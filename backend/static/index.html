@@ -842,128 +842,235 @@
         <!-- Column 1: Agent A -->
         <div class="flex flex-col bg-white dark:bg-slate-900 rounded-2xl border border-blue-200 dark:border-blue-900/60 overflow-hidden shadow-xs">
           <!-- Column Header -->
-          <div class="p-3 border-b border-blue-100 dark:border-blue-900/50 bg-blue-50/50 dark:bg-blue-950/30 flex flex-col gap-1 shrink-0">
+          <div class="p-3 border-b border-blue-100 dark:border-blue-900/50 bg-blue-50/50 dark:bg-blue-950/30 flex flex-col gap-1.5 shrink-0">
             <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-blue-700 dark:text-blue-300 flex items-center gap-1.5">
-                <span class="w-2 h-2 rounded-full bg-blue-500"></span> Agent A
-              </span>
-              <span id="multiBadgeA" class="px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 text-[10px] font-mono font-bold">Dynamic Grounding</span>
+              <div class="flex items-center gap-1.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                <span class="text-xs font-bold text-blue-700 dark:text-blue-300">Agent A</span>
+                <span class="text-[10px] px-1.5 py-0.2 rounded bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 font-mono font-bold">ecommerce_dw</span>
+              </div>
+              <!-- Per-Agent Thinking Toggle -->
+              <div class="inline-flex p-0.5 rounded-lg bg-white/90 dark:bg-slate-800 border border-blue-200 dark:border-blue-800 text-[10px]">
+                <button 
+                  type="button" 
+                  id="agentThinkingBtn_A_fast" 
+                  onclick="setAgentThinkingMode('A', 'FAST')" 
+                  class="px-2 py-0.5 rounded-md flex items-center gap-1 transition text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white cursor-pointer text-[10px]"
+                  title="Fast mode for Agent A"
+                >
+                  <i data-lucide="zap" class="w-2.5 h-2.5 text-amber-500"></i>
+                  <span>Fast</span>
+                </button>
+                <button 
+                  type="button" 
+                  id="agentThinkingBtn_A_thinking" 
+                  onclick="setAgentThinkingMode('A', 'THINKING')" 
+                  class="px-2 py-0.5 rounded-md flex items-center gap-1 transition bg-blue-100 dark:bg-slate-700 text-blue-700 dark:text-blue-300 font-bold shadow-2xs cursor-pointer text-[10px]"
+                  title="Thinking mode for Agent A"
+                >
+                  <i data-lucide="brain" class="w-2.5 h-2.5 text-blue-600 dark:text-blue-400"></i>
+                  <span>Thinking</span>
+                </button>
+              </div>
+            </div>
+            <div class="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400">
+              <span id="multiBadgeA" class="px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 font-mono font-bold">Full Knowledge Catalog</span>
+              <span class="font-mono">85 Terms &bull; Custom Aspects</span>
             </div>
             <!-- Full Prompt Header in smaller font -->
-            <p id="multiPromptHeaderA" class="text-[11px] text-slate-600 dark:text-slate-400 italic line-clamp-2 hover:line-clamp-none transition-all leading-tight cursor-default" title="Prompt used for Knowledge Catalog discovery"></p>
+            <p id="multiPromptHeaderA" class="text-[10px] text-slate-500 dark:text-slate-400 italic line-clamp-1 hover:line-clamp-none transition-all leading-tight cursor-default" title="Prompt used for Knowledge Catalog discovery"></p>
           </div>
           <!-- Message Thread -->
           <div id="threadAgentA" class="flex-1 p-3.5 overflow-y-auto space-y-3.5 custom-scrollbar bg-slate-50/20 dark:bg-slate-950/20 text-xs">
             <!-- Messages injected dynamically -->
+          </div>
+          <!-- Column Bottom Input (Single-Agent Query) -->
+          <div class="p-2 border-t border-blue-100 dark:border-blue-900/50 bg-blue-50/30 dark:bg-slate-900 shrink-0">
+            <form onsubmit="handleSingleAgentSubmit(event, 'A')" class="flex items-center gap-1.5">
+              <input 
+                type="text" 
+                id="inputAgentA" 
+                class="flex-1 px-3 py-1.5 text-xs bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-slate-900 dark:text-white" 
+                placeholder="Custom query for Agent A..." 
+                autocomplete="off"
+              />
+              <button 
+                type="submit" 
+                id="sendBtnAgentA" 
+                class="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl flex items-center justify-center cursor-pointer transition shadow-2xs shrink-0" 
+                title="Send query to Agent A only"
+              >
+                <i data-lucide="send" class="w-3 h-3"></i>
+              </button>
+            </form>
           </div>
         </div>
 
         <!-- Column 2: Agent B -->
         <div class="flex flex-col bg-white dark:bg-slate-900 rounded-2xl border border-indigo-200 dark:border-indigo-900/60 overflow-hidden shadow-xs">
           <!-- Column Header -->
-          <div class="p-3 border-b border-indigo-100 dark:border-indigo-900/50 bg-indigo-50/50 dark:bg-indigo-950/30 flex flex-col gap-1 shrink-0">
+          <div class="p-3 border-b border-indigo-100 dark:border-indigo-900/50 bg-indigo-50/50 dark:bg-indigo-950/30 flex flex-col gap-1.5 shrink-0">
             <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-indigo-700 dark:text-indigo-300 flex items-center gap-1.5">
-                <span class="w-2 h-2 rounded-full bg-indigo-500"></span> Agent B
-              </span>
-              <span id="multiBadgeB" class="px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-800 dark:text-indigo-200 text-[10px] font-mono font-bold">Dynamic Grounding</span>
+              <div class="flex items-center gap-1.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
+                <span class="text-xs font-bold text-indigo-700 dark:text-indigo-300">Agent B</span>
+                <span class="text-[10px] px-1.5 py-0.2 rounded bg-indigo-100 dark:bg-indigo-900/60 text-indigo-800 dark:text-indigo-200 font-mono font-bold">ecommerce_dw_2nd</span>
+              </div>
+              <!-- Per-Agent Thinking Toggle -->
+              <div class="inline-flex p-0.5 rounded-lg bg-white/90 dark:bg-slate-800 border border-indigo-200 dark:border-indigo-800 text-[10px]">
+                <button 
+                  type="button" 
+                  id="agentThinkingBtn_B_fast" 
+                  onclick="setAgentThinkingMode('B', 'FAST')" 
+                  class="px-2 py-0.5 rounded-md flex items-center gap-1 transition text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white cursor-pointer text-[10px]"
+                  title="Fast mode for Agent B"
+                >
+                  <i data-lucide="zap" class="w-2.5 h-2.5 text-amber-500"></i>
+                  <span>Fast</span>
+                </button>
+                <button 
+                  type="button" 
+                  id="agentThinkingBtn_B_thinking" 
+                  onclick="setAgentThinkingMode('B', 'THINKING')" 
+                  class="px-2 py-0.5 rounded-md flex items-center gap-1 transition bg-indigo-100 dark:bg-slate-700 text-indigo-700 dark:text-indigo-300 font-bold shadow-2xs cursor-pointer text-[10px]"
+                  title="Thinking mode for Agent B"
+                >
+                  <i data-lucide="brain" class="w-2.5 h-2.5 text-indigo-600 dark:text-indigo-400"></i>
+                  <span>Thinking</span>
+                </button>
+              </div>
+            </div>
+            <div class="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400">
+              <span id="multiBadgeB" class="px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-800 dark:text-indigo-200 font-mono font-bold">Descriptions Only</span>
+              <span class="font-mono text-slate-400">0 Terms &bull; 0 Aspects</span>
             </div>
             <!-- Full Prompt Header in smaller font -->
-            <p id="multiPromptHeaderB" class="text-[11px] text-slate-600 dark:text-slate-400 italic line-clamp-2 hover:line-clamp-none transition-all leading-tight cursor-default" title="Prompt used for Knowledge Catalog discovery"></p>
+            <p id="multiPromptHeaderB" class="text-[10px] text-slate-500 dark:text-slate-400 italic line-clamp-1 hover:line-clamp-none transition-all leading-tight cursor-default" title="Prompt used for Knowledge Catalog discovery"></p>
           </div>
           <!-- Message Thread -->
           <div id="threadAgentB" class="flex-1 p-3.5 overflow-y-auto space-y-3.5 custom-scrollbar bg-slate-50/20 dark:bg-slate-950/20 text-xs">
             <!-- Messages injected dynamically -->
+          </div>
+          <!-- Column Bottom Input (Single-Agent Query) -->
+          <div class="p-2 border-t border-indigo-100 dark:border-indigo-900/50 bg-indigo-50/30 dark:bg-slate-900 shrink-0">
+            <form onsubmit="handleSingleAgentSubmit(event, 'B')" class="flex items-center gap-1.5">
+              <input 
+                type="text" 
+                id="inputAgentB" 
+                class="flex-1 px-3 py-1.5 text-xs bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-slate-900 dark:text-white" 
+                placeholder="Custom query for Agent B..." 
+                autocomplete="off"
+              />
+              <button 
+                type="submit" 
+                id="sendBtnAgentB" 
+                class="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white rounded-xl flex items-center justify-center cursor-pointer transition shadow-2xs shrink-0" 
+                title="Send query to Agent B only"
+              >
+                <i data-lucide="send" class="w-3 h-3"></i>
+              </button>
+            </form>
           </div>
         </div>
 
         <!-- Column 3: Agent C -->
         <div class="flex flex-col bg-white dark:bg-slate-900 rounded-2xl border border-purple-200 dark:border-purple-900/60 overflow-hidden shadow-xs">
           <!-- Column Header -->
-          <div class="p-3 border-b border-purple-100 dark:border-purple-900/50 bg-purple-50/50 dark:bg-purple-950/30 flex flex-col gap-1 shrink-0">
+          <div class="p-3 border-b border-purple-100 dark:border-purple-900/50 bg-purple-50/50 dark:bg-purple-950/30 flex flex-col gap-1.5 shrink-0">
             <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-purple-700 dark:text-purple-300 flex items-center gap-1.5">
-                <span class="w-2 h-2 rounded-full bg-purple-500"></span> Agent C
-              </span>
-              <span id="multiBadgeC" class="px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/60 text-purple-800 dark:text-purple-200 text-[10px] font-mono font-bold">Dynamic Grounding</span>
+              <div class="flex items-center gap-1.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
+                <span class="text-xs font-bold text-purple-700 dark:text-purple-300">Agent C</span>
+                <span class="text-[10px] px-1.5 py-0.2 rounded bg-purple-100 dark:bg-purple-900/60 text-purple-800 dark:text-purple-200 font-mono font-bold">ecommerce_dw_3rd</span>
+              </div>
+              <!-- Per-Agent Thinking Toggle -->
+              <div class="inline-flex p-0.5 rounded-lg bg-white/90 dark:bg-slate-800 border border-purple-200 dark:border-purple-800 text-[10px]">
+                <button 
+                  type="button" 
+                  id="agentThinkingBtn_C_fast" 
+                  onclick="setAgentThinkingMode('C', 'FAST')" 
+                  class="px-2 py-0.5 rounded-md flex items-center gap-1 transition text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white cursor-pointer text-[10px]"
+                  title="Fast mode for Agent C"
+                >
+                  <i data-lucide="zap" class="w-2.5 h-2.5 text-amber-500"></i>
+                  <span>Fast</span>
+                </button>
+                <button 
+                  type="button" 
+                  id="agentThinkingBtn_C_thinking" 
+                  onclick="setAgentThinkingMode('C', 'THINKING')" 
+                  class="px-2 py-0.5 rounded-md flex items-center gap-1 transition bg-purple-100 dark:bg-slate-700 text-purple-700 dark:text-purple-300 font-bold shadow-2xs cursor-pointer text-[10px]"
+                  title="Thinking mode for Agent C"
+                >
+                  <i data-lucide="brain" class="w-2.5 h-2.5 text-purple-600 dark:text-purple-400"></i>
+                  <span>Thinking</span>
+                </button>
+              </div>
+            </div>
+            <div class="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400">
+              <span id="multiBadgeC" class="px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/60 text-purple-800 dark:text-purple-200 font-mono font-bold">Raw Schema Only</span>
+              <span class="font-mono text-slate-400">0 Desc &bull; 0 Terms</span>
             </div>
             <!-- Full Prompt Header in smaller font -->
-            <p id="multiPromptHeaderC" class="text-[11px] text-slate-600 dark:text-slate-400 italic line-clamp-2 hover:line-clamp-none transition-all leading-tight cursor-default" title="Prompt used for Knowledge Catalog discovery"></p>
+            <p id="multiPromptHeaderC" class="text-[10px] text-slate-500 dark:text-slate-400 italic line-clamp-1 hover:line-clamp-none transition-all leading-tight cursor-default" title="Prompt used for Knowledge Catalog discovery"></p>
           </div>
           <!-- Message Thread -->
           <div id="threadAgentC" class="flex-1 p-3.5 overflow-y-auto space-y-3.5 custom-scrollbar bg-slate-50/20 dark:bg-slate-950/20 text-xs">
             <!-- Messages injected dynamically -->
           </div>
+          <!-- Column Bottom Input (Single-Agent Query) -->
+          <div class="p-2 border-t border-purple-100 dark:border-purple-900/50 bg-purple-50/30 dark:bg-slate-900 shrink-0">
+            <form onsubmit="handleSingleAgentSubmit(event, 'C')" class="flex items-center gap-1.5">
+              <input 
+                type="text" 
+                id="inputAgentC" 
+                class="flex-1 px-3 py-1.5 text-xs bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none text-slate-900 dark:text-white" 
+                placeholder="Custom query for Agent C..." 
+                autocomplete="off"
+              />
+              <button 
+                type="submit" 
+                id="sendBtnAgentC" 
+                class="px-2.5 py-1.5 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white rounded-xl flex items-center justify-center cursor-pointer transition shadow-2xs shrink-0" 
+                title="Send query to Agent C only"
+              >
+                <i data-lucide="send" class="w-3 h-3"></i>
+              </button>
+            </form>
+          </div>
         </div>
 
       </div>
 
-      <!-- Synchronized Prompt Input Bar at Bottom -->
-      <div class="shrink-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-2.5 shadow-md flex flex-col gap-2">
-        <!-- Quick Prompts Horizontal Pill Carousel -->
-        <div class="flex items-center gap-2 overflow-x-auto custom-scrollbar text-[11px] pb-1">
-          <span data-i18n="inquire_all_label" class="text-slate-400 font-semibold text-[10px] uppercase shrink-0">Inquire all 3 agents:</span>
-          <button id="multiPill0" onclick="sendMultiAgentPromptByIndex(0)" class="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-900/40 text-slate-700 dark:text-slate-200 hover:text-blue-600 border border-slate-200 dark:border-slate-700 shrink-0 transition cursor-pointer">
-            <span data-i18n="prompt_1_title">💄 Beauty Shortfall (-27%)</span>
+      <!-- Synchronized Master Prompt Bar at Bottom -->
+      <div class="shrink-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-2.5 shadow-md">
+        <!-- Master Broadcast Input Form -->
+        <form onsubmit="handleMultiChatSubmit(event)" class="flex items-center gap-2">
+          <input 
+            type="text" 
+            id="multiPromptInput" 
+            class="flex-1 px-4 py-2.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-slate-900 dark:text-white" 
+            placeholder="Broadcast a diagnostic question across all 3 AI agents simultaneously (e.g. 'Show revenue by category')..." 
+            autocomplete="off"
+          />
+          <button 
+            type="button" 
+            onclick="populateColumnInputs()" 
+            class="px-3 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium text-xs rounded-xl flex items-center gap-1.5 border border-slate-200 dark:border-slate-700 transition cursor-pointer shrink-0" 
+            title="Copy this query into each agent column's input box so you can customize them individually before sending"
+          >
+            <i data-lucide="edit-3" class="w-3.5 h-3.5 text-indigo-500"></i>
+            <span>Populate Inputs</span>
           </button>
-          <button id="multiPill1" onclick="sendMultiAgentPromptByIndex(1)" class="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-900/40 text-slate-700 dark:text-slate-200 hover:text-blue-600 border border-slate-200 dark:border-slate-700 shrink-0 transition cursor-pointer">
-            <span data-i18n="prompt_2_title">📦 Stock-Out Revenue Loss</span>
+          <button 
+            type="submit" 
+            id="multiSendBtn" 
+            class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-semibold text-xs rounded-xl flex items-center gap-1.5 shadow-sm transition cursor-pointer shrink-0"
+          >
+            <i data-lucide="send" class="w-3.5 h-3.5"></i>
+            <span>Broadcast to 3 Agents</span>
           </button>
-          <button id="multiPill2" onclick="sendMultiAgentPromptByIndex(2)" class="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-900/40 text-slate-700 dark:text-slate-200 hover:text-blue-600 border border-slate-200 dark:border-slate-700 shrink-0 transition cursor-pointer">
-            <span data-i18n="prompt_4_title">📢 Paid Social Ad Throttling</span>
-          </button>
-          <button id="multiPill3" onclick="sendMultiAgentPromptByIndex(3)" class="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-900/40 text-slate-700 dark:text-slate-200 hover:text-blue-600 border border-slate-200 dark:border-slate-700 shrink-0 transition cursor-pointer">
-            <span data-i18n="prompt_3_title">📈 15-Min Intraday Target Pacing</span>
-          </button>
-        </div>
-
-        <!-- Mode Selector & Input Form -->
-        <div class="space-y-2">
-          <div class="flex items-center justify-between px-1">
-            <div class="flex items-center gap-2">
-              <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400">Mode:</span>
-              <div id="multiThinkingModeGroup" class="inline-flex p-0.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs">
-                <button 
-                  type="button" 
-                  id="multiModeBtnFast"
-                  onclick="setMultiThinkingMode('FAST')"
-                  class="px-2.5 py-1 rounded-lg flex items-center gap-1.5 transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer text-[11px]"
-                  title="Fast mode: Quick turnaround, minimal reasoning"
-                >
-                  <i data-lucide="zap" class="w-3 h-3 text-amber-500"></i>
-                  <span>Fast</span>
-                </button>
-                <button 
-                  type="button" 
-                  id="multiModeBtnThinking"
-                  onclick="setMultiThinkingMode('THINKING')"
-                  class="px-2.5 py-1 rounded-lg flex items-center gap-1.5 transition bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 font-semibold shadow-xs cursor-pointer text-[11px]"
-                  title="Thinking mode: Detailed reasoning traces, intermediate validation queries, and raw data"
-                >
-                  <i data-lucide="brain" class="w-3 h-3 text-indigo-600 dark:text-indigo-400"></i>
-                  <span>Thinking</span>
-                </button>
-              </div>
-            </div>
-          </div>
-          <form onsubmit="handleMultiChatSubmit(event)" class="flex items-center gap-2">
-            <input 
-              type="text" 
-              id="multiPromptInput" 
-              class="flex-1 px-4 py-2.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-slate-900 dark:text-white" 
-              placeholder="Ask a diagnostic question across all 3 AI agents simultaneously (e.g. 'Show revenue by category')..." 
-              autocomplete="off"
-            />
-            <button 
-              type="submit" 
-              id="multiSendBtn" 
-              class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-semibold text-xs rounded-xl flex items-center gap-1.5 shadow-sm transition cursor-pointer shrink-0"
-            >
-              <i data-lucide="send" class="w-3.5 h-3.5"></i>
-              <span data-i18n="broadcast_btn">Broadcast to 3 Agents</span>
-            </button>
-          </form>
-        </div>
+        </form>
       </div>
 
     </div>
@@ -1117,10 +1224,10 @@
           </div>
           <div>
             <div class="flex items-center gap-2">
-              <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400" data-i18n="chats_badge">3-Agent Chat Setup</span>
-              <span class="text-[10px] px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-800 dark:text-indigo-200 font-mono font-bold" data-i18n="chats_subbadge">Side-by-Side Comparison</span>
+              <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">3-Tier Metadata Isolation Setup</span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-800 dark:text-indigo-200 font-mono font-bold">Unified Knowledge Catalog Discovery</span>
             </div>
-            <h2 class="text-lg font-bold text-slate-900 dark:text-white tracking-tight mt-0.5" data-i18n="chats_title">Compare Chats • Prompt Staging & 3-Agent Evaluation</h2>
+            <h2 class="text-lg font-bold text-slate-900 dark:text-white tracking-tight mt-0.5">Compare Chats • 3 Levels of Metadata Grounding Isolation</h2>
           </div>
         </div>
         <button onclick="closeCompareChatsModal()" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
@@ -1131,94 +1238,181 @@
       <!-- Modal Body -->
       <div class="p-6 md:p-8 overflow-y-auto custom-scrollbar space-y-6 flex-1">
         
-        <!-- Preset Selector Bar -->
-        <div class="flex flex-wrap items-center justify-between gap-3 p-3.5 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200/80 dark:border-slate-700/60">
-          <div class="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
-            <i data-lucide="bookmark" class="w-4 h-4 text-indigo-500"></i>
-            <span data-i18n="studio_presets_label">Load Preset Candidate Scenarios:</span>
+        <!-- Single Knowledge Catalog Discovery Prompt Input Card -->
+        <div class="p-5 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-indigo-200 dark:border-indigo-900/50 flex flex-col space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-indigo-700 dark:text-indigo-300 uppercase tracking-wider flex items-center gap-2">
+              <i data-lucide="search" class="w-4 h-4 text-indigo-500"></i>
+              <span>Knowledge Catalog Table Discovery Prompt</span>
+            </span>
+            <span class="text-[11px] text-slate-500 font-medium">Discovers tables once &bull; Maps identically across all 3 tiers</span>
           </div>
-          <div class="flex flex-wrap gap-2">
-            <button onclick="loadChatPromptPreset('incident')" class="px-3 py-1 text-xs font-medium bg-white dark:bg-slate-700 hover:bg-blue-50 dark:hover:bg-blue-900/40 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 rounded-lg transition-colors cursor-pointer" data-i18n="preset_incident">
-              Black Friday Incident Triage
-            </button>
-            <button onclick="loadChatPromptPreset('logistics')" class="px-3 py-1 text-xs font-medium bg-white dark:bg-slate-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 rounded-lg transition-colors cursor-pointer" data-i18n="preset_logistics">
-              Pacing vs. Logistics & SLAs
-            </button>
-            <button onclick="loadChatPromptPreset('marketing')" class="px-3 py-1 text-xs font-medium bg-white dark:bg-slate-700 hover:bg-purple-50 dark:hover:bg-purple-900/40 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 rounded-lg transition-colors cursor-pointer" data-i18n="preset_marketing">
-              Marketing & Ad ROAS Throttling
-            </button>
-          </div>
-        </div>
-
-        <!-- 3 Prompt Input Cards Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          
-          <!-- Prompt A Card -->
-          <div class="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-blue-200 dark:border-blue-900/50 flex flex-col">
-            <div class="flex items-center justify-between mb-2">
-              <span class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
-                <span class="w-2 h-2 rounded-full bg-blue-500"></span> <span data-i18n="agent_a_prompt_label">Agent A Prompt</span>
-              </span>
-            </div>
-            <textarea id="chatPromptA" rows="6" class="w-full p-3 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-y min-h-[130px] font-sans leading-relaxed" placeholder="Enter candidate prompt for Agent A..."></textarea>
-          </div>
-
-          <!-- Prompt B Card -->
-          <div class="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-indigo-200 dark:border-indigo-900/50 flex flex-col">
-            <div class="flex items-center justify-between mb-2">
-              <span class="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
-                <span class="w-2 h-2 rounded-full bg-indigo-500"></span> <span data-i18n="agent_b_prompt_label">Agent B Prompt</span>
-              </span>
-            </div>
-            <textarea id="chatPromptB" rows="6" class="w-full p-3 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 resize-y min-h-[130px] font-sans leading-relaxed" placeholder="Enter candidate prompt for Agent B..."></textarea>
-          </div>
-
-          <!-- Prompt C Card -->
-          <div class="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-purple-200 dark:border-purple-900/50 flex flex-col">
-            <div class="flex items-center justify-between mb-2">
-              <span class="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider flex items-center gap-1.5">
-                <span class="w-2 h-2 rounded-full bg-purple-500"></span> <span data-i18n="agent_c_prompt_label">Agent C Prompt</span>
-              </span>
-            </div>
-            <textarea id="chatPromptC" rows="6" class="w-full p-3 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 resize-y min-h-[130px] font-sans leading-relaxed" placeholder="Enter candidate prompt for Agent C..."></textarea>
-          </div>
-
+          <textarea id="chatDiscoveryPrompt" rows="4" class="w-full p-3.5 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 resize-y min-h-[100px] font-sans leading-relaxed text-slate-900 dark:text-slate-100" placeholder="Enter business inquiry for Knowledge Catalog semantic table discovery (e.g. 'Prepare sales, marketing, ads, inventory, all connected business domains data')...">Prepare sales, marketing, ads, inventory, all connected business domains data</textarea>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-normal">
+            Google Cloud Knowledge Catalog executes semantic search across the 140-table warehouse. The exact discovered table set is assigned simultaneously to <strong>Agent A</strong> (<code class="text-blue-600 dark:text-blue-400 font-mono font-bold">ecommerce_dw</code>), <strong>Agent B</strong> (<code class="text-indigo-600 dark:text-indigo-400 font-mono font-bold">ecommerce_dw_2nd</code>), and <strong>Agent C</strong> (<code class="text-purple-600 dark:text-purple-400 font-mono font-bold">ecommerce_dw_3rd</code>) to evaluate metadata isolation impact.
+          </p>
         </div>
 
         <!-- Action Button -->
-        <div class="flex justify-center pt-2">
-          <button id="runChatEvaluationBtn" onclick="runChatPromptEvaluation()" class="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-xl flex items-center gap-2.5 shadow-lg shadow-indigo-500/25 transition-all hover:scale-[1.02] cursor-pointer">
-            <i data-lucide="play" class="w-4 h-4"></i>
-            <span data-i18n="run_eval_btn">Run Gemini Enterprise Agent Platform Evaluation</span>
+        <div class="flex justify-center pt-1">
+          <button id="runChatDiscoveryBtn" onclick="runChatIsolationDiscovery()" class="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-semibold text-xs rounded-xl flex items-center gap-2.5 shadow-lg shadow-indigo-500/25 transition-all hover:scale-[1.02] cursor-pointer">
+            <i data-lucide="sparkles" class="w-4 h-4"></i>
+            <span id="runChatDiscoveryBtnText">Discover Tables &amp; Ground 3 Isolated Agents</span>
           </button>
         </div>
 
-        <!-- Evaluation Results Display Container -->
+        <!-- Discovery & Grounding Results Container -->
         <div id="chatResultsContainer" class="hidden space-y-6 pt-4 border-t border-slate-200 dark:border-slate-800">
           
-          <!-- Executive Synthesis Banner -->
-          <div class="p-5 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-slate-800/80 dark:to-purple-950/40 rounded-2xl border border-indigo-200 dark:border-indigo-800/60 space-y-2">
+          <!-- Telemetry Banner -->
+          <div class="p-5 bg-gradient-to-r from-indigo-50 via-blue-50 to-purple-50 dark:from-slate-800/90 dark:via-blue-950/40 dark:to-purple-950/40 rounded-2xl border border-indigo-200 dark:border-indigo-800/60 space-y-2">
             <div class="flex items-center gap-2">
-              <i data-lucide="award" class="w-5 h-5 text-indigo-600 dark:text-indigo-400"></i>
-              <h4 class="text-sm font-bold text-slate-900 dark:text-white" data-i18n="gemini_rec_title">Gemini Enterprise Agent Platform Recommendation</h4>
-              <span id="chatWinningPromptBadge" class="ml-auto px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 text-xs font-bold font-mono">
-                RECOMMENDED: PROMPT B
+              <i data-lucide="check-circle" class="w-5 h-5 text-emerald-600 dark:text-emerald-400"></i>
+              <h4 class="text-sm font-bold text-slate-900 dark:text-white">Knowledge Catalog Discovery &amp; Multi-Tier Grounding Complete</h4>
+              <span id="chatDiscoveryCountBadge" class="ml-auto px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 text-xs font-bold font-mono">
+                37 TABLES GROUNDED
               </span>
             </div>
-            <p id="chatSynthesisText" class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-sans"></p>
-            <p id="chatRationaleText" class="text-xs text-slate-500 dark:text-slate-400 italic pt-1 border-t border-indigo-100 dark:border-slate-700/50"></p>
+            <p id="chatDiscoverySummaryText" class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-sans">
+              Dynamic semantic search retrieved relevant tables across the enterprise warehouse. The exact identical table list has been grounded across all 3 BigQuery Data Agents with strict metadata isolation invariants.
+            </p>
           </div>
 
-          <!-- 3-Way Comparative Scorecards Grid -->
-          <div id="chatScorecardsGrid" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <!-- Dynamic Scorecard Cards injected by JS -->
+          <!-- 3-Tier Metadata Isolation Architecture Cards Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            
+            <!-- Tier A Card -->
+            <div class="p-5 rounded-2xl border-2 border-blue-400 dark:border-blue-600/80 bg-white dark:bg-slate-800/90 shadow-md flex flex-col justify-between space-y-3">
+              <div>
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-xs font-bold text-blue-700 dark:text-blue-300 uppercase tracking-wider flex items-center gap-1.5">
+                    <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span> Agent A
+                  </span>
+                  <span class="px-2.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 font-mono text-[10px] font-bold">
+                    Full Knowledge Catalog
+                  </span>
+                </div>
+                <div class="text-xs font-mono font-bold text-slate-900 dark:text-slate-100 mb-2">
+                  Dataset: ecommerce_dw
+                </div>
+                <p class="text-[11px] text-slate-600 dark:text-slate-300 mb-3 leading-relaxed">
+                  Primary warehouse with full enterprise semantic intelligence and data governance layer.
+                </p>
+                <div class="space-y-1.5 text-[11px]">
+                  <div class="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 font-medium">
+                    <i data-lucide="check" class="w-3.5 h-3.5 text-emerald-600"></i>
+                    <span>Column &amp; Table Descriptions</span>
+                  </div>
+                  <div class="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 font-medium">
+                    <i data-lucide="check" class="w-3.5 h-3.5 text-emerald-600"></i>
+                    <span>85 Business Glossary Terms (EntryLinks)</span>
+                  </div>
+                  <div class="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 font-medium">
+                    <i data-lucide="check" class="w-3.5 h-3.5 text-emerald-600"></i>
+                    <span>Custom Governance Aspects</span>
+                  </div>
+                </div>
+              </div>
+              <div class="pt-2 border-t border-slate-100 dark:border-slate-700 text-[10px] font-mono text-slate-500">
+                Grounding Status: <span id="tierAStatus" class="text-blue-600 dark:text-blue-400 font-bold">Grounded</span>
+              </div>
+            </div>
+
+            <!-- Tier B Card -->
+            <div class="p-5 rounded-2xl border-2 border-indigo-400 dark:border-indigo-600/80 bg-white dark:bg-slate-800/90 shadow-md flex flex-col justify-between space-y-3">
+              <div>
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-xs font-bold text-indigo-700 dark:text-indigo-300 uppercase tracking-wider flex items-center gap-1.5">
+                    <span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span> Agent B
+                  </span>
+                  <span class="px-2.5 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-800 dark:text-indigo-200 font-mono text-[10px] font-bold">
+                    Descriptions Only
+                  </span>
+                </div>
+                <div class="text-xs font-mono font-bold text-slate-900 dark:text-slate-100 mb-2">
+                  Dataset: ecommerce_dw_2nd
+                </div>
+                <p class="text-[11px] text-slate-600 dark:text-slate-300 mb-3 leading-relaxed">
+                  Physical BigQuery replica with column descriptions, but isolated from Knowledge Catalog glossary terms.
+                </p>
+                <div class="space-y-1.5 text-[11px]">
+                  <div class="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 font-medium">
+                    <i data-lucide="check" class="w-3.5 h-3.5 text-emerald-600"></i>
+                    <span>Column &amp; Table Descriptions</span>
+                  </div>
+                  <div class="flex items-center gap-1.5 text-slate-400 dark:text-slate-500 line-through">
+                    <i data-lucide="x" class="w-3.5 h-3.5 text-slate-400"></i>
+                    <span>0 Knowledge Catalog Terms (0 EntryLinks)</span>
+                  </div>
+                  <div class="flex items-center gap-1.5 text-slate-400 dark:text-slate-500 line-through">
+                    <i data-lucide="x" class="w-3.5 h-3.5 text-slate-400"></i>
+                    <span>0 Custom Governance Aspects</span>
+                  </div>
+                </div>
+              </div>
+              <div class="pt-2 border-t border-slate-100 dark:border-slate-700 text-[10px] font-mono text-slate-500">
+                Grounding Status: <span id="tierBStatus" class="text-indigo-600 dark:text-indigo-400 font-bold">Grounded</span>
+              </div>
+            </div>
+
+            <!-- Tier C Card -->
+            <div class="p-5 rounded-2xl border-2 border-purple-400 dark:border-purple-600/80 bg-white dark:bg-slate-800/90 shadow-md flex flex-col justify-between space-y-3">
+              <div>
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-xs font-bold text-purple-700 dark:text-purple-300 uppercase tracking-wider flex items-center gap-1.5">
+                    <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span> Agent C
+                  </span>
+                  <span class="px-2.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/60 text-purple-800 dark:text-purple-200 font-mono text-[10px] font-bold">
+                    Raw Schema Only
+                  </span>
+                </div>
+                <div class="text-xs font-mono font-bold text-slate-900 dark:text-slate-100 mb-2">
+                  Dataset: ecommerce_dw_3rd
+                </div>
+                <p class="text-[11px] text-slate-600 dark:text-slate-300 mb-3 leading-relaxed">
+                  Physical BigQuery replica stripped of all descriptions, terms, and aspects for baseline raw schema reasoning.
+                </p>
+                <div class="space-y-1.5 text-[11px]">
+                  <div class="flex items-center gap-1.5 text-slate-400 dark:text-slate-500 line-through">
+                    <i data-lucide="x" class="w-3.5 h-3.5 text-slate-400"></i>
+                    <span>0 Column Descriptions (Raw Names Only)</span>
+                  </div>
+                  <div class="flex items-center gap-1.5 text-slate-400 dark:text-slate-500 line-through">
+                    <i data-lucide="x" class="w-3.5 h-3.5 text-slate-400"></i>
+                    <span>0 Knowledge Catalog Terms (0 EntryLinks)</span>
+                  </div>
+                  <div class="flex items-center gap-1.5 text-slate-400 dark:text-slate-500 line-through">
+                    <i data-lucide="x" class="w-3.5 h-3.5 text-slate-400"></i>
+                    <span>0 Custom Governance Aspects</span>
+                  </div>
+                </div>
+              </div>
+              <div class="pt-2 border-t border-slate-100 dark:border-slate-700 text-[10px] font-mono text-slate-500">
+                Grounding Status: <span id="tierCStatus" class="text-purple-600 dark:text-purple-400 font-bold">Grounded</span>
+              </div>
+            </div>
+
           </div>
 
-          <!-- Start 3-Agent Conversation Action Row -->
-          <div class="flex justify-center pt-3 pb-1">
-            <button id="startMultiChatBtn" onclick="startMultiAgentConversation()" class="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold text-xs rounded-2xl flex items-center justify-center gap-2.5 shadow-lg shadow-indigo-500/25 transition-all hover:scale-[1.02] cursor-pointer">
+          <!-- Discovered Tables Tag Cloud -->
+          <div class="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-200 dark:border-slate-700/60 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                <i data-lucide="database" class="w-3.5 h-3.5 text-indigo-500"></i>
+                <span>Discovered Warehouse Tables (<span id="chatTablesCountSpan">0</span>)</span>
+              </span>
+              <span class="text-[10px] text-slate-500">Shared Across All 3 Agents</span>
+            </div>
+            <div id="chatDiscoveredTablesList" class="flex flex-wrap gap-1.5 max-h-[140px] overflow-y-auto custom-scrollbar">
+              <!-- Dynamically populated tags -->
+            </div>
+          </div>
+
+          <!-- Enter 3-Agent Isolated Cockpit Action Row -->
+          <div class="flex justify-center pt-2 pb-1">
+            <button id="startMultiChatBtn" onclick="startMultiAgentConversation()" class="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-indigo-600 via-blue-600 to-purple-600 hover:from-indigo-700 hover:via-blue-700 hover:to-purple-700 active:scale-95 text-white font-bold text-xs rounded-2xl flex items-center justify-center gap-2.5 shadow-lg shadow-indigo-500/25 transition-all hover:scale-[1.02] cursor-pointer">
               <i data-lucide="play" class="w-4 h-4"></i>
-              <span id="startMultiChatBtnText" data-i18n="start_multi_chat_btn">Start conversation (with 3 Agents)</span>
+              <span id="startMultiChatBtnText">Enter 3-Agent Isolated Cockpit</span>
             </button>
           </div>
 
@@ -1230,10 +1424,10 @@
       <div class="px-6 md:px-8 py-3.5 border-t border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/80 flex items-center justify-between shrink-0 text-xs text-slate-500">
         <div class="flex items-center gap-2">
           <i data-lucide="shield-check" class="w-4 h-4 text-emerald-500"></i>
-          <span data-i18n="studio_footer_tech">Knowledge Catalog Search + Gemini Enterprise Agent Platform In-Region</span>
+          <span>Knowledge Catalog Semantic Search &bull; 3-Tier Physical BigQuery Isolation</span>
         </div>
         <button onclick="closeCompareChatsModal()" class="px-4 py-1.5 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg font-medium transition-colors cursor-pointer">
-          <span data-i18n="close_modal">Close</span>
+          <span>Close</span>
         </button>
       </div>
 
@@ -5756,7 +5950,6 @@
         // 3. Close studio modal and switch to workspace
         closePromptStudio();
         switchToWorkspaceView();
-        showFloatingToast(`🚀 Launched Investigation with ${promptId.replace('_', ' ')} (${count} tables mapped)!`);
 
       } catch (err) {
         console.error("Error applying prompt and launching workspace:", err);
@@ -5771,26 +5964,24 @@
     }
 
     function showFloatingToast(message) {
-      const toast = document.createElement('div');
-      toast.className = 'fixed bottom-6 right-6 z-50 px-5 py-3 rounded-2xl bg-slate-900 text-white text-xs font-semibold shadow-2xl border border-slate-700 flex items-center gap-2 animate-fade-in';
-      toast.innerHTML = `<span>${message}</span>`;
-      document.body.appendChild(toast);
-      setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transition = 'opacity 0.5s ease';
-        setTimeout(() => toast.remove(), 500);
-      }, 3500);
+      // Disabled: Floating toast messages permanently removed per user requirement
+      return;
     }
 
     // =========================================================================
     // 3-AGENT PARALLEL CONVERSATIONAL COCKPIT MODULE ("Compare Chats")
     // =========================================================================
     let compareChatsClicks = [];
-    let compareChatsEvaluationData = null;
+    let compareChatsDiscoveryData = null;
+    let agentThinkingModes = {
+      A: 'THINKING',
+      B: 'THINKING',
+      C: 'THINKING'
+    };
     let multiAgents = {
-      A: { name: "Agent A", prompt: "", tables: [], table_count: 29, session_id: "" },
-      B: { name: "Agent B", prompt: "", tables: [], table_count: 21, session_id: "" },
-      C: { name: "Agent C", prompt: "", tables: [], table_count: 20, session_id: "" }
+      A: { name: "Agent A", dataset: "ecommerce_dw", prompt: "", tables: [], table_count: 37, session_id: "" },
+      B: { name: "Agent B", dataset: "ecommerce_dw_2nd", prompt: "", tables: [], table_count: 37, session_id: "" },
+      C: { name: "Agent C", dataset: "ecommerce_dw_3rd", prompt: "", tables: [], table_count: 37, session_id: "" }
     };
 
     function handleCompareChatsClick(e) {
@@ -5798,28 +5989,17 @@
         e.preventDefault();
         e.stopPropagation();
       }
-      const now = Date.now();
-      // Keep only clicks within the last 900ms (3 fast clicks)
-      compareChatsClicks = compareChatsClicks.filter(t => now - t < 900);
-      compareChatsClicks.push(now);
-
-      if (compareChatsClicks.length >= 3) {
-        compareChatsClicks = [];
-        openCompareChatsModal();
-      }
+      openCompareChatsModal();
     }
 
     function openCompareChatsModal() {
       const modal = document.getElementById('compareChatsModal');
       if (!modal) return;
       
-      const preset = getPromptPreset(activePresetKey);
-      const pA = document.getElementById('chatPromptA');
-      const pB = document.getElementById('chatPromptB');
-      const pC = document.getElementById('chatPromptC');
-      if (pA) pA.value = preset.a;
-      if (pB) pB.value = preset.b;
-      if (pC) pC.value = preset.c;
+      const input = document.getElementById('chatDiscoveryPrompt');
+      if (input && !input.value.trim()) {
+        input.value = "Prepare sales, marketing, ads, inventory, all connected business domains data";
+      }
       
       modal.classList.remove('hidden');
       modal.style.display = 'flex';
@@ -5833,265 +6013,88 @@
       modal.style.display = 'none';
     }
 
-    function loadChatPromptPreset(key) {
-      activePresetKey = key;
-      const preset = getPromptPreset(key);
-      const cA = document.getElementById('chatPromptA');
-      const cB = document.getElementById('chatPromptB');
-      const cC = document.getElementById('chatPromptC');
-      if (cA) cA.value = preset.a;
-      if (cB) cB.value = preset.b;
-      if (cC) cC.value = preset.c;
+    function loadChatDiscoveryPreset(key) {
+      const input = document.getElementById('chatDiscoveryPrompt');
+      if (!input) return;
+      if (key === 'incident') {
+        input.value = "Black Friday severe revenue shortfall across Beauty & Logistics with stock-outs and ROAS drops";
+      } else if (key === 'cross_domain') {
+        input.value = "Prepare sales, marketing, ads, inventory, all connected business domains data";
+      } else if (key === 'logistics') {
+        input.value = "Warehouse inventory snapshots, distribution center lead times, and out-of-stock interactions";
+      } else if (key === 'marketing') {
+        input.value = "Paid ad campaigns, bidding logs, creative performance, and ROAS throttling";
+      }
     }
 
-    async function runChatPromptEvaluation() {
-      const pA = document.getElementById('chatPromptA').value.trim();
-      const pB = document.getElementById('chatPromptB').value.trim();
-      const pC = document.getElementById('chatPromptC').value.trim();
-
-      const prompts = [pA, pB, pC].filter(p => p.length > 0);
-      if (prompts.length < 2) {
-        alert("Please provide at least 2 candidate prompts to compare.");
+    async function runChatIsolationDiscovery() {
+      const input = document.getElementById('chatDiscoveryPrompt');
+      const prompt = input ? input.value.trim() : "";
+      if (!prompt) {
+        alert("Please enter a business inquiry prompt for Knowledge Catalog table discovery.");
         return;
       }
 
-      const btn = document.getElementById('runChatEvaluationBtn');
-      const originalHtml = btn.innerHTML;
-      btn.disabled = true;
-      btn.innerHTML = `
-        <span class="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-        <span>${t('evaluating_btn')}</span>
-      `;
-
-      const resultsContainer = document.getElementById('chatResultsContainer');
-      if (resultsContainer) resultsContainer.classList.add('hidden');
-
-      try {
-        const res = await fetch('/api/evaluate-prompts', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompts })
-        });
-
-        if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
-        const data = await res.json();
-        compareChatsEvaluationData = data;
-
-        renderChatPromptEvaluation(data);
-      } catch (err) {
-        console.error("Compare Chats evaluation error:", err);
-        alert("Evaluation failed: " + err.message);
-      } finally {
-        btn.disabled = false;
-        btn.innerHTML = originalHtml;
-        lucide.createIcons();
-      }
-    }
-
-    function renderChatPromptEvaluation(data) {
-      const resultsContainer = document.getElementById('chatResultsContainer');
-      const synthesis = document.getElementById('chatSynthesisText');
-      const rationale = document.getElementById('chatRationaleText');
-      const winningBadge = document.getElementById('chatWinningPromptBadge');
-      const grid = document.getElementById('chatScorecardsGrid');
-
-      if (!resultsContainer) return;
-      resultsContainer.classList.remove('hidden');
-
-      const ev = data.evaluation || {};
-      synthesis.textContent = ev.executive_synthesis || "Comparative evaluation complete.";
-      rationale.textContent = ev.recommendation_rationale ? `💡 Recommendation Rationale: ${ev.recommendation_rationale}` : "";
-      
-      const recId = (ev.recommended_prompt_id || "Prompt_A").toUpperCase();
-      winningBadge.textContent = `${t('rec_badge_prefix')} ${recId.replace('_', ' ')}`;
-
-      const evals = ev.evaluations || [];
-      const searchResults = data.search_results || [];
-
-      const searchResultMap = {};
-      searchResults.forEach((sr, idx) => {
-        const pid = sr.prompt_id || `Prompt_${String.fromCharCode(65 + idx)}`;
-        searchResultMap[pid] = { ...sr, index: idx, prompt_id: pid };
-      });
-
-      grid.innerHTML = evals.map((item, idx) => {
-        const itemPid = item.prompt_id || `Prompt_${String.fromCharCode(65 + idx)}`;
-        const sr = searchResultMap[itemPid] || searchResults[idx] || {};
-        const srIndex = typeof sr.index === 'number' ? sr.index : idx;
-        const isWinner = item.prompt_id === ev.recommended_prompt_id;
-        const colorClass = srIndex === 0 ? 'blue' : (srIndex === 1 ? 'indigo' : 'purple');
-        const scoreColor = item.score >= 90 ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/70 border-emerald-300 dark:border-emerald-800' : (item.score >= 80 ? 'text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-950/70 border-blue-300 dark:border-blue-800' : 'text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-950/70 border-amber-300 dark:border-amber-800');
-        const agentLabel = srIndex === 0 ? 'Agent A' : (srIndex === 1 ? 'Agent B' : 'Agent C');
-
-        return `
-          <div class="p-5 rounded-2xl border ${isWinner ? 'border-2 border-indigo-500 shadow-xl bg-white dark:bg-slate-800/90 ring-4 ring-indigo-500/10' : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40'} flex flex-col justify-between space-y-4">
-            <div>
-              <!-- Card Header -->
-              <div class="flex items-center justify-between mb-2">
-                <div class="flex items-center gap-2">
-                  <span class="text-xs font-bold text-${colorClass}-600 dark:text-${colorClass}-400 uppercase tracking-wider">
-                    ${agentLabel} (${itemPid.replace('_', ' ')})
-                  </span>
-                  ${isWinner ? '<span class="px-2 py-0.5 rounded-full bg-indigo-500 text-white text-[9px] font-bold uppercase">TOP MATCH</span>' : ''}
-                </div>
-                <div class="px-2.5 py-1 rounded-xl border text-xs font-extrabold font-mono ${scoreColor}">
-                  Score: ${item.score}/100
-                </div>
-              </div>
-
-              <p class="text-xs text-slate-700 dark:text-slate-200 font-medium line-clamp-2 italic mb-3">
-                "${escapeHtml(sr.prompt || '')}"
-              </p>
-
-              <!-- Telemetry Metrics -->
-              <div class="grid grid-cols-3 gap-2 mb-3 text-[11px]">
-                <div class="p-2 bg-slate-100 dark:bg-slate-700/60 rounded-xl">
-                  <span class="text-[10px] text-slate-500 block">${t('scorecard_tables')}</span>
-                  <span class="font-bold text-slate-900 dark:text-white font-mono">${sr.table_count || 0} tables</span>
-                </div>
-                <div class="p-2 bg-slate-100 dark:bg-slate-700/60 rounded-xl">
-                  <span class="text-[10px] text-slate-500 block">${t('scorecard_terms')}</span>
-                  <span class="font-bold text-slate-900 dark:text-white font-mono">${(sr.terms || []).length || sr.term_count || 0} terms</span>
-                </div>
-                <div class="p-2 bg-slate-100 dark:bg-slate-700/60 rounded-xl">
-                  <span class="text-[10px] text-slate-500 block">EntryLinks</span>
-                  <span class="font-bold text-slate-900 dark:text-white font-mono">${sr.entry_link_count || ((sr.table_count || 0) + ((sr.terms || []).length || sr.term_count || 0))} links</span>
-                </div>
-              </div>
-
-              <!-- Strengths -->
-              <div class="space-y-1 mb-3">
-                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">${t('scorecard_strengths')}</span>
-                <ul class="text-[11px] text-slate-600 dark:text-slate-300 space-y-1">
-                  ${(item.strengths || []).map(s => `<li class="flex items-start gap-1.5"><i data-lucide="check" class="w-3.5 h-3.5 text-indigo-500 shrink-0 mt-0.5"></i><span>${escapeHtml(s)}</span></li>`).join('')}
-                </ul>
-              </div>
-
-              <!-- Domain Coverage Pills -->
-              ${item.domain_coverage ? `
-                <div class="pt-2 border-t border-slate-200 dark:border-slate-700/50">
-                  <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">${t('scorecard_coverage')}</span>
-                  <div class="flex flex-wrap gap-1 text-[9px]">
-                    ${Object.entries(item.domain_coverage).map(([k, v]) => `
-                      <span class="px-2 py-0.5 rounded-md font-mono ${v === 'High' ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300' : (v === 'Medium' ? 'bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-500')}">
-                        ${k.replace('_', ' ')}: ${v}
-                      </span>
-                    `).join('')}
-                  </div>
-                </div>
-              ` : ''}
-
-            </div>
-          </div>
-        `;
-      }).join('');
-
-      lucide.createIcons();
-    }
-
-    async function startMultiAgentConversation() {
-      const currentPreset = getPromptPreset(activePresetKey);
-      const pA = (document.getElementById('chatPromptA')?.value.trim()) || currentPreset.a;
-      const pB = (document.getElementById('chatPromptB')?.value.trim()) || currentPreset.b;
-      const pC = (document.getElementById('chatPromptC')?.value.trim()) || currentPreset.c;
-
-      const btn = document.getElementById('startMultiChatBtn');
+      const btn = document.getElementById('runChatDiscoveryBtn');
       const originalHtml = btn ? btn.innerHTML : "";
       if (btn) {
         btn.disabled = true;
         btn.innerHTML = `
-          <span class="inline-block w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-          <span>Preparing 3 Agents & Grounded Tables...</span>
+          <span class="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+          <span>Discovering Tables & Grounding 3 Agents...</span>
         `;
       }
 
       try {
-        let searchResults = compareChatsEvaluationData ? compareChatsEvaluationData.search_results : null;
-        if (!searchResults || searchResults.length < 3) {
-          const res = await fetch('/api/evaluate-prompts', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompts: [pA, pB, pC] })
-          });
-          if (res.ok) {
-            const data = await res.json();
-            compareChatsEvaluationData = data;
-            searchResults = data.search_results;
-          }
+        const res = await fetch('/api/multi-agents/prepare', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: prompt })
+        });
+
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${await res.text()}`);
         }
 
-        const srA = (searchResults && searchResults[0]) ? searchResults[0] : { tables: [], table_count: 29 };
-        const srB = (searchResults && searchResults[1]) ? searchResults[1] : { tables: [], table_count: 21 };
-        const srC = (searchResults && searchResults[2]) ? searchResults[2] : { tables: [], table_count: 20 };
+        const data = await res.json();
+        compareChatsDiscoveryData = data;
+        const tables = data.tables || [];
+        const count = data.table_count || tables.length;
 
-        multiAgents.A = {
-          name: "Agent A",
-          prompt: pA,
-          tables: srA.tables || [],
-          table_count: srA.table_count || 29,
-          session_id: 'SESS-AGENTA-' + Math.random().toString(36).substring(2, 9)
-        };
+        // Populate multiAgents state
+        ['A', 'B', 'C'].forEach(key => {
+          multiAgents[key].prompt = prompt;
+          multiAgents[key].tables = tables;
+          multiAgents[key].table_count = count;
+        });
 
-        multiAgents.B = {
-          name: "Agent B",
-          prompt: pB,
-          tables: srB.tables || [],
-          table_count: srB.table_count || 21,
-          session_id: 'SESS-AGENTB-' + Math.random().toString(36).substring(2, 9)
-        };
+        // Update Results UI
+        const resultsContainer = document.getElementById('chatResultsContainer');
+        if (resultsContainer) resultsContainer.classList.remove('hidden');
 
-        multiAgents.C = {
-          name: "Agent C",
-          prompt: pC,
-          tables: srC.tables || [],
-          table_count: srC.table_count || 20,
-          session_id: 'SESS-AGENTC-' + Math.random().toString(36).substring(2, 9)
-        };
+        const badge = document.getElementById('chatDiscoveryCountBadge');
+        if (badge) badge.textContent = `${count} TABLES GROUNDED`;
 
-        try {
-          await fetch('/api/multi-agents/prepare', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              agents: [
-                { name: "Agent A", tables: multiAgents.A.tables },
-                { name: "Agent B", tables: multiAgents.B.tables },
-                { name: "Agent C", tables: multiAgents.C.tables }
-              ]
-            })
-          });
-        } catch (prepErr) {
-          console.warn("Notice: Multi-agent GCP preparation background notice:", prepErr);
+        const summary = document.getElementById('chatDiscoverySummaryText');
+        if (summary) {
+          summary.textContent = `Knowledge Catalog discovered ${count} tables, ${data.term_count || 0} business terms, and ${data.entry_link_count || 0} EntryLinks. Exactly identical table schemas mapped simultaneously across Agent A (ecommerce_dw), Agent B (ecommerce_dw_2nd), and Agent C (ecommerce_dw_3rd).`;
         }
 
-        const badgeA = document.getElementById('multiBadgeA');
-        const badgeB = document.getElementById('multiBadgeB');
-        const badgeC = document.getElementById('multiBadgeC');
-        const headerA = document.getElementById('multiPromptHeaderA');
-        const headerB = document.getElementById('multiPromptHeaderB');
-        const headerC = document.getElementById('multiPromptHeaderC');
+        const tablesCountSpan = document.getElementById('chatTablesCountSpan');
+        if (tablesCountSpan) tablesCountSpan.textContent = count;
 
-        if (badgeA) badgeA.textContent = t('tables_mapped_badge', { count: multiAgents.A.table_count });
-        if (badgeB) badgeB.textContent = t('tables_mapped_badge', { count: multiAgents.B.table_count });
-        if (badgeC) badgeC.textContent = t('tables_mapped_badge', { count: multiAgents.C.table_count });
-
-        if (headerA) headerA.textContent = pA;
-        if (headerB) headerB.textContent = pB;
-        if (headerC) headerC.textContent = pC;
-
-        closeCompareChatsModal();
-        switchToMultiAgentWorkspaceView();
-
-        resetMultiAgentUI();
-        setupAgentWelcomeMessage('A', multiAgents.A);
-        setupAgentWelcomeMessage('B', multiAgents.B);
-        setupAgentWelcomeMessage('C', multiAgents.C);
-
-        showFloatingToast(`🤖 3 Agents Initialized (Agent A: ${multiAgents.A.table_count} tables, Agent B: ${multiAgents.B.table_count} tables, Agent C: ${multiAgents.C.table_count} tables)!`);
+        const tagList = document.getElementById('chatDiscoveredTablesList');
+        if (tagList) {
+          tagList.innerHTML = tables.map(t => `
+            <span class="px-2 py-0.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-[10px] text-slate-700 dark:text-slate-300">
+              ${escapeHtml(t)}
+            </span>
+          `).join('');
+        }
 
       } catch (err) {
-        console.error("Error starting multi-agent conversation:", err);
-        alert("Could not start multi-agent conversation: " + err.message);
+        console.error("Knowledge Catalog discovery error:", err);
+        alert("Discovery & Grounding failed: " + err.message);
       } finally {
         if (btn) {
           btn.disabled = false;
@@ -6101,11 +6104,89 @@
       }
     }
 
+    function setAgentThinkingMode(key, mode) {
+      agentThinkingModes[key] = (mode === 'FAST' ? 'FAST' : 'THINKING');
+      const fastBtn = document.getElementById(`agentThinkingBtn_${key}_fast`);
+      const thinkBtn = document.getElementById(`agentThinkingBtn_${key}_thinking`);
+      const color = key === 'A' ? 'blue' : (key === 'B' ? 'indigo' : 'purple');
+      if (fastBtn && thinkBtn) {
+        if (agentThinkingModes[key] === 'FAST') {
+          fastBtn.className = 'px-2 py-0.5 rounded-md flex items-center gap-1 transition bg-white dark:bg-slate-700 text-amber-600 dark:text-amber-400 font-bold shadow-2xs cursor-pointer text-[10px]';
+          thinkBtn.className = 'px-2 py-0.5 rounded-md flex items-center gap-1 transition text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white cursor-pointer text-[10px]';
+        } else {
+          thinkBtn.className = `px-2 py-0.5 rounded-md flex items-center gap-1 transition bg-${color}-100 dark:bg-slate-700 text-${color}-700 dark:text-${color}-300 font-bold shadow-2xs cursor-pointer text-[10px]`;
+          fastBtn.className = 'px-2 py-0.5 rounded-md flex items-center gap-1 transition text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white cursor-pointer text-[10px]';
+        }
+      }
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function setAllAgentsThinkingMode(mode) {
+      ['A', 'B', 'C'].forEach(key => setAgentThinkingMode(key, mode));
+    }
+
+    function populateColumnInputs() {
+      const masterInput = document.getElementById('multiPromptInput');
+      const text = masterInput ? masterInput.value.trim() : '';
+      if (!text) return;
+      ['A', 'B', 'C'].forEach(key => {
+        const inp = document.getElementById(`inputAgent${key}`);
+        if (inp) inp.value = text;
+      });
+    }
+
+    async function startMultiAgentConversation() {
+      const input = document.getElementById('chatDiscoveryPrompt');
+      const prompt = input ? input.value.trim() : "Prepare sales, marketing, ads, inventory, all connected business domains data";
+
+      if (!compareChatsDiscoveryData || !compareChatsDiscoveryData.tables || compareChatsDiscoveryData.tables.length === 0) {
+        await runChatIsolationDiscovery();
+      }
+
+      const count = (compareChatsDiscoveryData && compareChatsDiscoveryData.table_count) || 37;
+
+      // Assign session IDs
+      ['A', 'B', 'C'].forEach(key => {
+        multiAgents[key].session_id = `SESS-AGENT${key}-` + Math.random().toString(36).substring(2, 9).toUpperCase();
+        multiAgents[key].table_count = count;
+      });
+
+      // Update Column Headers
+      const headerA = document.getElementById('multiPromptHeaderA');
+      const headerB = document.getElementById('multiPromptHeaderB');
+      const headerC = document.getElementById('multiPromptHeaderC');
+      if (headerA) headerA.textContent = prompt;
+      if (headerB) headerB.textContent = prompt;
+      if (headerC) headerC.textContent = prompt;
+
+      closeCompareChatsModal();
+      switchToMultiAgentWorkspaceView();
+
+      resetMultiAgentUI();
+      setupAgentWelcomeMessage('A', multiAgents.A);
+      setupAgentWelcomeMessage('B', multiAgents.B);
+      setupAgentWelcomeMessage('C', multiAgents.C);
+    }
+
     function setupAgentWelcomeMessage(key, agent) {
       const thread = document.getElementById(`threadAgent${key}`);
       if (!thread) return;
 
       const color = key === 'A' ? 'blue' : (key === 'B' ? 'indigo' : 'purple');
+      let tierBadge = "";
+      let tierDesc = "";
+
+      if (key === 'A') {
+        tierBadge = "Tier A: Full Knowledge Catalog (ecommerce_dw)";
+        tierDesc = "Benchmark agent with rich column descriptions, 85 business glossary terms linked via EntryLinks, and custom governance aspects. Demonstrates complete semantic business understanding.";
+      } else if (key === 'B') {
+        tierBadge = "Tier B: Isolated - Descriptions Only (ecommerce_dw_2nd)";
+        tierDesc = "Physical BigQuery replica with column descriptions preserved, but ZERO Knowledge Catalog glossary terms, ZERO EntryLinks, and ZERO custom aspects. Tests schema descriptions without enterprise semantics.";
+      } else {
+        tierBadge = "Tier C: Isolated - Raw Schema Only (ecommerce_dw_3rd)";
+        tierDesc = "Physical BigQuery replica completely stripped of descriptions, glossary terms, EntryLinks, and aspects. Tests zero-metadata baseline LLM syntactic reasoning against raw column and table names.";
+      }
+
       thread.innerHTML = `
         <div class="flex gap-2.5">
           <div class="w-7 h-7 rounded-full bg-${color}-100 dark:bg-${color}-950 text-${color}-800 dark:text-${color}-200 flex items-center justify-center shrink-0 mt-0.5 shadow-2xs font-bold text-xs">
@@ -6114,15 +6195,31 @@
           <div class="flex-1 bg-white dark:bg-slate-800 border border-slate-200/90 dark:border-slate-700 p-3.5 rounded-2xl rounded-tl-sm space-y-2 shadow-2xs leading-relaxed">
             <div class="flex items-center gap-1.5 font-bold text-${color}-600 dark:text-${color}-400 text-xs">
               <i data-lucide="bot" class="w-3.5 h-3.5"></i>
-              <span>${t('agent_online_title', { name: agent.name })}</span>
+              <span>Agent ${key} Online &bull; ${tierBadge}</span>
             </div>
-            <p class="text-slate-600 dark:text-slate-300 text-xs">
-              ${t('agent_online_desc', { count: agent.table_count, key: key })}
+            <p class="text-slate-600 dark:text-slate-300 text-xs leading-relaxed">
+              ${tierDesc}
             </p>
+            <div class="text-[10px] font-mono text-slate-400 dark:text-slate-500 pt-1 border-t border-slate-100 dark:border-slate-700">
+              Grounded Tables: ${agent.table_count || 37} &bull; Dataset: ${agent.dataset || (key === 'A' ? 'ecommerce_dw' : (key === 'B' ? 'ecommerce_dw_2nd' : 'ecommerce_dw_3rd'))}
+            </div>
           </div>
         </div>
       `;
       lucide.createIcons();
+    }
+
+    async function handleSingleAgentSubmit(e, key) {
+      if (e) e.preventDefault();
+      const input = document.getElementById(`inputAgent${key}`);
+      if (!input) return;
+      const query = input.value.trim();
+      if (!query) return;
+
+      input.value = '';
+      appendUserMessageToAgentThread(key, query);
+      appendAgentLoadingToThread(key);
+      await querySingleAgent(key, query);
     }
 
     async function sendMultiAgentPrompt(query) {
@@ -6216,7 +6313,7 @@
             user_name: currentUserName,
             menu_item: 'compare chats',
             agent_no: 'agent' + key,
-            thinking_mode: currentMultiThinkingMode || 'THINKING'
+            thinking_mode: agentThinkingModes[key] || 'THINKING'
           })
         });
 
@@ -6406,7 +6503,6 @@
         multiAgents[key].session_id = `SESS-AGENT${key}-` + Math.random().toString(36).substring(2, 9);
         setupAgentWelcomeMessage(key, multiAgents[key]);
       });
-      showFloatingToast("🔄 Reset conversation context for Agent A, Agent B, and Agent C.");
     }
 
     // =========================================================================
@@ -6602,8 +6698,6 @@ Session ID: ${currentSessionId}
         findings: [],
         startTime: Date.now()
       };
-
-      showFloatingToast("🔄 Started new conversation thread.");
 
       try {
         await fetch('/api/conversation/reset', {

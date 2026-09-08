@@ -80,6 +80,25 @@ def test_dom_structure():
     assert send_btn is not None, "❌ #multiSendBtn missing!"
     print("   ✅ Synchronized multi-prompt input bar verified.")
 
+    # Check 3-Tier Discovery Elements
+    discovery_prompt = soup.find(id="chatDiscoveryPrompt")
+    discovery_btn = soup.find(id="runChatDiscoveryBtn")
+    assert discovery_prompt is not None, "❌ #chatDiscoveryPrompt missing!"
+    assert discovery_btn is not None, "❌ #runChatDiscoveryBtn missing!"
+    print("   ✅ Single Knowledge Catalog discovery prompt and button verified.")
+
+    # Check Per-Agent Independent Thinking Toggles and Column Inputs
+    for key in ['A', 'B', 'C']:
+        fast_btn = soup.find(id=f"agentThinkingBtn_{key}_fast")
+        think_btn = soup.find(id=f"agentThinkingBtn_{key}_thinking")
+        col_input = soup.find(id=f"inputAgent{key}")
+        col_send = soup.find(id=f"sendBtnAgent{key}")
+        assert fast_btn is not None, f"❌ #agentThinkingBtn_{key}_fast missing!"
+        assert think_btn is not None, f"❌ #agentThinkingBtn_{key}_thinking missing!"
+        assert col_input is not None, f"❌ #inputAgent{key} missing!"
+        assert col_send is not None, f"❌ #sendBtnAgent{key} missing!"
+        print(f"   ✅ Agent {key} verified: Independent Thinking Toggle & Column Input.")
+
 def test_multi_agent_backend_endpoints():
     print("\n🚀 2. Testing 3 Separate Google Cloud Data Agents in Parallel...")
     
@@ -87,6 +106,18 @@ def test_multi_agent_backend_endpoints():
     health_res = requests.get(f"{BASE_URL}/api/health", timeout=15.0)
     assert health_res.status_code == 200, f"Health check failed: {health_res.text}"
     print(f"   ✅ Backend is healthy.")
+
+    # Test /api/multi-agents/prepare endpoint with unified discovery prompt
+    print("   Testing /api/multi-agents/prepare with unified discovery prompt...")
+    prep_res = requests.post(f"{BASE_URL}/api/multi-agents/prepare", json={
+        "prompt": "Prepare sales, marketing, ads, inventory, all connected business domains data"
+    }, timeout=60.0)
+    assert prep_res.status_code == 200, f"/api/multi-agents/prepare failed: {prep_res.text}"
+    prep_data = prep_res.json()
+    assert prep_data.get("status") == "success", f"Prepare status not success: {prep_data}"
+    tables = prep_data.get("tables", [])
+    assert len(tables) > 0, "No tables returned from /api/multi-agents/prepare!"
+    print(f"   ✅ /api/multi-agents/prepare succeeded: {len(tables)} tables discovered and mapped across 3 tiers.")
 
     # Test inquiring table count across all 3 agents
     prompt = "how many tables do you have"

@@ -37,6 +37,8 @@ load_dotenv()
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "")
 DATASET_ID = os.environ.get("BQ_DATASET_ID", "ecommerce_dw")
+DATASET_2ND_ID = os.environ.get("BQ_DATASET_2ND_ID", f"{DATASET_ID}_2nd")
+DATASET_3RD_ID = os.environ.get("BQ_DATASET_3RD_ID", f"{DATASET_ID}_3rd")
 REGION = os.environ.get("BQ_LOCATION", "us-central1").lower()
 DATA_AGENT_ID = os.environ.get("DATA_AGENT_ID") or os.environ.get("CA_DATA_AGENT_ID", "gda-blackweek-primary")
 DATA_AGENT_A_ID = os.environ.get("DATA_AGENT_A_ID", "gda-blackweek-a")
@@ -128,8 +130,13 @@ def main():
     print("🚀 LUMIÈRESHOP CLOUD RUN AUTOMATED DEPLOYER")
     print(f"Target Project ID : {PROJECT_ID}")
     print(f"Target Region     : {REGION}")
-    print(f"BigQuery Dataset  : {DATASET_ID}")
-    print(f"Data Agent ID     : {DATA_AGENT_ID}")
+    print(f"BigQuery Primary  : {DATASET_ID}")
+    print(f"BigQuery 2nd (B)  : {DATASET_2ND_ID}")
+    print(f"BigQuery 3rd (C)  : {DATASET_3RD_ID}")
+    print(f"Primary Agent ID  : {DATA_AGENT_ID}")
+    print(f"Compare Agent A   : {DATA_AGENT_A_ID}")
+    print(f"Compare Agent B   : {DATA_AGENT_B_ID}")
+    print(f"Compare Agent C   : {DATA_AGENT_C_ID}")
     print("=" * 80)
 
     if not PROJECT_ID:
@@ -234,6 +241,8 @@ def main():
     env_vars = (
         f"GCP_PROJECT_ID={project_id},"
         f"BQ_DATASET_ID={DATASET_ID},"
+        f"BQ_DATASET_2ND_ID={DATASET_2ND_ID},"
+        f"BQ_DATASET_3RD_ID={DATASET_3RD_ID},"
         f"BQ_LOCATION={REGION},"
         f"CA_API_HOST=https://geminidataanalytics.googleapis.com,"
         f"CA_API_ENDPOINT=https://geminidataanalytics.googleapis.com/v1beta/projects/{project_id}/locations/global:chat,"

@@ -42,36 +42,44 @@ load_dotenv()
 
 PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "")
 DATASET_ID = os.environ.get("BQ_DATASET_ID", "ecommerce_dw")
+DATASET_2ND_ID = os.environ.get("BQ_DATASET_2ND_ID", f"{DATASET_ID}_2nd")
+DATASET_3RD_ID = os.environ.get("BQ_DATASET_3RD_ID", f"{DATASET_ID}_3rd")
 DATA_AGENT_ID = os.environ.get("DATA_AGENT_ID") or os.environ.get("CA_DATA_AGENT_ID", "gda-blackweek-primary")
 DATA_AGENT_A_ID = os.environ.get("DATA_AGENT_A_ID", "gda-blackweek-a")
 DATA_AGENT_B_ID = os.environ.get("DATA_AGENT_B_ID", "gda-blackweek-b")
 DATA_AGENT_C_ID = os.environ.get("DATA_AGENT_C_ID", "gda-blackweek-c")
 
-PROMPTS = {
-    "primary": (
-        "DATA_AGENT_ID",
-        DATA_AGENT_ID,
-        "LumiereShop Primary Data Agent",
-        "Prepare sales, marketing, ads, inventory, all connected business domains data"
-    ),
-    "agent_a": (
-        "DATA_AGENT_A_ID",
-        DATA_AGENT_A_ID,
-        "LumiereShop Data Agent A",
-        "Why did Beauty category miss target revenue during Black Week?"
-    ),
-    "agent_b": (
-        "DATA_AGENT_B_ID",
-        DATA_AGENT_B_ID,
-        "LumiereShop Data Agent B",
-        "Show stock-out interactions and lost revenue for Beauty products SKU-1001, SKU-1002, SKU-1003."
-    ),
-    "agent_c": (
-        "DATA_AGENT_C_ID",
-        DATA_AGENT_C_ID,
-        "LumiereShop Data Agent C",
-        "Show 15-minute intraday target vs actual revenue curve for Beauty on Friday."
-    ),
+PROMPT = "Prepare sales, marketing, ads, inventory, all connected business domains data"
+
+AGENTS_CONFIG = {
+    "primary": {
+        "env_key": "DATA_AGENT_ID",
+        "agent_id": DATA_AGENT_ID,
+        "display_name": "LumiereShop Primary Data Agent",
+        "dataset_id": DATASET_ID,
+        "tier": "Primary Single-Agent Workspace (ecommerce_dw)",
+    },
+    "agent_a": {
+        "env_key": "DATA_AGENT_A_ID",
+        "agent_id": DATA_AGENT_A_ID,
+        "display_name": "LumiereShop Data Agent A (Full KC)",
+        "dataset_id": DATASET_ID,
+        "tier": "Tier A: Full Knowledge Catalog Grounding (ecommerce_dw)",
+    },
+    "agent_b": {
+        "env_key": "DATA_AGENT_B_ID",
+        "agent_id": DATA_AGENT_B_ID,
+        "display_name": "LumiereShop Data Agent B (Descriptions Only)",
+        "dataset_id": DATASET_2ND_ID,
+        "tier": "Tier B: Isolated - Descriptions Only (ecommerce_dw_2nd)",
+    },
+    "agent_c": {
+        "env_key": "DATA_AGENT_C_ID",
+        "agent_id": DATA_AGENT_C_ID,
+        "display_name": "LumiereShop Data Agent C (Raw Schema)",
+        "dataset_id": DATASET_3RD_ID,
+        "tier": "Tier C: Isolated - Raw Schema Only (ecommerce_dw_3rd)",
+    },
 }
 
 
@@ -143,24 +151,63 @@ def search_knowledge_catalog_dynamic(prompt: str, token: str) -> List[str]:
         return []
 
 
-def provision_or_update_data_agent(agent_id: str, display_name: str, description: str, tables: List[str], headers: Dict[str, str]) -> tuple:
+AGENT_SYSTEM_INSTRUCTION = "Today is Friday, November 27th, 2026"
+
+CORE_INVESTIGATION_TABLES = [
+    "categories", "products", "distribution_centers", "inventory_items", "inventory_snapshots",
+    "users", "orders", "order_items", "sales_event_stream", "weekly_commercial_targets",
+    "daily_category_targets", "category_15min_targets", "web_sessions", "web_events",
+    "oos_interactions", "competitor_price_feed", "marketing_campaigns", "daily_ad_performance",
+    "ad_bidding_log", "ad_creatives", "payment_gateway_logs", "influencer_campaigns",
+    "catalog_recommender_logs", "shipping_lead_times", "competitor_promotions"
+]
+
+
+def discover_warehouse_tables_fallback() -> List[str]:
+    """
+    Fallback: Discovers available tables directly from BigQuery dataset when
+    Knowledge Catalog semantic index is still warming up during cold start.
+    """
+    try:
+        from google.cloud import bigquery
+        client = bigquery.Client(project=PROJECT_ID)
+        tables = [t.table_id for t in client.list_tables(DATASET_ID)]
+        if tables:
+            core_present = [t for t in CORE_INVESTIGATION_TABLES if t in tables]
+            if len(core_present) >= 15:
+                return core_present
+            return tables[:25]
+    except Exception as e:
+        print(f"  Notice: BigQuery warehouse table listing: {e}")
+    return CORE_INVESTIGATION_TABLES
+
+
+def provision_or_update_data_agent(
+    agent_id: str,
+    display_name: str,
+    description: str,
+    tables: List[str],
+    headers: Dict[str, str],
+    target_dataset: str = DATASET_ID,
+) -> tuple:
     """
     Idempotently creates or updates a BigQuery Data Agent in Google Cloud with dynamically discovered tables.
     Returns (success: bool, active_agent_id: str).
     """
     table_refs = [
-        {"projectId": PROJECT_ID, "datasetId": DATASET_ID, "tableId": t_name}
+        {"projectId": PROJECT_ID, "datasetId": target_dataset, "tableId": t_name}
         for t_name in sorted(set(tables))
     ]
 
     agent_url = f"https://geminidataanalytics.googleapis.com/v1beta/projects/{PROJECT_ID}/locations/global/dataAgents/{agent_id}"
-    patch_url = f"{agent_url}?updateMask=displayName,description,dataAnalyticsAgent.publishedContext.datasourceReferences"
+    patch_url = f"{agent_url}?updateMask=displayName,description,dataAnalyticsAgent.publishedContext.datasourceReferences,dataAnalyticsAgent.publishedContext.systemInstruction"
 
     payload = {
         "displayName": display_name,
         "description": description,
         "dataAnalyticsAgent": {
             "publishedContext": {
+                "systemInstruction": AGENT_SYSTEM_INSTRUCTION,
                 "datasourceReferences": {
                     "bq": {
                         "tableReferences": table_refs
@@ -201,40 +248,13 @@ def provision_or_update_data_agent(agent_id: str, display_name: str, description
         print(f"  ❌ Error contacting Conversational Analytics API: {e}", file=sys.stderr)
         return False, agent_id
 
-
-CORE_INVESTIGATION_TABLES = [
-    "categories", "products", "distribution_centers", "inventory_items", "inventory_snapshots",
-    "users", "orders", "order_items", "sales_event_stream", "weekly_commercial_targets",
-    "daily_category_targets", "category_15min_targets", "web_sessions", "web_events",
-    "oos_interactions", "competitor_price_feed", "marketing_campaigns", "daily_ad_performance",
-    "ad_bidding_log", "ad_creatives", "payment_gateway_logs", "influencer_campaigns",
-    "catalog_recommender_logs", "shipping_lead_times", "competitor_promotions"
-]
-
-
-def discover_warehouse_tables_fallback() -> List[str]:
-    """
-    Fallback: Discovers available tables directly from BigQuery dataset when
-    Knowledge Catalog semantic index is still warming up during cold start.
-    """
-    try:
-        from google.cloud import bigquery
-        client = bigquery.Client(project=PROJECT_ID)
-        tables = [t.table_id for t in client.list_tables(DATASET_ID)]
-        if tables:
-            core_present = [t for t in CORE_INVESTIGATION_TABLES if t in tables]
-            if len(core_present) >= 15:
-                return core_present
-            return tables[:25]
-    except Exception as e:
-        print(f"  Notice: BigQuery warehouse table listing: {e}")
-    return CORE_INVESTIGATION_TABLES
-
-
 def main():
     print("=" * 80)
     print("🔍 LUMIÈRESHOP DYNAMIC KNOWLEDGE CATALOG AGENT GROUNDING")
-    print(f"Project: {PROJECT_ID} | Dataset: {DATASET_ID}")
+    print(f"Project   : {PROJECT_ID}")
+    print(f"Primary   : {DATASET_ID} (Full Knowledge Catalog Grounding)")
+    print(f"Isolated 2: {DATASET_2ND_ID} (Descriptions Only, 0 Glossary/EntryLinks)")
+    print(f"Isolated 3: {DATASET_3RD_ID} (Raw Schema Only, 0 Descriptions)")
     print("=" * 80)
 
     token = get_access_token()
@@ -248,27 +268,38 @@ def main():
         "x-goog-user-project": PROJECT_ID
     }
 
+    # Discover tables once via Knowledge Catalog semantic search
+    print(f"\n[Dynamic Discovery] Querying Knowledge Catalog with unified prompt:")
+    print(f"  Prompt: '{PROMPT}'")
+    discovered_tables = search_knowledge_catalog_dynamic(PROMPT, token)
+    
+    if not discovered_tables:
+        print("  ℹ️ Knowledge Catalog returned 0 tables (indexing in progress). Using resilient warehouse fallback...")
+        discovered_tables = discover_warehouse_tables_fallback()
+
+    print(f"  Discovered {len(discovered_tables)} tables for all agents:")
+    print(f"  Tables: {discovered_tables}")
+
     success_count = 0
     configured_agents = {}
-    for key, (env_key, agent_id, display_name, prompt) in PROMPTS.items():
-        print(f"\n[Dynamic Discovery] Querying Knowledge Catalog for: '{prompt[:60]}...'")
-        discovered_tables = search_knowledge_catalog_dynamic(prompt, token)
-        
-        if not discovered_tables:
-            print("  ℹ️ Knowledge Catalog returned 0 tables (indexing in progress). Using resilient warehouse fallback...")
-            discovered_tables = discover_warehouse_tables_fallback()
+    for key, cfg in AGENTS_CONFIG.items():
+        env_key = cfg["env_key"]
+        agent_id = cfg["agent_id"]
+        display_name = cfg["display_name"]
+        target_dataset = cfg["dataset_id"]
+        tier_info = cfg["tier"]
 
-        print(f"  Discovered {len(discovered_tables)} tables for Agent '{agent_id}':")
-        print(f"  Tables: {discovered_tables}")
-
-        desc = f"Grounded with {len(discovered_tables)} tables discovered via Knowledge Catalog semantic discovery."
-        ok, active_id = provision_or_update_data_agent(agent_id, display_name, desc, discovered_tables, headers)
+        print(f"\n[Grounding] {tier_info}")
+        desc = f"Grounded with {len(discovered_tables)} tables ({target_dataset}). {tier_info}."
+        ok, active_id = provision_or_update_data_agent(
+            agent_id, display_name, desc, discovered_tables, headers, target_dataset=target_dataset
+        )
         if ok:
             success_count += 1
-            configured_agents[env_key] = active_id
+            configured_agents[env_key] = f"{active_id} -> {target_dataset}"
 
     print("\n" + "=" * 80)
-    print(f"DYNAMIC GROUNDING COMPLETE: {success_count}/{len(PROMPTS)} agents dynamically configured.")
+    print(f"DYNAMIC GROUNDING COMPLETE: {success_count}/{len(AGENTS_CONFIG)} agents dynamically configured.")
     for k, v in configured_agents.items():
         print(f"  • {k:<18} : {v}")
     print("=" * 80)

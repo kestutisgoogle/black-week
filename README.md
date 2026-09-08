@@ -29,16 +29,64 @@ Traditional static dashboards show aggregate top-line drops but fail to pinpoint
 
 LumièreShop is built on a clean, decoupled, cloud-native architecture connecting a single-page application to Google Cloud data and AI services:
 
+```mermaid
+flowchart TD
+    subgraph UI_Layer ["🖥️ Frontend & Workspace UI (Material Design 3)"]
+        S1["Screen 1: Google Workspace Alert & Discovery"]
+        S2["Screen 2: CMO Conversational Workspace"]
+        S3["Screen 3: Root Cause Solution Summary"]
+        PS["Prompt Optimization Studio (3 Prompts)"]
+        MC["3-Agent Parallel Cockpit (Compare Chats)"]
+    end
+
+    subgraph Backend_Layer ["⚡ Backend API (FastAPI / Python 3.13)"]
+        API["FastAPI Gateway (/api/*)"]
+        DISC["Knowledge Catalog Discovery Service"]
+        EVAL["Prompt Evaluator (Gemini 3.7 Flash)"]
+        CA_SVC["Conversational Analytics Client"]
+        I18N["Multilingual Engine (25 Languages)"]
+    end
+
+    subgraph GCP_Cloud ["☁️ Google Cloud Platform Infrastructure"]
+        KC["Google Cloud Knowledge Catalog\n(Global Semantic Search & Glossary)"]
+        BQ["BigQuery Data Warehouse\n(ecommerce_dw: 140 Tables)"]
+        BQ_ISO["BigQuery Isolation Datasets\n(ecommerce_dw_2nd, ecommerce_dw_3rd)"]
+        DA["Gemini Enterprise Agent Platform\n(Conversational Analytics API)"]
+        CR["Google Cloud Run\n(Containerized Microservice)"]
+    end
+
+    S1 -->|Prepare Data / Query| API
+    S2 -->|Chat Inquiry| API
+    PS -->|Evaluate Prompts| API
+    MC -->|Parallel Query| API
+    API --> DISC
+    API --> EVAL
+    API --> CA_SVC
+    DISC -->|Semantic Search| KC
+    EVAL -->|Scoring & Analysis| DA
+    CA_SVC -->|Grounded SQL & Chat| DA
+    DA -->|Execute SQL| BQ
+    DA -->|Execute SQL (Tiers B & C)| BQ_ISO
+    CR -->|Hosts Container| Backend_Layer
+```
+
 ![LumièreShop System Architecture](docs/images/architecture_diagram.png)
 
 ### Core Architectural Pillars
 
-1. **Semantic Discovery Layer (Google Cloud Knowledge Catalog)**:
-2. **Dynamic Agent Grounding (Conversational Analytics API)**:
-3. **Server-Managed Stateful Multi-Turn Dialogue**:
-4. **Multi-Prompt Comparative Evaluation Studio (Gemini Enterprise Agent Platform / Gemini 3.7 Flash)**:
-5. **3-Agent Parallel Conversational Cockpit ("Compare Chats")**:
-6. **Forensic Telemetry & Audit Logging**:
+1. **Semantic Discovery Layer (Google Cloud Knowledge Catalog)**: Executes live semantic search against Google Cloud Knowledge Catalog to dynamically discover relevant BigQuery tables from the 140-table data warehouse, matching business incident inquiries against semantic descriptions, 85 business glossary terms, and custom aspect templates with zero hardcoded table biases.
+2. **Dynamic Agent Grounding & System Instructions (Conversational Analytics API)**: Dynamically patches Google Cloud BigQuery Data Agents (`dataAnalyticsAgent.publishedContext.datasourceReferences.bq.tableReferences`) with discovered table clusters. Crucially, all agents are persistently configured with the system instruction: `"Today is Friday, November 27th, 2026"` (`publishedContext.systemInstruction`), preventing SQL models from defaulting to `CURRENT_DATE()` and anchoring all relative time calculations ("today", "yesterday", "this week") to the Black Week crisis window.
+3. **Server-Managed Stateful Multi-Turn Dialogue**: Maintains server-side persistent conversation resources (`projects/{project}/locations/global/conversations/{uuid}`) via the Conversational Analytics API, preserving context across multi-turn exchanges for seamless pronoun resolution ("that category", "compare it with last year").
+4. **Multi-Prompt Comparative Evaluation Studio (Gemini Enterprise Agent Platform / Gemini 3.7 Flash)**: Evaluates candidate prompts across Knowledge Catalog semantic search metrics without modifying BigQuery Data Agents, scoring table volume, domain coverage, and glossary alignment with strict grading differentiation.
+5. **3-Agent Parallel Conversational Cockpit ("Compare Chats" & 3-Tier Metadata Isolation)**:
+   - Evaluates the tangible value of metadata grounding by comparing three models side-by-side:
+     - **Tier A (Agent A)**: Primary dataset (`ecommerce_dw`) with **Full Knowledge Catalog Grounding** (column & table descriptions, 85 business glossary terms linked via EntryLinks, and custom governance aspects).
+     - **Tier B (Agent B)**: Replica dataset (`ecommerce_dw_2nd`) with **Descriptions Only** (column & table descriptions preserved, but **0 glossary terms, 0 EntryLinks, 0 custom aspects**).
+     - **Tier C (Agent C)**: Replica dataset (`ecommerce_dw_3rd`) with **Raw Schema Only** (**0 column descriptions, 0 glossary terms, 0 EntryLinks, 0 custom aspects**).
+   - **Unified Table Discovery**: Uses a single prompt to Knowledge Catalog to dynamically discover warehouse tables once, mapping the exact identical table cluster across all 3 agents simultaneously.
+   - **Dual-Mode Querying**: Allows broadcasting a question across all 3 agents at once, with the ability to modify/overwrite prompts per agent individually in dedicated column input boxes.
+   - **Independent Fast/Thinking Controls**: Each agent has its own independent `[⚡ Fast / 🧠 Thinking]` toggle button.
+6. **Forensic Telemetry & Audit Logging**: Asynchronously logs every analytical interaction, generated BigQuery SQL query, reasoning breakdown, Vega-Lite chart spec, execution latency, and scanned byte count into BigQuery `ecommerce_dw.agent_interaction_logs`, tagged with operator identity (`user_name`), menu context (`menu_item`), and agent column identifier (`agent_no`).
 
 ---
 
@@ -111,17 +159,60 @@ Copy the environment template file:
 cp .env.example .env
 ```
 
-Edit `.env` with your project details:
+Edit `.env` with your project details. **Only 2 variables are mandatory** (`GCP_PROJECT_ID` and `GCP_USER_IDENTITY`). All other variables have production-ready defaults and can be left as-is:
 
 ```ini
-# Google Cloud Platform & BigQuery Configuration
-GCP_PROJECT_ID=YOUR_GCP_PROJECT_ID
-GCP_USER_IDENTITY=YOUR_EMAIL@yourdomain.com # used to tag operator identity in BigQuery audit logs (agent_interaction_logs table).
-BQ_DATASET_ID=ecommerce_dw
-BQ_LOCATION=YOUR_GCP_REGION # e.g. europe-west4 or other preferred region
+# ==============================================================================
+# 1. Mandatory Google Cloud Platform Configuration (Must be provided by user)
+# ==============================================================================
+GCP_PROJECT_ID=your-gcp-project-id              # Your Google Cloud Project ID
+GCP_USER_IDENTITY=user@example.com              # Your email identity for audit log tracking
 
+# ==============================================================================
+# 2. Regional & BigQuery Dataset Configuration (Pre-configured defaults)
+# ==============================================================================
+BQ_LOCATION=europe-west4                        # BigQuery region (e.g. europe-west4, us-central1)
+BQ_DATASET_ID=ecommerce_dw                      # Primary dataset for Tier A (Full Knowledge Catalog)
+BQ_DATASET_2ND_ID=ecommerce_dw_2nd              # Replica dataset for Tier B (Descriptions Only)
+BQ_DATASET_3RD_ID=ecommerce_dw_3rd              # Replica dataset for Tier C (Raw Schema Only)
+
+# ==============================================================================
+# 3. Gemini Enterprise Agent Platform (Conversational Analytics API)
+# ==============================================================================
+CA_API_HOST=https://geminidataanalytics.googleapis.com
+CA_API_ENDPOINT=https://geminidataanalytics.googleapis.com/v1beta/projects/${GCP_PROJECT_ID}/locations/global:chat
+DATA_AGENT_ID=gda-blackweek-primary             # Primary Single-Agent Workspace Data Agent ID
+DATA_AGENT_A_ID=gda-blackweek-a                 # 3-Agent Cockpit Tier A Data Agent ID
+DATA_AGENT_B_ID=gda-blackweek-b                 # 3-Agent Cockpit Tier B Data Agent ID
+DATA_AGENT_C_ID=gda-blackweek-c                 # 3-Agent Cockpit Tier C Data Agent ID
+
+# ==============================================================================
+# 4. UI Screen Flow Configuration (Operator Entry Screen)
+# ==============================================================================
+USER_NAME_SCREEN=on                             # "on" to show operator entry screen; "off" to bypass
 ```
----
+
+#### Environment Variables Breakdown Table
+
+| Variable | Status | Default Value | Description |
+|---|---|---|---|
+| `GCP_PROJECT_ID` | **Mandatory** | *None* | Target Google Cloud Project ID hosting BigQuery, Knowledge Catalog, and Cloud Run. |
+| `GCP_USER_IDENTITY` | **Mandatory** | *None* | Operator email address tagged into BigQuery audit logs (`agent_interaction_logs`). |
+| `BQ_LOCATION` | Optional | `europe-west4` | Region where BigQuery datasets and storage slots are provisioned. |
+| `BQ_DATASET_ID` | Optional | `ecommerce_dw` | Primary dataset containing all 140 operational tables and Knowledge Catalog bindings. |
+| `BQ_DATASET_2ND_ID` | Optional | `ecommerce_dw_2nd` | Isolated dataset for Tier B (Descriptions only, 0 glossary terms/EntryLinks). |
+| `BQ_DATASET_3RD_ID` | Optional | `ecommerce_dw_3rd` | Isolated dataset for Tier C (Raw schema only, 0 descriptions/glossary). |
+| `CA_API_HOST` | Optional | `https://geminidataanalytics.googleapis.com` | Base host for Google Cloud Gemini Data Analytics REST API. |
+| `CA_API_ENDPOINT` | Optional | `.../locations/global:chat` | Chat endpoint for stateful data agent interactions. |
+| `DATA_AGENT_ID` | Optional | `gda-blackweek-primary` | Resource ID for the primary CMO workspace data agent. |
+| `DATA_AGENT_A_ID` | Optional | `gda-blackweek-a` | Resource ID for Agent A in the 3-Agent Parallel Cockpit. |
+| `DATA_AGENT_B_ID` | Optional | `gda-blackweek-b` | Resource ID for Agent B in the 3-Agent Parallel Cockpit. |
+| `DATA_AGENT_C_ID` | Optional | `gda-blackweek-c` | Resource ID for Agent C in the 3-Agent Parallel Cockpit. |
+| `USER_NAME_SCREEN` | Optional | `on` | Controls whether the initial operator name entry screen is enabled (`on`/`off`). |
+
+> [!NOTE]
+> **Agent System Instructions**: You do **not** need to configure any environment variables for agent instructions. The system instruction `"Today is Friday, November 27th, 2026"` is embedded directly in the provisioning code and runtime services, and automatically applied to all Google Cloud Data Agents during grounding.
+
 
 ### Step 4.4: Cloud Provisioning & Data Warehouse Initialization
 
@@ -137,13 +228,14 @@ python3 scripts/bootstrap_new_project.py
 
 **What this command automatically provisions in your Google Cloud Project:**
 1. **Google Cloud APIs & IAM Roles**: Automatically enables all 12 required Google Cloud APIs and configures all 18 Service Account IAM roles.
-2. **BigQuery Dataset**: Creates the ecommerce dataset and all 140 tables across 17 business domains (Core Catalog, Orders, Clickstream, Competitors, Paid Ads, CRM, Reverse Logistics, ERP Finance, etc.).
+2. **BigQuery Dataset**: Creates the primary ecommerce dataset (`ecommerce_dw`) and all 140 tables across 17 business domains (Core Catalog, Orders, Clickstream, Competitors, Paid Ads, CRM, Reverse Logistics, ERP Finance, etc.).
 3. **100% Metadata Annotations**: Populates rich, structured descriptions on every table and column in BigQuery.
 4. **19.3M Calibrated Records**: Seeds deterministic synthetic data (`random.seed(42)`) representing realistic Black Week 2026 sales events, cart abandonments, ad bidding logs, and 6 weeks of historical baseline actuals.
-5. **Knowledge Catalog Business Glossary**: Deploys the business taxonomy across 15 categories, 85 business terms, and 188 native EntryLinks in Google Cloud.
+5. **Knowledge Catalog Business Glossary**: Deploys the business taxonomy across 15 categories, 85 business terms, and 257 native EntryLinks in Google Cloud.
 6. **Knowledge Catalog Custom AspectType**: Creates the `enterprise-data-context` AspectType and attaches structured governance metadata to all 140 tables.
-7. **Gemini BigQuery Data Agents**: Dynamically executes Knowledge Catalog semantic search to discover working tables and provisions/grounds all 4 Data Agents (`DATA_AGENT_ID`, `gda-blackweek-a`, `gda-blackweek-b`, `gda-blackweek-c`).
-8. **Automated Quality Audit**: Runs the full 11-suite verification pipeline to guarantee 100% system readiness.
+7. **BigQuery Isolation Datasets (Tiers B & C)**: Creates physical replica datasets `ecommerce_dw_2nd` (descriptions preserved, 0 glossary terms/EntryLinks/aspects) and `ecommerce_dw_3rd` (raw schema only, 0 descriptions/terms/aspects) with exact row parity.
+8. **Gemini BigQuery Data Agents**: Dynamically executes Knowledge Catalog semantic search to discover working tables and provisions/grounds all 4 Data Agents (`DATA_AGENT_ID`, `DATA_AGENT_A_ID`, `DATA_AGENT_B_ID`, `DATA_AGENT_C_ID`).
+9. **Automated Quality Audit**: Runs the full composable verification pipeline to guarantee 100% system readiness.
 
 *(Tip: You can add `--dry-run` to inspect all stages without modifying cloud resources, or `--skip-tests` to bypass post-deployment verification).*
 
@@ -180,16 +272,19 @@ python3 scripts/12_generate_extended_data.py
 # 8. Generate 6 weeks of historical actuals
 python3 scripts/14_generate_historical_data.py
 
-# 9. Deploy Knowledge Catalog Business Glossary (15 categories, 85 terms, 188 EntryLinks)
+# 9. Deploy Knowledge Catalog Business Glossary (15 categories, 85 terms, 257 EntryLinks)
 python3 scripts/09_create_dataplex_glossary.py
 
 # 10. Deploy enterprise-data-context AspectType and bind to all 140 tables
 python3 scripts/13_setup_dataplex_aspects.py
 
-# 11. Create & ground the Gemini BigQuery Data Agents (Primary + 3 Compare Chats Agents)
+# 11. Replicate tables to BigQuery Isolation Datasets (ecommerce_dw_2nd & ecommerce_dw_3rd)
+python3 scripts/18_setup_isolation_datasets.py
+
+# 12. Create & ground the Gemini BigQuery Data Agents with system instructions (Primary + 3 Compare Chats Agents)
 python3 scripts/06_update_data_agent.py
 
-# 12. Run the master test suite to verify 100% system readiness
+# 13. Run the master test suite to verify 100% system readiness
 python3 scripts/test/run_all_tests.py --all
 ```
 ---
@@ -333,9 +428,18 @@ Clicking *"Compare prompts"* 3 times rapidly under Apps in the left sidebar open
 
 ### Optional Feature: 3-Agent Parallel Conversational Cockpit ("Compare Chats")
 Clicking *"Compare chats"* 3 times rapidly under Apps opens the dedicated 3-Agent staging and parallel evaluation studio:
-- Provisions 3 parallel Data Agents (`gda-blackweek-a`, `gda-blackweek-b`, `gda-blackweek-c`) with isolated table clusters.
-- **Synchronized Broadcast Bar**: Dispatches analytical prompts to all 3 agents simultaneously with clean startup.
+- Provisions 3 parallel Data Agents (`gda-blackweek-a`, `gda-blackweek-b`, `gda-blackweek-c`) with isolated table clusters across 3 data tiers (`ecommerce_dw`, `ecommerce_dw_2nd`, `ecommerce_dw_3rd`).
+- **Dynamic 3-Tier Discovery**: Discovers warehouse tables via Knowledge Catalog semantic search and binds the identical table set across all 3 agents simultaneously.
+- **Streamlined Cockpit**: A clean broadcast bar (`#multiPromptInput`, `[Populate Inputs]`, `[Broadcast to 3 Agents]`) with independent per-column inputs and per-agent `[⚡ Fast / 🧠 Thinking]` reasoning toggles.
 - **Unified Multi-Agent Auditing**: Every agent interaction is persisted to BigQuery `ecommerce_dw.agent_interaction_logs` tagged with `menu_item='compare chats'` and `agent_no='agentA' / 'agentB' / 'agentC'`.
+
+---
+
+### Multilingual System (25 Languages)
+LumièreShop provides native localization across **25 European and International languages**:
+- **Supported Languages**: Bulgarian, Croatian, Czech, Dutch, English (Default), Estonian, Finnish, French, German, Greek, Hungarian, Italian, Latvian, Lithuanian, Norwegian, Polish, Portuguese, Romanian, Russian, Serbian, Slovak, Slovenian, Spanish, Swedish, Ukrainian.
+- **Header Language Switcher**: Located in the top header, ordered alphabetically by English display name.
+- **Dynamic Prompt Localization**: Selecting any language instantly translates all candidate prompt presets (`Incident Root Cause`, `Logistics & Fulfillment SLAs`, `Marketing Ad Spend & ROAS`) and scenario tabs across the entire application.
 
 ---
 
@@ -386,7 +490,7 @@ lumiere-shop/
 │   ├── 01_create_schema.py                 # Core schema DDL generator (26 tables)
 │   ├── 02_generate_data.py                 # High-throughput calibrated synthetic data generator
 │   ├── 04_extend_log_schema.py             # BigQuery audit log schema extension
-│   ├── 06_update_data_agent.py             # BigQuery Data Agent table grounding initializer
+│   ├── 06_update_data_agent.py             # BigQuery Data Agent table grounding & system instructions initializer
 │   ├── 08_setup_dataplex_profiling.py      # Knowledge Catalog data profiling scan setup
 │   ├── 09_create_dataplex_glossary.py      # Knowledge Catalog business glossary deployer
 │   ├── 11_create_extended_schema.py        # Extended enterprise schema DDL (104 tables)

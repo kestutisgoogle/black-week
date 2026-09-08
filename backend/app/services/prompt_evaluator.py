@@ -163,6 +163,7 @@ class PromptEvaluatorService:
 
         # Step 2: Construct evaluation prompt for Google Cloud Gemini Enterprise Agent Platform
         system_instruction = (
+            "Today is Friday, November 27th, 2026.\n"
             "You are an expert Chief Data Officer and Google Cloud Data Architect. "
             "You are evaluating 2 to 3 candidate natural language search prompts used in Google Cloud Knowledge Catalog "
             "to dynamically discover BigQuery tables for a Black Friday revenue shortfall investigation in 'ecommerce_dw'.\n\n"

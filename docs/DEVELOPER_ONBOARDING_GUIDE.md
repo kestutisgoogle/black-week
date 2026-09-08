@@ -45,6 +45,64 @@ flowchart TD
     CR -->|Hosts| Backend_Layer
 ```
 
+### 🔬 3-Tier Metadata Isolation Architecture ("Compare Chats")
+
+The **Compare Chats** comparative cockpit provides side-by-side comparative benchmarking to evaluate how differing levels of metadata grounding directly affect LLM SQL generation accuracy and reasoning fidelity.
+
+```mermaid
+flowchart TD
+    subgraph Discovery ["🔍 Unified Semantic Discovery (Knowledge Catalog)"]
+        PROMPT["Single Business Discovery Prompt"] --> KC_SEARCH["Knowledge Catalog Semantic Search"]
+        KC_SEARCH --> TABLES["Shared Table Cluster (Exact Table Parity across 3 Tiers)"]
+    end
+
+    subgraph Tier_A ["Tier A: Full Knowledge Catalog Grounding"]
+        AGENT_A["Agent A (DATA_AGENT_A_ID)"]
+        DS_A["Dataset: ecommerce_dw (Primary)"]
+        DESC_A["✅ Column & Table Descriptions"]
+        TERMS_A["✅ 85 Business Glossary Terms (EntryLinks)"]
+        ASPECTS_A["✅ Custom Governance Aspects"]
+        AGENT_A --> DS_A
+        DS_A --- DESC_A
+        DS_A --- TERMS_A
+        DS_A --- ASPECTS_A
+    end
+
+    subgraph Tier_B ["Tier B: Isolated Descriptions Only"]
+        AGENT_B["Agent B (DATA_AGENT_B_ID)"]
+        DS_B["Dataset: ecommerce_dw_2nd (Replica)"]
+        DESC_B["✅ Column & Table Descriptions Preserved"]
+        TERMS_B["❌ 0 Knowledge Catalog Terms (0 EntryLinks)"]
+        ASPECTS_B["❌ 0 Custom Governance Aspects"]
+        AGENT_B --> DS_B
+        DS_B --- DESC_B
+        DS_B --- TERMS_B
+        DS_B --- ASPECTS_B
+    end
+
+    subgraph Tier_C ["Tier C: Isolated Raw Schema Only"]
+        AGENT_C["Agent C (DATA_AGENT_C_ID)"]
+        DS_C["Dataset: ecommerce_dw_3rd (Replica)"]
+        DESC_C["❌ 0 Descriptions (Raw Schema Only)"]
+        TERMS_C["❌ 0 Knowledge Catalog Terms (0 EntryLinks)"]
+        ASPECTS_C["❌ 0 Custom Governance Aspects"]
+        AGENT_C --> DS_C
+        DS_C --- DESC_C
+        DS_C --- TERMS_C
+        DS_C --- ASPECTS_C
+    end
+
+    TABLES -->|Map to Primary| AGENT_A
+    TABLES -->|Map to 2nd Replica| AGENT_B
+    TABLES -->|Map to 3rd Replica| AGENT_C
+```
+
+#### Key Capabilities of Compare Chats:
+1. **Single Unified Table Discovery:** Querying Knowledge Catalog once dynamically discovers the optimal table cluster from the 140-table warehouse and provisions the identical table names across all 3 agents simultaneously.
+2. **True Physical Isolation:** Because Knowledge Catalog EntryLinks and AspectTypes are bound to canonical table resource URIs (`ecommerce_dw`), replicating tables into `ecommerce_dw_2nd` and `ecommerce_dw_3rd` creates 100% physical metadata isolation without touching the primary dataset.
+3. **Dual-Mode Querying:** Operators can broadcast queries simultaneously to all 3 agents or customize/overwrite queries per agent individually using dedicated column-level inputs.
+4. **Independent Fast/Thinking Controls:** Each agent column maintains its own independent `[⚡ Fast / 🧠 Thinking]` toggle button.
+
 ---
 
 ## 📂 Repository Directory Structure
@@ -85,8 +143,9 @@ lumiere-shop/
 │   ├── 14_generate_historical_data.py # Step 14: Populate multi-week historical actuals
 │   ├── 15_add_user_name_to_logs.py # Step 15: Add user_name audit log column
 │   ├── 17_add_menu_item_and_agent_no_to_logs.py # Step 17: Add multi-agent audit log columns
+│   ├── 18_setup_isolation_datasets.py # Step 18: BigQuery Isolation Datasets (2nd & 3rd Tiers)
 │   ├── apply_bq_descriptions.py    # Apply 5-part descriptions to BigQuery tables
-│   ├── bootstrap_new_project.py    # Turnkey automated 7-stage cloud deployment orchestrator
+│   ├── bootstrap_new_project.py    # Turnkey automated 14-stage cloud deployment orchestrator
 │   ├── expand_business_glossary.py # 85-term business taxonomy generator
 │   ├── export_bq_tables_to_csv.py  # BigQuery dataset CSV exporter & archiver
 │   ├── export_dataset_summary.py   # Markdown schema generator with placeholders
@@ -147,12 +206,17 @@ GCP_PROJECT_ID=<YOUR_GCP_PROJECT_ID>
 GCP_PROJECT_NUMBER=<YOUR_GCP_PROJECT_NUMBER>
 GCP_REGION=<YOUR_GCP_REGION>
 BQ_DATASET_ID=ecommerce_dw
+BQ_DATASET_2ND_ID=ecommerce_dw_2nd
+BQ_DATASET_3RD_ID=ecommerce_dw_3rd
 BQ_LOCATION=<YOUR_GCP_REGION>
 
 # Gemini Enterprise Agent Platform (Conversational Analytics)
 CA_API_HOST=https://geminidataanalytics.googleapis.com
 CA_API_ENDPOINT=https://geminidataanalytics.googleapis.com/v1beta/projects/<YOUR_GCP_PROJECT_ID>/locations/global:chat
-DATA_AGENT_ID=<YOUR_DATA_AGENT_ID>
+DATA_AGENT_ID=gda-blackweek-primary
+DATA_AGENT_A_ID=gda-blackweek-a
+DATA_AGENT_B_ID=gda-blackweek-b
+DATA_AGENT_C_ID=gda-blackweek-c
 
 # Application Runtime Configuration
 PORT=8000
@@ -213,16 +277,22 @@ If you need to re-provision the BigQuery dataset or re-seed the environment from
 
 | Step | Script | Description |
 |---|---|---|
+| Turnkey | `python3 scripts/bootstrap_new_project.py` | Fully automated 14-stage deployment orchestrator for fresh cloud projects. |
 | Reset | `python3 scripts/cleanup_knowledge_catalog.py` | Safely purges Knowledge Catalog glossaries, AspectTypes, and Data Agents. |
-| 01 | `python3 scripts/01_create_schema.py` | Creates core 20 BigQuery tables in `ecommerce_dw`. |
-| 02 | `python3 scripts/02_generate_data.py` | Seeds Black Week operational data (Nov 23–27). |
-| 03 | `python3 scripts/04_extend_log_schema.py` | Creates `catalog_recommender_logs`, `ad_bidding_log`, etc. |
-| 04 | `python3 scripts/09_create_dataplex_glossary.py` | Deploys business glossary to Knowledge Catalog. |
-| 05 | `python3 scripts/11_create_extended_schema.py` | Creates 115 extended enterprise tables (7 domains). |
-| 06 | `python3 scripts/12_generate_extended_data.py` | Generates relational records across extended domains. |
-| 07 | `python3 scripts/13_setup_dataplex_aspects.py` | Attaches Knowledge Catalog custom aspect templates. |
-| 08 | `python3 scripts/14_generate_historical_data.py` | Generates 6 weeks of historical actuals for trends. |
-| 09 | `python3 scripts/apply_bq_descriptions.py` | Applies 5-part structured descriptions to all tables. |
+| 00 | `python3 scripts/setup_gcp_apis.py` | Enables 12 required GCP APIs and verifies IAM bindings. |
+| 01 | `python3 scripts/01_create_schema.py` | Creates core 26 BigQuery tables in `ecommerce_dw`. |
+| 02 | `python3 scripts/11_create_extended_schema.py` | Creates 104 extended enterprise schema tables (7 business domains). |
+| 03 | `python3 scripts/04_extend_log_schema.py` | Creates forensic log tables (`ad_bidding_log`, `catalog_recommender_logs`). |
+| 04 | `python3 scripts/15_add_user_name_to_logs.py` | Adds `user_name` audit tracking column to `agent_interaction_logs`. |
+| 05 | `python3 scripts/17_add_menu_item_and_agent_no_to_logs.py` | Adds `menu_item` and `agent_no` multi-agent audit telemetry columns. |
+| 06 | `python3 scripts/apply_bq_descriptions.py` | Applies structured 5-part business descriptions to all 140 BigQuery tables. |
+| 07 | `python3 scripts/02_generate_data.py` | Seeds operational Black Week synthetic data (Nov 23–27). |
+| 08 | `python3 scripts/12_generate_extended_data.py` | Generates relational records across all extended domain tables. |
+| 09 | `python3 scripts/14_generate_historical_data.py` | Generates multi-week historical actuals and baselines. |
+| 10 | `python3 scripts/09_create_dataplex_glossary.py` | Deploys 85-term business glossary and 257 EntryLinks to Knowledge Catalog. |
+| 11 | `python3 scripts/13_setup_dataplex_aspects.py` | Deploys and attaches Knowledge Catalog custom governance AspectTypes. |
+| 12 | `python3 scripts/18_setup_isolation_datasets.py` | Replicates tables to `ecommerce_dw_2nd` (descriptions only) and `ecommerce_dw_3rd` (raw schema only). |
+| 13 | `python3 scripts/06_update_data_agent.py` | Dynamically grounds 4 Gemini Data Agents across the 3 metadata isolation tiers. |
 
 ---
 

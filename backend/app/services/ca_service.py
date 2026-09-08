@@ -49,6 +49,9 @@ from google.oauth2 import credentials as oauth2_credentials
 from app.config import (
     PROJECT_ID,
     DATASET_ID,
+    DATASET_2ND_ID,
+    DATASET_3RD_ID,
+    DATASET_MAPPING,
     USER_IDENTITY,
     DATA_AGENT_ID,
     DATA_AGENT_A_ID,
@@ -60,6 +63,9 @@ from app.config import (
 
 # Primary Google Cloud Data Agent resource path and chat endpoint
 CHAT_API_ENDPOINT = f"https://geminidataanalytics.googleapis.com/v1beta/projects/{PROJECT_ID}/locations/global:chat"
+
+# Static system instruction anchoring all Conversational Analytics Data Agents to Black Friday 2026
+AGENT_SYSTEM_INSTRUCTION = "Today is Friday, November 27th, 2026"
 
 # Cached Google OAuth credential instance
 _google_creds = None
@@ -331,14 +337,16 @@ def update_multi_agent_sources(agent_name: str, table_names: List[str]) -> None:
     } if token else {}
     if token:
         try:
-            update_url = f"https://geminidataanalytics.googleapis.com/v1beta/{agent_res}?updateMask=dataAnalyticsAgent.publishedContext.datasourceReferences.bq.tableReferences"
+            target_dataset = DATASET_MAPPING.get(agent_name, DATASET_ID)
+            update_url = f"https://geminidataanalytics.googleapis.com/v1beta/{agent_res}?updateMask=dataAnalyticsAgent.publishedContext.datasourceReferences.bq.tableReferences,dataAnalyticsAgent.publishedContext.systemInstruction"
             table_refs = [
-                {"projectId": PROJECT_ID, "datasetId": DATASET_ID, "tableId": t}
+                {"projectId": PROJECT_ID, "datasetId": target_dataset, "tableId": t}
                 for t in table_names
             ]
             payload = {
                 "dataAnalyticsAgent": {
                     "publishedContext": {
+                        "systemInstruction": AGENT_SYSTEM_INSTRUCTION,
                         "datasourceReferences": {
                             "bq": {
                                 "tableReferences": table_refs
@@ -349,19 +357,19 @@ def update_multi_agent_sources(agent_name: str, table_names: List[str]) -> None:
             }
             res = requests.patch(update_url, headers=headers, json=payload, timeout=15)
             if res.status_code in [200, 201]:
-                print(f"✅ Successfully updated {agent_name} ({agent_res}) with {len(table_names)} tables.")
+                print(f"✅ Successfully updated {agent_name} ({agent_res}) with {len(table_names)} tables in '{target_dataset}'.")
             elif res.status_code == 404:
                 agent_id = agent_res.split("/")[-1]
-                print(f"ℹ️ Agent {agent_name} ({agent_id}) does not exist. Creating dynamically with {len(table_names)} tables...")
+                print(f"ℹ️ Agent {agent_name} ({agent_id}) does not exist. Creating dynamically with {len(table_names)} tables in '{target_dataset}'...")
                 create_url = f"https://geminidataanalytics.googleapis.com/v1beta/projects/{PROJECT_ID}/locations/global/dataAgents?dataAgentId={agent_id}"
                 create_payload = {
                     "displayName": f"LumiereShop {agent_name}",
-                    "description": f"Dynamic Knowledge Catalog Grounded Agent for {agent_name}",
+                    "description": f"Grounded Agent for {agent_name} in {target_dataset}",
                     **payload
                 }
                 c_res = requests.post(create_url, headers=headers, json=create_payload, timeout=20)
                 if c_res.status_code in [200, 201]:
-                    print(f"✅ Successfully created and grounded {agent_name} ({agent_id}) with {len(table_names)} tables.")
+                    print(f"✅ Successfully created and grounded {agent_name} ({agent_id}) with {len(table_names)} tables in '{target_dataset}'.")
                 else:
                     print(f"Notice: Failed to create {agent_name}: HTTP {c_res.status_code} - {c_res.text}")
         except Exception as e:
@@ -726,7 +734,7 @@ def update_data_agent_sources(table_names: List[str]) -> Dict[str, Any]:
     # Update the live GCP BigQuery Data Agent publishedContext via REST API
     if token:
         try:
-            update_url = f"https://geminidataanalytics.googleapis.com/v1beta/{DATA_AGENT_NAME}?updateMask=dataAnalyticsAgent.publishedContext.datasourceReferences.bq.tableReferences"
+            update_url = f"https://geminidataanalytics.googleapis.com/v1beta/{DATA_AGENT_NAME}?updateMask=dataAnalyticsAgent.publishedContext.datasourceReferences.bq.tableReferences,dataAnalyticsAgent.publishedContext.systemInstruction"
             table_refs = [
                 {"projectId": PROJECT_ID, "datasetId": DATASET_ID, "tableId": t}
                 for t in table_names
@@ -734,6 +742,7 @@ def update_data_agent_sources(table_names: List[str]) -> Dict[str, Any]:
             payload = {
                 "dataAnalyticsAgent": {
                     "publishedContext": {
+                        "systemInstruction": AGENT_SYSTEM_INSTRUCTION,
                         "datasourceReferences": {
                             "bq": {
                                 "tableReferences": table_refs

@@ -80,7 +80,8 @@ STAGES = [
     ("9. Multi-Week Historical Actuals Data", "scripts/14_generate_historical_data.py"),
     ("10. Knowledge Catalog Glossary & EntryLinks", "scripts/09_create_dataplex_glossary.py"),
     ("11. Knowledge Catalog Custom AspectType", "scripts/13_setup_dataplex_aspects.py"),
-    ("12. BigQuery Data Agents Provisioning", "scripts/06_update_data_agent.py"),
+    ("12. BigQuery Isolation Datasets (2nd & 3rd)", "scripts/18_setup_isolation_datasets.py"),
+    ("13. BigQuery Data Agents Provisioning", "scripts/06_update_data_agent.py"),
 ]
 
 

@@ -46,6 +46,19 @@ PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "")
 # Target BigQuery Dataset holding all 140 operational and extended domain tables
 DATASET_ID = os.environ.get("BQ_DATASET_ID", "ecommerce_dw")
 
+# 2nd BigQuery Dataset for Agent B (Identical tables/descriptions, 0 Knowledge Catalog glossary/EntryLinks)
+DATASET_2ND_ID = os.environ.get("BQ_DATASET_2ND_ID", f"{DATASET_ID}_2nd")
+
+# 3rd BigQuery Dataset for Agent C (Identical tables, 0 descriptions, 0 Knowledge Catalog glossary/EntryLinks)
+DATASET_3RD_ID = os.environ.get("BQ_DATASET_3RD_ID", f"{DATASET_ID}_3rd")
+
+# Mapping of multi-agent identifiers to their respective isolated datasets
+DATASET_MAPPING = {
+    "Agent A": DATASET_ID,
+    "Agent B": DATASET_2ND_ID,
+    "Agent C": DATASET_3RD_ID,
+}
+
 # Regional BigQuery location for dataset storage and SQL job execution
 LOCATION = os.environ.get("BQ_LOCATION", "us-central1")
 

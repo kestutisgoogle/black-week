@@ -122,7 +122,8 @@ class MultiAgentSetupItem(BaseModel):
 
 class MultiAgentsPrepareRequest(BaseModel):
     """Payload to batch-configure all 3 parallel Data Agents in GCP with discovered table sets."""
-    agents: List[MultiAgentSetupItem] = Field(..., description="List of agent definitions and their table bindings.")
+    agents: Optional[List[MultiAgentSetupItem]] = Field(None, description="Optional list of agent definitions and their table bindings.")
+    prompt: Optional[str] = Field(None, description="Single Knowledge Catalog prompt to evaluate and map to all 3 agents.")
 
 
 class ResetConversationRequest(BaseModel):
@@ -299,19 +300,57 @@ async def chat_endpoint(request: ChatRequest):
 async def multi_agents_prepare_endpoint(request: MultiAgentsPrepareRequest):
     """
     Configures dedicated Google Cloud Data Agents for Agent A, Agent B, and Agent C
-    with their respective Knowledge Catalog resolved table references in parallel.
+    with their respective isolated datasets in parallel.
+    If a prompt is provided, discovers tables once via Knowledge Catalog semantic search
+    and maps the exact same tables across Agent A (ecommerce_dw), Agent B (ecommerce_dw_2nd),
+    and Agent C (ecommerce_dw_3rd).
     """
     try:
+        discovered_tables = []
+        term_count = 0
+        entry_link_count = 0
+        terms = []
+        entry_links = []
+
+        if request.prompt:
+            discovery_result = await anyio.to_thread.run_sync(
+                discovery_service.discover_knowledge_context, request.prompt.strip()
+            )
+            discovered_tables = discovery_result.get("tables", [])
+            term_count = discovery_result.get("term_count", 0)
+            entry_link_count = discovery_result.get("entry_link_count", 0)
+            terms = discovery_result.get("terms", [])
+            entry_links = discovery_result.get("entry_links", [])
+
+            agents_to_update = [
+                MultiAgentSetupItem(name="Agent A", tables=discovered_tables),
+                MultiAgentSetupItem(name="Agent B", tables=discovered_tables),
+                MultiAgentSetupItem(name="Agent C", tables=discovered_tables),
+            ]
+        elif request.agents:
+            agents_to_update = request.agents
+            if agents_to_update:
+                discovered_tables = agents_to_update[0].tables
+        else:
+            raise HTTPException(status_code=400, detail="Either 'prompt' or 'agents' must be provided.")
+
         async def _update_one(item: MultiAgentSetupItem):
             await anyio.to_thread.run_sync(update_multi_agent_sources, item.name, item.tables)
 
         async with anyio.create_task_group() as tg:
-            for item in request.agents:
+            for item in agents_to_update:
                 tg.start_soon(_update_one, item)
 
         return {
             "status": "success",
-            "message": f"Successfully configured {len(request.agents)} dedicated Data Agents in GCP.",
+            "prompt": request.prompt,
+            "table_count": len(discovered_tables),
+            "term_count": term_count,
+            "entry_link_count": entry_link_count,
+            "tables": discovered_tables,
+            "terms": terms,
+            "entry_links": entry_links,
+            "message": f"Successfully mapped {len(discovered_tables)} tables across 3 isolated agents in GCP.",
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
