@@ -29,47 +29,6 @@ Traditional static dashboards show aggregate top-line drops but fail to pinpoint
 
 LumièreShop is built on a clean, decoupled, cloud-native architecture connecting a single-page application to Google Cloud data and AI services:
 
-```mermaid
-flowchart TD
-    subgraph UI_Layer ["🖥️ Frontend & Workspace UI (Material Design 3)"]
-        S1["Screen 1: Google Workspace Alert & Discovery"]
-        S2["Screen 2: CMO Conversational Workspace"]
-        S3["Screen 3: Root Cause Solution Summary"]
-        PS["Prompt Optimization Studio (3 Prompts)"]
-        MC["3-Agent Parallel Cockpit (Compare Chats)"]
-    end
-
-    subgraph Backend_Layer ["⚡ Backend API (FastAPI / Python 3.13)"]
-        API["FastAPI Gateway (/api/*)"]
-        DISC["Knowledge Catalog Discovery Service"]
-        EVAL["Prompt Evaluator (Gemini 3.7 Flash)"]
-        CA_SVC["Conversational Analytics Client"]
-        I18N["Multilingual Engine (25 Languages)"]
-    end
-
-    subgraph GCP_Cloud ["☁️ Google Cloud Platform Infrastructure"]
-        KC["Google Cloud Knowledge Catalog\n(Global Semantic Search & Glossary)"]
-        BQ["BigQuery Data Warehouse\n(ecommerce_dw: 140 Tables)"]
-        BQ_ISO["BigQuery Isolation Datasets\n(ecommerce_dw_2nd, ecommerce_dw_3rd)"]
-        DA["Gemini Enterprise Agent Platform\n(Conversational Analytics API)"]
-        CR["Google Cloud Run\n(Containerized Microservice)"]
-    end
-
-    S1 -->|Prepare Data / Query| API
-    S2 -->|Chat Inquiry| API
-    PS -->|Evaluate Prompts| API
-    MC -->|Parallel Query| API
-    API --> DISC
-    API --> EVAL
-    API --> CA_SVC
-    DISC -->|Semantic Search| KC
-    EVAL -->|Scoring & Analysis| DA
-    CA_SVC -->|Grounded SQL & Chat| DA
-    DA -->|Execute SQL| BQ
-    DA -->|Execute SQL (Tiers B & C)| BQ_ISO
-    CR -->|Hosts Container| Backend_Layer
-```
-
 ![LumièreShop System Architecture](docs/images/architecture_diagram.png)
 
 ### Core Architectural Pillars
@@ -499,6 +458,7 @@ lumiere-shop/
 │   ├── 14_generate_historical_data.py      # Seed 6 weeks historical actuals (1.5 months)
 │   ├── 15_add_user_name_to_logs.py         # DDL adding user_name to agent_interaction_logs
 │   ├── 17_add_menu_item_and_agent_no_to_logs.py # DDL adding menu_item and agent_no to logs
+│   ├── 18_setup_isolation_datasets.py      # BigQuery replica isolation datasets creator (2nd & 3rd)
 │   ├── apply_bq_descriptions.py            # BigQuery table and column metadata annotator
 │   ├── bootstrap_new_project.py            # Turnkey automated 7-stage cloud deployment orchestrator
 │   ├── cleanup_all.py                      # Master environment teardown & orchestrator (preserves BQ)
@@ -510,7 +470,9 @@ lumiere-shop/
 │   ├── export_bq_tables_to_csv.py          # BigQuery dataset CSV exporter & archiver
 │   ├── export_dataset_summary.py           # Markdown schema generator with placeholders
 │   ├── generate_docs_pdf.py                # Documentation compiler (HTML & PDF)
-│   └── render_architecture_diagram.py      # Architecture PNG diagram generator (Playwright)
+│   ├── kc_check.py                         # Knowledge Catalog search & profiling verification tool
+│   ├── render_architecture_diagram.py      # Architecture PNG diagram generator (Playwright)
+│   └── setup_gcp_apis.py                   # Google Cloud APIs enablement & IAM role bindings orchestrator
 ├── scripts/test/                           # Composable Test Suites & Quality Auditor
 │   ├── 03_verify_agent.py                 # Conversational Analytics API REST verification
 │   ├── 04b_verify_extended_logs.py         # Audit log verification script
@@ -545,3 +507,4 @@ lumiere-shop/
 ## 8. License & Compliance
 
 This project is licensed under the **Apache License 2.0**. All synthetic data, schemas, and configurations are calibrated strictly for demonstration and testing purposes without containing real customer or financial personally identifiable information (PII).
+
