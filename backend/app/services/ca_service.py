@@ -115,90 +115,113 @@ def get_bigquery_client() -> bigquery.Client:
         creds = oauth2_credentials.Credentials(token)
         return bigquery.Client(project=PROJECT_ID, credentials=creds)
     return bigquery.Client(project=PROJECT_ID)
-def format_rich_thinking_process(
-    raw_thinking_texts: List[str],
-    ref_tables: Set[str],
-    generated_sql: Optional[str],
-    bq_job_id: Optional[str],
-    elapsed_ms: int,
-    result_row_count: int,
-    followups: List[str],
-    prompt: str,
+def _format_raw_data_markdown(data_rows: List[Dict[str, Any]], max_rows: int = 25) -> str:
+    """Formats raw query result dictionary rows into a clean Markdown table."""
+    if not data_rows or not isinstance(data_rows, list):
+        return ""
+    valid_rows = [r for r in data_rows if isinstance(r, dict)]
+    if not valid_rows:
+        return ""
+
+    headers = list(valid_rows[0].keys())
+    if not headers:
+        return ""
+
+    md_lines = [
+        "| " + " | ".join(headers) + " |",
+        "| " + " | ".join([":---" for _ in headers]) + " |"
+    ]
+    for row in valid_rows[:max_rows]:
+        vals = [str(row.get(h, "")).replace("|", "\\|").replace("\n", " ") for h in headers]
+        md_lines.append("| " + " | ".join(vals) + " |")
+
+    if len(valid_rows) > max_rows:
+        md_lines.append(f"\n*(Showing first {max_rows} of {len(valid_rows)} raw rows)*")
+
+    return "\n".join(md_lines)
+
+
+def format_real_thinking_process(
+    api_response_data: Any,
+    raw_thinking_texts: Optional[List[str]] = None,
+    table_data: Optional[List[Dict[str, Any]]] = None,
+    generated_sql: Optional[str] = None,
+    bq_job_id: Optional[str] = None,
+    elapsed_ms: int = 0,
+    **kwargs: Any
 ) -> str:
     """
-    Constructs a comprehensive, 4-stage analytical reasoning trace
-    grounded in real agent execution steps, BigQuery telemetry, and semantic context.
-
-    Stages:
-      1. Semantic Context & Table Mapping (grounded BigQuery sources).
-      2. Analytical Strategy & SQL Formulation (joins, filters, aggregates).
-      3. Warehouse Execution & Telemetry (job ID, region, latency, row count).
-      4. Diagnostic Synthesis & Follow-up Investigation Paths.
-
-    Returns:
-        str: Markdown-formatted multi-step reasoning explanation.
+    Formats the real thinking process exactly as outputted by the BigQuery Data Agent:
+    - Pastes verbatim thoughts received from the agent (no canned summary).
+    - Embeds the raw data rows returned from BigQuery for queries executed during thinking.
+    - Preserves executed SQL code blocks and query telemetry.
     """
-    steps = []
-    
-    # 1. Semantic Context & Table Resolution
-    active_count = len(_active_mapped_tables) if _active_mapped_tables else len(ref_tables)
-    tables_list = sorted(list(ref_tables)) if ref_tables else []
-    if tables_list:
-        tables_str = ", ".join([f"`{t}`" for t in tables_list])
-        steps.append(
-            f"**1. Semantic Context & Table Mapping**\n"
-            f"• Grounded in {active_count} warehouse tables configured via Google Cloud Knowledge Catalog.\n"
-            f"• Isolated {len(tables_list)} target tables for relational analysis: {tables_str}."
-        )
-    else:
-        steps.append(
-            f"**1. Semantic Context Resolution**\n"
-            f"• Grounded in {active_count} warehouse tables configured for inquiry: *\"{prompt}\"*."
-        )
+    blocks = []
+    seen_tables = False
 
-    # 2. Analytical Strategy & Query Synthesis
-    if generated_sql and generated_sql != "N/A":
-        sql_upper = generated_sql.upper()
-        clauses = []
-        if "JOIN" in sql_upper:
-            clauses.append("relational table joins")
-        if "GROUP BY" in sql_upper:
-            clauses.append("dimensional aggregation")
-        if "ORDER BY" in sql_upper:
-            clauses.append("variance sorting")
-        if "WHERE" in sql_upper or "BETWEEN" in sql_upper:
-            clauses.append("temporal/status filtering")
-        clauses_desc = " with " + ", ".join(clauses) if clauses else ""
-        
-        steps.append(
-            f"**2. Analytical Strategy & SQL Formulation**\n"
-            f"• Formulated parameterized BigQuery SQL query{clauses_desc} to isolate root cause metrics.\n"
-            f"• Verified schema bindings, partition filters, and column definitions against BigQuery metadata."
-        )
+    if isinstance(api_response_data, list):
+        for step in api_response_data:
+            sys_msg = step.get("systemMessage", {})
 
-    # 3. Grounded BigQuery Job Execution
-    if bq_job_id:
-        steps.append(
-            f"**3. Warehouse Execution & Telemetry**\n"
-            f"• Dispatched BigQuery job `{bq_job_id}` in region `europe-west4`.\n"
-            f"• Returned {result_row_count} metric records in {elapsed_ms}ms with strict zero-hallucination grounding."
-        )
-    else:
-        steps.append(
-            f"**3. Data Retrieval**\n"
-            f"• Executed analytical query in {elapsed_ms}ms, returning {result_row_count} verified records."
-        )
+            # 1. Thought texts from agent
+            if "text" in sys_msg:
+                text_obj = sys_msg["text"]
+                text_type = text_obj.get("textType", "")
+                parts = text_obj.get("parts", [])
+                text_val = text_obj.get("text", "")
 
-    # 4. Diagnostic Synthesis & Follow-up Formulation
-    if followups and len(followups) > 0:
-        followup_bullets = "\n".join([f"  - {f}" for f in followups[:3]])
-        steps.append(
-            f"**4. Diagnostic Synthesis & Follow-up Investigation Paths**\n"
-            f"• Analyzed quantitative metric variance and synthesized key insights for leadership.\n"
-            f"• Proposed prioritized follow-up diagnostic questions:\n{followup_bullets}"
-        )
+                # Only include thoughts in the thinking process
+                if text_type == "THOUGHT" or (not text_type and text_type not in ("FINAL_RESPONSE", "FOLLOWUP_QUESTIONS")):
+                    thought_parts = parts if parts else ([text_val] if text_val else [])
+                    if thought_parts:
+                        formatted_parts = []
+                        for idx, p in enumerate(thought_parts):
+                            p_clean = p.strip()
+                            if not p_clean:
+                                continue
+                            # Format SQL queries in fenced code blocks
+                            if any(p_clean.upper().startswith(kw) for kw in ["SELECT", "WITH", "CREATE", "SHOW", "DESCRIBE"]):
+                                formatted_parts.append(f"```sql\n{p_clean}\n```")
+                            elif idx == 0 and len(thought_parts) > 1:
+                                formatted_parts.append(f"**{p_clean}**")
+                            else:
+                                formatted_parts.append(p_clean)
+                        if formatted_parts:
+                            blocks.append("\n\n".join(formatted_parts))
 
-    return "\n\n".join(steps)
+            # 2. Raw query data returned from BigQuery
+            if "data" in sys_msg:
+                data_obj = sys_msg["data"]
+                if "result" in data_obj and "data" in data_obj["result"]:
+                    rows = data_obj["result"]["data"]
+                    if rows and isinstance(rows, list):
+                        table_md = _format_raw_data_markdown(rows)
+                        if table_md:
+                            seen_tables = True
+                            blocks.append(f"**Raw Data Results ({len(rows)} rows):**\n\n{table_md}")
+
+    # Fallback if no table data was encountered in steps but table_data is present
+    if not seen_tables and table_data and isinstance(table_data, list):
+        table_md = _format_raw_data_markdown(table_data)
+        if table_md:
+            blocks.append(f"**Raw Data Results ({len(table_data)} rows):**\n\n{table_md}")
+
+    # Fallback to raw_thinking_texts if blocks is empty
+    if not blocks and raw_thinking_texts:
+        for t in raw_thinking_texts:
+            if t and t.strip():
+                blocks.append(t.strip())
+
+    return "\n\n".join(blocks).strip()
+
+
+# Backward-compatible alias for any existing callers
+def format_rich_thinking_process(*args: Any, **kwargs: Any) -> str:
+    if args and isinstance(args[0], list) and args[0] and isinstance(args[0][0], dict):
+        return format_real_thinking_process(api_response_data=args[0], **kwargs)
+    raw_texts = kwargs.get("raw_thinking_texts", args[0] if args else [])
+    table_data = kwargs.get("table_data")
+    return format_real_thinking_process(api_response_data=[], raw_thinking_texts=raw_texts, table_data=table_data, **kwargs)
 
 
 # Conversations API endpoint for server-managed stateful sessions
@@ -354,6 +377,7 @@ def send_cmo_prompt(
     user_name: Optional[str] = None,
     menu_item: Optional[str] = "chat",
     agent_no: Optional[str] = None,
+    thinking_mode: Optional[str] = "FAST",
 ) -> Dict[str, Any]:
     """
     Dispatches a natural language analytics query to the Google Cloud Gemini Data Analytics REST API.
@@ -369,6 +393,7 @@ def send_cmo_prompt(
         user_name: Optional user identifier or display name.
         menu_item: Interface menu context initiating interaction ('chat' vs 'compare chats').
         agent_no: Agent column identifier in comparative mode ('agentA', 'agentB', 'agentC', or None).
+        thinking_mode: Thinking mode flag ('FAST' for rapid low-latency response, 'THINKING' for detailed reasoning).
 
     Returns:
         Dict[str, Any]: Formatted response payload with markdown text, reasoning, SQL, chart info, and metrics.
@@ -386,6 +411,12 @@ def send_cmo_prompt(
     if not session_id:
         session_id = f"SESS-CA-{uuid.uuid4().hex[:8]}"
     start_time = time.time()
+
+    # Normalize thinking mode (FAST vs THINKING, default to FAST if unspecified)
+    valid_thinking_modes = {"FAST", "THINKING", "THINKING_MODE_UNSPECIFIED"}
+    normalized_thinking_mode = (thinking_mode or "FAST").upper()
+    if normalized_thinking_mode not in valid_thinking_modes:
+        normalized_thinking_mode = "FAST"
 
     # Step 1: Determine target GCP Data Agent resource
     target_data_agent = MULTI_DATA_AGENTS.get(agent_name, DATA_AGENT_NAME)
@@ -414,7 +445,8 @@ def send_cmo_prompt(
                 "data_agent_context": {
                     "data_agent": target_data_agent
                 }
-            }
+            },
+            "thinking_mode": normalized_thinking_mode
         }
     else:
         # Fallback to direct data_agent_context if conversation creation was unavailable
@@ -429,7 +461,8 @@ def send_cmo_prompt(
             ],
             "data_agent_context": {
                 "data_agent": target_data_agent
-            }
+            },
+            "thinking_mode": normalized_thinking_mode
         }
 
     raw_response_text = ""
@@ -505,15 +538,13 @@ def send_cmo_prompt(
                         chart_type = chart_info.get("type", "vega_chart")
 
                 text_answer = "\n\n".join(final_texts) if final_texts else "\n\n".join(all_texts)
-                thinking_process = format_rich_thinking_process(
+                thinking_process = format_real_thinking_process(
+                    api_response_data=api_response_data,
                     raw_thinking_texts=thinking_texts,
-                    ref_tables=ref_tables,
+                    table_data=table_data if 'table_data' in locals() and table_data else None,
                     generated_sql=generated_sql if 'generated_sql' in locals() else None,
                     bq_job_id=bq_job_id if 'bq_job_id' in locals() else None,
                     elapsed_ms=elapsed_ms,
-                    result_row_count=len(table_data) if 'table_data' in locals() and table_data else 0,
-                    followups=followups if 'followups' in locals() else [],
-                    prompt=prompt
                 )
 
                 # Step 5: Retrieve actual BigQuery bytes & execution metadata from job
@@ -559,6 +590,7 @@ def send_cmo_prompt(
         "conversation_id": conv_name,
         "is_stateful": bool(conv_name),
         "user_prompt": prompt,
+        "thinking_mode": normalized_thinking_mode,
         "text": text_answer.strip() if text_answer.strip() else None,
         "thinking_process": thinking_process.strip() if 'thinking_process' in locals() and thinking_process and thinking_process.strip() else None,
         "generated_sql": generated_sql if generated_sql else None,
@@ -593,7 +625,7 @@ def send_cmo_prompt(
         "job_id": bq_job_id if 'bq_job_id' in locals() else None,
         "referenced_tables": json.dumps(list(ref_tables)) if 'ref_tables' in locals() and ref_tables else None,
         "result_row_count": len(table_data) if table_data else 0,
-        "thinking_process": (thinking_process[:2000] if 'thinking_process' in locals() and thinking_process else None),
+        "thinking_process": (thinking_process[:10000] if 'thinking_process' in locals() and thinking_process else None),
         "step_count": len(api_response_data) if isinstance(api_response_data, list) else 0,
         "has_chart": has_chart if 'has_chart' in locals() else False,
         "chart_type": chart_type if 'chart_type' in locals() else None,
@@ -601,16 +633,17 @@ def send_cmo_prompt(
         "data_agent_id": f"{DATA_AGENT_NAME}-{agent_name.lower().replace(' ', '-')}" if agent_name else DATA_AGENT_NAME,
         "http_status_code": res.status_code if 'res' in locals() and hasattr(res, 'status_code') else 200,
         "ca_api_endpoint": CHAT_API_ENDPOINT,
-        "raw_ca_api_response": raw_response_text[:2000],
+        "raw_ca_api_response": raw_response_text[:10000],
         "menu_item": menu_item or "chat",
         "agent_no": agent_no if agent_no else None,
+        "thinking_mode": normalized_thinking_mode,
         "created_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     }]
 
     try:
         bq_client = get_bigquery_client()
         table_ref = f"{PROJECT_ID}.{DATASET_ID}.agent_interaction_logs"
-        bq_client.insert_rows_json(table_ref, log_record)
+        bq_client.insert_rows_json(table_ref, log_record, ignore_unknown_values=True)
     except Exception as e:
         print(f"Notice: Log write failed: {e}", file=sys.stderr)
 

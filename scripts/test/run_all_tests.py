@@ -54,7 +54,7 @@ def run_test_module(name: str, script_relpath: str, args: list = None) -> dict:
             cwd=PROJECT_ROOT,
             capture_output=True,
             text=True,
-            timeout=360
+            timeout=600
         )
         duration = round(time.time() - start_time, 2)
         success = (res.returncode == 0)

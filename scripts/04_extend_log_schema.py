@@ -54,6 +54,7 @@ def extend_schema():
         bigquery.SchemaField("followup_questions", "STRING", mode="NULLABLE"),
         bigquery.SchemaField("data_agent_id", "STRING", mode="NULLABLE"),
         bigquery.SchemaField("http_status_code", "INTEGER", mode="NULLABLE"),
+        bigquery.SchemaField("thinking_mode", "STRING", mode="NULLABLE"),
     ]
 
     schema = list(table.schema)

@@ -64,13 +64,13 @@ glossary:
     display_name: Temporal Simulation & Calendar Context
     description: "Semantic temporal anchor definitions, relative calendar mappings\
       \ ('this week', 'today', 'yesterday', 'previous week', 'MTD'), and date bounds\
-      \ for the Lumi\xE8reShop Black Friday 2026 executive incident simulation."
+      \ for Lumi\xE8reShop retail and promotional calendar periods."
   terms:
   - id: roas
     display_name: ROAS (Return on Ad Spend)
     category_id: marketing
     definition: Marketing efficiency metric calculated as total attributed sales revenue
-      divided by advertising expenditure. Baseline Black Week target is 4.8x.
+      divided by advertising expenditure across paid acquisition channels.
     formula: SUM(orders.total_amount) / SUM(daily_ad_performance.spend)
     synonyms:
     - ad efficiency
@@ -787,7 +787,7 @@ glossary:
     - table: support_agents
       column: tier_level
   - id: customer_escalation_rate
-    display_name: Customer Escalation Incident Rate
+    display_name: Customer Escalation Rate
     category_id: customer_service
     definition: Percentage of customer support inquiries escalated to senior management
       or tier-3 support teams.
@@ -1285,11 +1285,11 @@ glossary:
   - id: this_week
     display_name: This Week (Black Week 2026)
     category_id: temporal_context
-    definition: "In the Lumi\xE8reShop executive incident simulation, 'this week'\
-      \ (or 'current week') refers to Black Week 2026 (the week starting Monday, November\
-      \ 23, 2026 through Monday, November 30, 2026 / Cyber Monday). For actual transactions,\
+    definition: "In Lumi\xE8reShop operations, 'this week' (or 'current week') refers\
+      \ to Black Week 2026 (the promotional week starting Monday, November 23, 2026\
+      \ through Monday, November 30, 2026 / Cyber Monday). For actual transactions,\
       \ inventory, and marketing events, records are available from Monday, November\
-      \ 23, 2026 00:00:00 UTC up to the incident cutoff of Friday, November 27, 2026\
+      \ 23, 2026 00:00:00 UTC up to the latest reporting cutoff of Friday, November 27, 2026\
       \ 14:30:00 UTC. Planned target pacing tables cover the entire 8-day promotional\
       \ week (November 23\u201330, 2026)."
     formula: created_at BETWEEN '2026-11-23 00:00:00 UTC' AND '2026-11-27 14:30:00
@@ -1323,11 +1323,11 @@ glossary:
   - id: today
     display_name: Today (Black Friday 2026-11-27)
     category_id: temporal_context
-    definition: "In the Lumi\xE8reShop simulation, 'today' refers to Black Friday\
-      \ (Friday, November 27, 2026) from 00:00:00 UTC up to the active incident simulation\
-      \ cutoff at 14:30:00 UTC. SQL queries filtering for 'today' or 'today's sales'\
-      \ must filter for date '2026-11-27' or timestamp range between '2026-11-27 00:00:00\
-      \ UTC' and '2026-11-27 14:30:00 UTC'."
+    definition: "In Lumi\xE8reShop operations, 'today' refers to Black Friday (Friday,\
+      \ November 27, 2026) from 00:00:00 UTC up to the reporting cutoff at 14:30:00\
+      \ UTC. SQL queries filtering for 'today' or 'today's sales' must filter for date\
+      \ '2026-11-27' or timestamp range between '2026-11-27 00:00:00 UTC' and '2026-11-27\
+      \ 14:30:00 UTC'."
     formula: DATE(created_at) = '2026-11-27' AND created_at <= '2026-11-27 14:30:00
       UTC'
     synonyms:
@@ -1339,7 +1339,6 @@ glossary:
     - today's actuals
     - today so far
     - friday actuals
-    - incident day
     - today's data
     - today's sales
     bindings:
@@ -1416,8 +1415,6 @@ glossary:
       column: date
     - table: web_sessions
       column: session_started_at
-    - table: historical_sales_summary
-      column: week_start
   - id: two_weeks_ago
     display_name: Two Weeks Ago (2026-11-09 to 2026-11-15)
     category_id: temporal_context
@@ -1469,8 +1466,6 @@ glossary:
       column: date
     - table: web_sessions
       column: session_started_at
-    - table: monthly_financial_actuals
-      column: month
   - id: last_month
     display_name: Last Month (October 2026)
     category_id: temporal_context
@@ -1496,12 +1491,11 @@ glossary:
     - table: web_sessions
       column: session_started_at
   - id: simulation_anchor_now
-    display_name: Current Simulation Time (2026-11-27 14:30 UTC)
+    display_name: Current Time / Black Friday Cutoff (2026-11-27 14:30 UTC)
     category_id: temporal_context
-    definition: "The exact fixed point-in-time simulation anchor for Lumi\xE8reShop:\
+    definition: "The operational reporting cutoff timestamp for Lumi\xE8reShop:\
       \ Friday, November 27, 2026 at 14:30:00 UTC (Black Friday early afternoon).\
-      \ The business scenario takes place at this exact moment during executive incident\
-      \ triage. Zero operational records exist after this timestamp."
+      \ Represents the latest available real-time operational and transactional data point in the data warehouse."
     formula: TIMESTAMP '2026-11-27 14:30:00 UTC'
     synonyms:
     - now
@@ -1509,8 +1503,8 @@ glossary:
     - right now
     - current moment
     - as of now
-    - incident time
-    - simulation cutoff
+    - reporting cutoff
+    - data cutoff
     - present time
     - latest available data
     - real time now
@@ -1544,8 +1538,6 @@ glossary:
       column: date
     - table: weekly_commercial_targets
       column: week_start_date
-    - table: promotions
-      column: end_date
   - id: black_week_monday
     display_name: Black Week Monday (2026-11-23)
     category_id: temporal_context
@@ -1569,20 +1561,18 @@ glossary:
     - table: daily_ad_performance
       column: date
   - id: black_week_tuesday
-    display_name: Black Week Tuesday / Stockout Incident Day (2026-11-24)
+    display_name: Black Week Tuesday (2026-11-24)
     category_id: temporal_context
-    definition: Tuesday, November 24, 2026 of Black Week. The critical day when the
-      top 3 best-selling Beauty SKUs experienced premature physical stockouts at the
-      European distribution centers by 10:30 UTC.
+    definition: Tuesday, November 24, 2026 of Black Week (Day 2 of the promotional
+      campaign calendar). Used to evaluate second-day promotional intake, category
+      conversion rates, and inventory velocity across regional distribution centers.
     formula: DATE(created_at) = '2026-11-24'
     synonyms:
     - tuesday of this week
     - black week tuesday
-    - stockout day
     - tuesday actuals
     - nov 24
     - day 2 of black week
-    - oos day
     bindings:
     - table: orders
       column: created_at
@@ -1595,11 +1585,11 @@ glossary:
     - table: daily_category_targets
       column: date
   - id: black_week_wednesday
-    display_name: Black Week Wednesday / Recommender Degradation Day (2026-11-25)
+    display_name: Black Week Wednesday (2026-11-25)
     category_id: temporal_context
-    definition: Wednesday, November 25, 2026 of Black Week. The day when catalog recommendation
-      algorithms fell back to low-margin generic items following stockouts, causing
-      conversion rate (CVR) and average order value (AOV) to decline.
+    definition: Wednesday, November 25, 2026 of Black Week (Day 3 of the promotional
+      campaign calendar). Used to evaluate mid-week promotional sales velocity, customer
+      basket composition, and recommender engagement across digital storefronts.
     formula: DATE(created_at) = '2026-11-25'
     synonyms:
     - wednesday of this week
@@ -1618,17 +1608,18 @@ glossary:
     - table: daily_category_targets
       column: date
   - id: black_week_thursday
-    display_name: Black Week Thursday / Ad Throttle Day (2026-11-26)
+    display_name: Black Week Thursday / Thanksgiving (2026-11-26)
     category_id: temporal_context
-    definition: Thursday, November 26, 2026 of Black Week (Thanksgiving / Black Thursday).
-      The day when Meta Ads automated Target ROAS bidding algorithms detected falling
-      on-page conversion value and throttled paid acquisition spend by 31%.
+    definition: Thursday, November 26, 2026 of Black Week (Day 4 of the promotional
+      campaign calendar, corresponding to Thanksgiving / Black Thursday). Used to
+      evaluate pre-Black Friday customer traffic surge, advertising campaign pacing,
+      and promotional intake.
     formula: DATE(created_at) = '2026-11-26'
     synonyms:
     - thursday of this week
     - black week thursday
     - thanksgiving
-    - ad throttle day
+    - black thursday
     - nov 26
     - day 4 of black week
     bindings:
@@ -1694,8 +1685,6 @@ glossary:
       column: week_start_date
     - table: daily_category_targets
       column: date
-    - table: monthly_financial_actuals
-      column: month
   - id: intraday_pacing_intervals
     display_name: Intraday 15-Minute Pacing Intervals (Today / Black Friday)
     category_id: temporal_context

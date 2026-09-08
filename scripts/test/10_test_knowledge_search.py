@@ -39,8 +39,7 @@ LOCATION = "global"
 GLOSSARY_ID = "ecommerce-glossary"
 
 DEFAULT_PROMPT = (
-    "It's Black Friday 14:30. Please prepare the data that will serve to find root cause of the "
-    "problem of decreased revenue comparing to forecasted revenue during Black Week Sales."
+    "Prepare sales, marketing, ads, inventory, all connected business domains data"
 )
 
 

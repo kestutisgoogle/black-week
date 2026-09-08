@@ -13,17 +13,19 @@ In a traditional enterprise data warehouse containing **140 tables**, answering 
 
 In **LumièreShop**, we implemented a **cloud-native data context and semantic discovery engine** using **Google Cloud Knowledge Catalog** and **BigQuery**. When an executive asks a question in plain English, the system:
 1. **Understands the business intent** using AI vector embeddings in Knowledge Catalog.
-2. **Traverses the enterprise metadata graph and business glossary** across 11 commercial domains.
+2. **Traverses the enterprise metadata graph and business glossary** (85 terms across 15 operational categories, mapping all 17 architectural domains).
 3. **Dynamically discovers the exact 25 crucial tables** needed for the root-cause investigation with **100.0% precision in under 500 milliseconds**.
 4. **Feeds the discovered tables to the BigQuery Data Agent**, enabling conversational GenAI SQL analytics and automated root-cause diagnostics.
 
 ```mermaid
 graph TD
     A["👤 Executive Business Prompt<br/><i>'Black Friday revenue drop vs forecast'</i>"] --> B["🧠 Knowledge Catalog Semantic Engine<br/>(Vector Space & Meaning Index)"]
-    B --> C["🏷️ Business Glossary<br/>(39 Terms across 11 Domains)"]
+    B --> C["🏷️ Business Glossary<br/>(85 Terms across 15 Categories)"]
     B --> D["📋 Enterprise Data Context Aspects<br/>(Domain, Tier, Role, Diagnostic Context)"]
+    B --> E1["🔗 Native EntryLinks<br/>(188 Table-Term Graph Edges)"]
     C --> E["🗄️ Exact 25 Crucial BigQuery Tables<br/>(Orders, Logistics SLAs, Inventory, Ad Bids, Pricing)"]
     D --> E
+    E1 --> E
     E --> F["🤖 BigQuery Data Agent (GenAI)<br/>(Dynamic SQL Query Generation)"]
     F --> G["📊 Executive Root-Cause Findings<br/>(Stockouts, DACH Carrier Bottlenecks, Ad Throttling)"]
 ```
@@ -39,10 +41,11 @@ To understand how data and context are organized in our Google Cloud environment
 | **Google Cloud Knowledge Catalog** *(Knowledge Catalog)* | **The Intelligent Enterprise Library Catalog** | Google Cloud's centralized discovery and metadata management service. It scans, indexes, and understands all data assets stored across BigQuery and business glossaries. |
 | **Entry Group (`@bigquery`, `@dataplex`)** | **Library Wings / Sections** | A logical collection of catalog entries. `@bigquery` houses physical database tables; `@dataplex` houses business terms and taxonomy. |
 | **Entry** | **A Library Index Card** | A digital catalog record representing a single asset (e.g., the BigQuery table `shipping_lead_times` or the Business Term `Gross Merchandise Value`). |
+| **EntryLink (`entryLinks`)** | **Direct Catalog Cross-Reference Link** | A native Knowledge Catalog directed relationship edge (`definition` link type) binding physical BigQuery table entries in `@bigquery` directly to their canonical Glossary Term entries in `@dataplex`. In LumièreShop, 188 EntryLinks are provisioned in `europe-west4`. |
 | **AspectType** | **A Standardized Passport / Form Template** | A reusable metadata schema defining custom business properties. In our project, we created the `enterprise-data-context` AspectType to standardize domain categorization, data tiers, operational roles, and diagnostic incident summaries. |
 | **Aspect** | **A Filled-Out Passport Attached to a Table** | The actual metadata card attached to a specific table. For instance, the aspect on `shipping_lead_times` specifies that it belongs to *Logistics*, is a *Gold-tier* table, and diagnoses *DACH carrier capacity bottlenecks and SLA checkout abandonment*. |
-| **Business Glossary (`ecommerce-glossary`)** | **The Enterprise Corporate Dictionary** | The single source of truth for business metrics, calculation formulas, and corporate acronyms. In our project, `ecommerce-glossary` contains 39 terms across 11 business domains in location `global`. |
-| **Category & Term** | **Dictionary Chapters & Definitions** | A **Category** is a domain folder (e.g., *Digital Marketing Performance*), and a **Term** is a specific business concept (e.g., *Influencer Attributed Revenue*, *Carrier Bottleneck SLA*). |
+| **Business Glossary (`ecommerce-glossary`)** | **The Enterprise Corporate Dictionary** | The single source of truth for business metrics, calculation formulas, and corporate acronyms. In our project, `ecommerce-glossary` contains 85 terms across 15 categories in location `global`, binding to all 140 BigQuery tables. |
+| **Category & Term** | **Dictionary Chapters & Definitions** | A **Category** is a domain folder (e.g., *Digital Marketing Performance*, *Temporal Simulation*), and a **Term** is a specific business concept (e.g., *Influencer Attributed Revenue*, *Carrier Bottleneck SLA*, *Today*). |
 | **BigQuery Data Agent** | **The Conversational Analytics AI Analyst** | Google Cloud's GenAI-powered analytics service that takes plain-English questions and the discovered 25 tables to write and execute SQL queries automatically. |
 
 ---
@@ -55,7 +58,8 @@ To enable AI agents and search engines to understand the exact role and importan
 graph TD
     subgraph S1["1. Enterprise Classification Standards"]
         D1["🥇 Gold, 🥈 Silver, 🥉 Bronze Medallion Tiers"]
-        D2["🏢 11 Business Domains: Commercial, Logistics, Paid Ads, Inventory..."]
+        D2["🏢 15 Glossary Categories & 17 Architectural Table Domains (Domains A–Q)"]
+        D3["🔗 188 Native EntryLinks Binding Tables to Business Terms"]
     end
 
     subgraph S2["2. Standardized Aspect Schema: enterprise-data-context"]
@@ -74,14 +78,22 @@ graph TD
 ```
 
 ### A. The Medallion Data Tiers
-1. **Gold (Curated Aggregates)**: High-level business performance metrics, commercial pacing targets, and daily category benchmarks (e.g. `daily_category_targets`, `weekly_commercial_targets`).
+1. **Gold (Curated Aggregates & Planning)**: High-level business performance metrics, commercial pacing targets, and daily category benchmarks (e.g. `daily_category_targets`, `weekly_commercial_targets`, `category_15min_targets`, `orders`).
 2. **Silver (Consolidated & Operational)**: Enriched operational transaction logs, carrier transit tracking, inventory snapshots, and ad bidding performance (e.g. `shipping_lead_times`, `inventory_snapshots`, `ad_bidding_log`).
-3. **Bronze (Raw Event Telemetry)**: Granular clickstream events, web sessions, and payment gateway technical logs (e.g. `web_events`, `web_sessions`, `sales_event_stream`).
+3. **Bronze (Raw Event Telemetry & Staging)**: Granular clickstream events, web sessions, and payment gateway technical logs (e.g. `web_events`, `web_sessions`, `sales_event_stream`, `stg_shopify_*`).
+4. **Sandbox & QA (Non-Production & Legacy)**: Machine learning feature stores, synthetic test payloads, and legacy 2023 archives (e.g. `dev_customer_churn_feature_store`, `qa_load_test_sessions_backup`).
 
-### B. The 4-Field `enterprise-data-context` Aspect Schema
+### B. Enterprise Domain Taxonomy: 15 Categories & 17 Table Domains
+The semantic model reconciles two complementary perspectives:
+- **15 Knowledge Catalog Glossary Categories**: Functional corporate vocabulary groupings in `ecommerce-glossary` (`marketing`, `supply_chain`, `logistics`, `pricing_merchandising`, `technical_checkout`, `finance`, `returns_rma`, `customer_service`, `loyalty_retention`, `omnichannel_pos`, `product_pim`, `lifecycle_marketing`, `staging_ingestion`, `data_governance`, and `temporal_context`).
+  - *Special Category: `temporal_context`*: Defines 16 relative and fixed calendar anchor terms (e.g., `this_week`, `today`, `yesterday`, `simulation_anchor_now`, `cyber_monday`) ensuring the AI Data Agent accurately scopes date filters to the Black Friday 2026 simulation window.
+- **17 Architectural Table Domains (Domains A through Q)**: Physical storage organization of all 140 BigQuery tables across transactional systems, supply chain IoT, and staging buffers.
+- **188 Native EntryLinks**: Directed relationships provisioned in Google Cloud Knowledge Catalog connecting BigQuery table entries to their canonical business terms.
+
+### C. The 4-Field `enterprise-data-context` Aspect Schema
 Every table in the `ecommerce_dw` dataset has a structured Aspect attached in Google Cloud with four dedicated fields:
 - **`business_domain`**: The business area (e.g. `domain_a_commercial_performance`, `domain_g_logistics`, `domain_k_paid_advertising`).
-- **`data_tier`**: Medallion architecture classification (`gold_curated`, `silver_consolidated`, `bronze_raw_staging`).
+- **`data_tier`**: Medallion architecture classification (`gold_curated`, `silver_consolidated`, `bronze_raw_staging`, `sandbox_qa`).
 - **`operational_role`**: The primary operational duty of the table in daily retail workflows (e.g. `carrier_transit_tracking`, `hourly_pacing_benchmarking`).
 - **`incident_relevance_summary`**: A detailed business explanation of how this table helps diagnose commercial issues (e.g., tracking delivery SLA delays during Black Week sales surges).
 
@@ -139,7 +151,7 @@ Google Cloud Knowledge Catalog uses **AI Vector Embeddings** to understand meani
 In LumièreShop, data assets and governance metadata do not exist in silos; they form two interconnected graph structures:
 
 #### A. The Metadata Knowledge Graph (Governance & Context Plane)
-Knowledge Catalog models metadata as a directed graph connecting governance definitions, custom aspects, and physical database assets.
+Knowledge Catalog models metadata as a directed graph connecting governance definitions, custom aspects, and physical database assets via **188 native EntryLinks**:
 
 ```mermaid
 graph LR
@@ -163,20 +175,24 @@ graph LR
 
     Term -.->|SEMANTICALLY_MAPS| Aspect
     Aspect -->|ATTACHED_TO| Table
+    Term ==>|NATIVE_ENTRY_LINK| Table
 ```
 
 #### How 3-Hop Graph Traversal Operates During Discovery:
 1. **Hop 1 — Semantic Entry Point**:
-   When the executive prompt (*"decreased revenue during Black Week"*) is evaluated, the search engine matches relevant **Glossary Term Nodes** (e.g. *Target Variance*, *Stockout Lost Revenue*, *Carrier Bottlenecks*).
-2. **Hop 2 — Aspect & Relational Edge Traversal**:
-   From the matched terms, the engine traverses relational edges to the **`enterprise-data-context` Aspect Nodes** and their attached **BigQuery Table Entry Nodes** (`shipping_lead_times`, `ad_bidding_log`, `oos_interactions`).
+   When the executive prompt (*"decreased revenue during Black Week"*) is evaluated, the search engine matches relevant **Glossary Term Nodes** (e.g. *Target Variance*, *Stockout Lost Revenue*, *Carrier Bottlenecks*, *Yesterday*).
+2. **Hop 2 — Native EntryLinks & Aspect Traversal**:
+   From the matched terms, the engine traverses relational edges via **Knowledge Catalog EntryLinks** (188 provisioned definition links) and **`enterprise-data-context` Aspect Nodes** directly to the target **BigQuery Table Entry Nodes** (`shipping_lead_times`, `ad_bidding_log`, `oos_interactions`).
 3. **Hop 3 — Context Hydration & Column Traversal**:
-   Our application service (`discovery_service.py`) dynamically traverses the term's metadata graph to extract calculation formulas (e.g., `SUM(sale_price * quantity)`) and column-level definitions, providing the BigQuery Data Agent with complete schema grounding.
+   Our application service (`discovery_service.py`) dynamically traverses the term's metadata graph to extract calculation formulas (e.g., `SUM(sale_price * quantity)`) and column-level bindings across all 140 tables, providing the BigQuery Data Agent with complete schema grounding.
 
 ---
 
 #### B. The Relational Schema Join Graph (BigQuery Data Plane)
-Once the 25 crucial tables are discovered, the BigQuery Data Agent uses their **Primary Key / Foreign Key relational topology** to automatically construct accurate multi-table SQL queries:
+Once the 25 crucial tables are discovered, the BigQuery Data Agent uses their **logical Primary Key / Foreign Key relational topology** to automatically construct accurate multi-table SQL queries.
+
+> [!NOTE]
+> **Logical Keys vs. Physical BigQuery Constraints**: In BigQuery, relational integrity is maintained through standard **logical key conventions** rather than enforced ANSI SQL physical constraints (which BigQuery does not enforce anyway). The tables share uniform key column names (`order_id`, `product_id`, `category_id`, `user_id`, `session_id`, `campaign_id`, `dc_id`), which the Gemini Data Agent resolves seamlessly via Knowledge Catalog column descriptions and glossary bindings.
 
 ```mermaid
 graph LR
@@ -287,4 +303,4 @@ graph TD
 | **Maintenance Burden** | High (static SQL scripts and manual spreadsheets) | Zero drift (centralized cloud governance in Knowledge Catalog) |
 
 ---
-*Document Version: 1.1.0 | Dataset: `ecommerce_dw` | Google Cloud Knowledge Catalog & BigQuery*
+*Document Version: 1.2.0 | Dataset: `ecommerce_dw` (140 Tables) | 85 Business Terms across 15 Categories | 188 Native EntryLinks | Google Cloud Knowledge Catalog & BigQuery*

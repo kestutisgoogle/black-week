@@ -1,8 +1,8 @@
 {
   "glossary": {
     "name": "ecommerce-glossary",
-    "display_name": "Lumi\u00e8reShop Executive Retail Glossary (140 Tables Complete)",
-    "description": "Enterprise semantic glossary defining retail business metrics, e-commerce KPIs, operational failure modes, and BigQuery column bindings across all 17 domains for Lumi\u00e8reShop.",
+    "display_name": "LumièreShop Executive Retail Glossary (140 Tables Complete)",
+    "description": "Enterprise semantic glossary defining retail business metrics, e-commerce KPIs, operational failure modes, and BigQuery column bindings across all 17 domains for LumièreShop.",
     "categories": [
       {
         "id": "marketing",
@@ -77,7 +77,7 @@
       {
         "id": "temporal_context",
         "display_name": "Temporal Simulation & Calendar Context",
-        "description": "Semantic temporal anchor definitions, relative calendar mappings ('this week', 'today', 'yesterday', 'previous week', 'MTD'), and date bounds for the Lumi\u00e8reShop Black Friday 2026 executive incident simulation."
+        "description": "Semantic temporal anchor definitions, relative calendar mappings ('this week', 'today', 'yesterday', 'previous week', 'MTD'), and date bounds for LumièreShop retail and promotional calendar periods."
       }
     ],
     "terms": [
@@ -85,7 +85,7 @@
         "id": "roas",
         "display_name": "ROAS (Return on Ad Spend)",
         "category_id": "marketing",
-        "definition": "Marketing efficiency metric calculated as total attributed sales revenue divided by advertising expenditure. Baseline Black Week target is 4.8x.",
+        "definition": "Marketing efficiency metric calculated as total attributed sales revenue divided by advertising expenditure across paid acquisition channels.",
         "formula": "SUM(orders.total_amount) / SUM(daily_ad_performance.spend)",
         "synonyms": [
           "ad efficiency",
@@ -334,7 +334,7 @@
         "id": "price_index",
         "display_name": "Competitor Price Index Parity",
         "category_id": "pricing_merchandising",
-        "definition": "Ratio of competitor retail prices compared to Lumi\u00e8reShop prices for identical SKUs. 1.00x denotes exact price parity.",
+        "definition": "Ratio of competitor retail prices compared to LumièreShop prices for identical SKUs. 1.00x denotes exact price parity.",
         "formula": "competitor_price / retail_price",
         "synonyms": [
           "price parity",
@@ -471,7 +471,7 @@
         "id": "black_week_promotional_period",
         "display_name": "Black Week Peak Commercial Period",
         "category_id": "finance",
-        "definition": "The annual Q4 retail peak promotional sales period from Monday November 23, 2026 00:00:00 to Sunday November 29, 2026 23:59:59 UTC, encompassing Black Friday and Cyber Monday. Evaluated against executive weekly_commercial_targets and daily_category_targets with an executive sales benchmark of \u20ac6,650,000 across categories.",
+        "definition": "The annual Q4 retail peak promotional sales period from Monday November 23, 2026 00:00:00 to Sunday November 29, 2026 23:59:59 UTC, encompassing Black Friday and Cyber Monday. Evaluated against executive weekly_commercial_targets and daily_category_targets with an executive sales benchmark of €6,650,000 across categories.",
         "formula": "orders.created_at >= '2026-11-23 00:00:00' AND orders.created_at < '2026-11-30 00:00:00'",
         "synonyms": [
           "Black Week",
@@ -1092,7 +1092,7 @@
       },
       {
         "id": "customer_escalation_rate",
-        "display_name": "Customer Escalation Incident Rate",
+        "display_name": "Customer Escalation Rate",
         "category_id": "customer_service",
         "definition": "Percentage of customer support inquiries escalated to senior management or tier-3 support teams.",
         "formula": "COUNT(customer_escalations.escalation_id) / COUNT(support_tickets.ticket_id)",
@@ -1871,7 +1871,7 @@
         "id": "this_week",
         "display_name": "This Week (Black Week 2026)",
         "category_id": "temporal_context",
-        "definition": "In the Lumi\u00e8reShop executive incident simulation, 'this week' (or 'current week') refers to Black Week 2026 (the week starting Monday, November 23, 2026 through Monday, November 30, 2026 / Cyber Monday). For actual transactions, inventory, and marketing events, records are available from Monday, November 23, 2026 00:00:00 UTC up to the incident cutoff of Friday, November 27, 2026 14:30:00 UTC. Planned target pacing tables cover the entire 8-day promotional week (November 23\u201330, 2026).",
+        "definition": "In LumièreShop operations, 'this week' (or 'current week') refers to Black Week 2026 (the promotional week starting Monday, November 23, 2026 through Monday, November 30, 2026 / Cyber Monday). For actual transactions, inventory, and marketing events, records are available from Monday, November 23, 2026 00:00:00 UTC up to the latest reporting cutoff of Friday, November 27, 2026 14:30:00 UTC. Planned target pacing tables cover the entire 8-day promotional week (November 23–30, 2026).",
         "formula": "created_at BETWEEN '2026-11-23 00:00:00 UTC' AND '2026-11-27 14:30:00 UTC'",
         "synonyms": [
           "this week",
@@ -1920,7 +1920,7 @@
         "id": "today",
         "display_name": "Today (Black Friday 2026-11-27)",
         "category_id": "temporal_context",
-        "definition": "In the Lumi\u00e8reShop simulation, 'today' refers to Black Friday (Friday, November 27, 2026) from 00:00:00 UTC up to the active incident simulation cutoff at 14:30:00 UTC. SQL queries filtering for 'today' or 'today's sales' must filter for date '2026-11-27' or timestamp range between '2026-11-27 00:00:00 UTC' and '2026-11-27 14:30:00 UTC'.",
+        "definition": "In LumièreShop operations, 'today' refers to Black Friday (Friday, November 27, 2026) from 00:00:00 UTC up to the reporting cutoff at 14:30:00 UTC. SQL queries filtering for 'today' or 'today's sales' must filter for date '2026-11-27' or timestamp range between '2026-11-27 00:00:00 UTC' and '2026-11-27 14:30:00 UTC'.",
         "formula": "DATE(created_at) = '2026-11-27' AND created_at <= '2026-11-27 14:30:00 UTC'",
         "synonyms": [
           "today",
@@ -1931,7 +1931,6 @@
           "today's actuals",
           "today so far",
           "friday actuals",
-          "incident day",
           "today's data",
           "today's sales"
         ],
@@ -1970,7 +1969,7 @@
         "id": "yesterday",
         "display_name": "Yesterday (Black Thursday / Thanksgiving 2026-11-26)",
         "category_id": "temporal_context",
-        "definition": "In the Lumi\u00e8reShop simulation, 'yesterday' refers to the full calendar day preceding Black Friday, which is Thursday, November 26, 2026 (Thanksgiving / Black Thursday). SQL queries filtering for 'yesterday' must filter for DATE = '2026-11-26' or timestamp between '2026-11-26 00:00:00 UTC' and '2026-11-26 23:59:59 UTC'.",
+        "definition": "In the LumièreShop simulation, 'yesterday' refers to the full calendar day preceding Black Friday, which is Thursday, November 26, 2026 (Thanksgiving / Black Thursday). SQL queries filtering for 'yesterday' must filter for DATE = '2026-11-26' or timestamp between '2026-11-26 00:00:00 UTC' and '2026-11-26 23:59:59 UTC'.",
         "formula": "DATE(created_at) = '2026-11-26'",
         "synonyms": [
           "yesterday",
@@ -2010,7 +2009,7 @@
         "id": "previous_week",
         "display_name": "Previous Week (Pre-Black Week Baseline 2026-11-16 to 2026-11-22)",
         "category_id": "temporal_context",
-        "definition": "In the Lumi\u00e8reShop simulation, 'previous week' (or 'last week') refers to the full 7-day pre-promotional baseline week immediately preceding Black Week, spanning Monday, November 16, 2026 through Sunday, November 22, 2026. SQL queries comparing current performance against last week must use this date range.",
+        "definition": "In the LumièreShop simulation, 'previous week' (or 'last week') refers to the full 7-day pre-promotional baseline week immediately preceding Black Week, spanning Monday, November 16, 2026 through Sunday, November 22, 2026. SQL queries comparing current performance against last week must use this date range.",
         "formula": "created_at >= '2026-11-16 00:00:00 UTC' AND created_at < '2026-11-23 00:00:00 UTC'",
         "synonyms": [
           "previous week",
@@ -2039,10 +2038,6 @@
           {
             "table": "web_sessions",
             "column": "session_started_at"
-          },
-          {
-            "table": "weekly_commercial_targets",
-            "column": "week_start_date"
           }
         ]
       },
@@ -2050,7 +2045,7 @@
         "id": "two_weeks_ago",
         "display_name": "Two Weeks Ago (2026-11-09 to 2026-11-15)",
         "category_id": "temporal_context",
-        "definition": "In the Lumi\u00e8reShop simulation, 'two weeks ago' refers to the 7-day baseline period spanning Monday, November 9, 2026 through Sunday, November 15, 2026.",
+        "definition": "In the LumièreShop simulation, 'two weeks ago' refers to the 7-day baseline period spanning Monday, November 9, 2026 through Sunday, November 15, 2026.",
         "formula": "created_at >= '2026-11-09 00:00:00 UTC' AND created_at < '2026-11-16 00:00:00 UTC'",
         "synonyms": [
           "two weeks ago",
@@ -2083,7 +2078,7 @@
         "id": "this_month",
         "display_name": "This Month (November 2026 MTD)",
         "category_id": "temporal_context",
-        "definition": "In the Lumi\u00e8reShop simulation, 'this month' refers to November 2026 Month-to-Date (MTD), spanning from November 1, 2026 00:00:00 UTC up to the simulation cutoff on Friday, November 27, 2026 14:30:00 UTC.",
+        "definition": "In the LumièreShop simulation, 'this month' refers to November 2026 Month-to-Date (MTD), spanning from November 1, 2026 00:00:00 UTC up to the simulation cutoff on Friday, November 27, 2026 14:30:00 UTC.",
         "formula": "DATE(created_at) >= '2026-11-01' AND created_at <= '2026-11-27 14:30:00 UTC'",
         "synonyms": [
           "this month",
@@ -2112,10 +2107,6 @@
           {
             "table": "web_sessions",
             "column": "session_started_at"
-          },
-          {
-            "table": "weekly_commercial_targets",
-            "column": "week_start_date"
           }
         ]
       },
@@ -2123,7 +2114,7 @@
         "id": "last_month",
         "display_name": "Last Month (October 2026)",
         "category_id": "temporal_context",
-        "definition": "In the Lumi\u00e8reShop simulation, 'last month' (or 'previous month') refers to October 2026, containing historical baseline data in the dataset (October 11, 2026 through October 31, 2026).",
+        "definition": "In the LumièreShop simulation, 'last month' (or 'previous month') refers to October 2026, containing historical baseline data in the dataset (October 11, 2026 through October 31, 2026).",
         "formula": "DATE(created_at) BETWEEN '2026-10-01' AND '2026-10-31'",
         "synonyms": [
           "last month",
@@ -2155,9 +2146,9 @@
       },
       {
         "id": "simulation_anchor_now",
-        "display_name": "Current Simulation Time (2026-11-27 14:30 UTC)",
+        "display_name": "Current Time / Black Friday Cutoff (2026-11-27 14:30 UTC)",
         "category_id": "temporal_context",
-        "definition": "The exact fixed point-in-time simulation anchor for Lumi\u00e8reShop: Friday, November 27, 2026 at 14:30:00 UTC (Black Friday early afternoon). The business scenario takes place at this exact moment during executive incident triage. Zero operational records exist after this timestamp.",
+        "definition": "The operational reporting cutoff timestamp for LumièreShop: Friday, November 27, 2026 at 14:30:00 UTC (Black Friday early afternoon). Represents the latest available real-time operational and transactional data point in the data warehouse.",
         "formula": "TIMESTAMP '2026-11-27 14:30:00 UTC'",
         "synonyms": [
           "now",
@@ -2165,8 +2156,8 @@
           "right now",
           "current moment",
           "as of now",
-          "incident time",
-          "simulation cutoff",
+          "reporting cutoff",
+          "data cutoff",
           "present time",
           "latest available data",
           "real time now"
@@ -2216,10 +2207,6 @@
           {
             "table": "weekly_commercial_targets",
             "column": "week_start_date"
-          },
-          {
-            "table": "discount_coupons_master",
-            "column": "valid_to"
           }
         ]
       },
@@ -2258,18 +2245,16 @@
       },
       {
         "id": "black_week_tuesday",
-        "display_name": "Black Week Tuesday / Stockout Incident Day (2026-11-24)",
+        "display_name": "Black Week Tuesday (2026-11-24)",
         "category_id": "temporal_context",
-        "definition": "Tuesday, November 24, 2026 of Black Week. The critical day when the top 3 best-selling Beauty SKUs experienced premature physical stockouts at the European distribution centers by 10:30 UTC.",
+        "definition": "Tuesday, November 24, 2026 of Black Week (Day 2 of the promotional campaign calendar). Used to evaluate second-day promotional intake, category conversion rates, and inventory velocity across regional distribution centers.",
         "formula": "DATE(created_at) = '2026-11-24'",
         "synonyms": [
           "tuesday of this week",
           "black week tuesday",
-          "stockout day",
           "tuesday actuals",
           "nov 24",
-          "day 2 of black week",
-          "oos day"
+          "day 2 of black week"
         ],
         "bindings": [
           {
@@ -2296,9 +2281,9 @@
       },
       {
         "id": "black_week_wednesday",
-        "display_name": "Black Week Wednesday / Recommender Degradation Day (2026-11-25)",
+        "display_name": "Black Week Wednesday (2026-11-25)",
         "category_id": "temporal_context",
-        "definition": "Wednesday, November 25, 2026 of Black Week. The day when catalog recommendation algorithms fell back to low-margin generic items following stockouts, causing conversion rate (CVR) and average order value (AOV) to decline.",
+        "definition": "Wednesday, November 25, 2026 of Black Week (Day 3 of the promotional campaign calendar). Used to evaluate mid-week promotional sales velocity, customer basket composition, and recommender engagement across digital storefronts.",
         "formula": "DATE(created_at) = '2026-11-25'",
         "synonyms": [
           "wednesday of this week",
@@ -2329,15 +2314,15 @@
       },
       {
         "id": "black_week_thursday",
-        "display_name": "Black Week Thursday / Ad Throttle Day (2026-11-26)",
+        "display_name": "Black Week Thursday / Thanksgiving (2026-11-26)",
         "category_id": "temporal_context",
-        "definition": "Thursday, November 26, 2026 of Black Week (Thanksgiving / Black Thursday). The day when Meta Ads automated Target ROAS bidding algorithms detected falling on-page conversion value and throttled paid acquisition spend by 31%.",
+        "definition": "Thursday, November 26, 2026 of Black Week (Day 4 of the promotional campaign calendar, corresponding to Thanksgiving / Black Thursday). Used to evaluate pre-Black Friday customer traffic surge, advertising campaign pacing, and promotional intake.",
         "formula": "DATE(created_at) = '2026-11-26'",
         "synonyms": [
           "thursday of this week",
           "black week thursday",
           "thanksgiving",
-          "ad throttle day",
+          "black thursday",
           "nov 26",
           "day 4 of black week"
         ],
@@ -2431,10 +2416,6 @@
           {
             "table": "daily_category_targets",
             "column": "date"
-          },
-          {
-            "table": "legacy_orders_2023_archive",
-            "column": "created_at"
           }
         ]
       },

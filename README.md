@@ -276,7 +276,7 @@ The application opens in an authentic Google Workspace dark-mode shell. A promin
 ![Screen 1: Google Workspace Chat Alert](docs/images/screen1_google_workspace_alert.png)
 
 - **Exact Semantic Search Prompt Display**: Step 1 renders the exact plain-English business prompt dispatched to Google Cloud Knowledge Catalog in a Material Design 3 container.
-- **Lumière Sales Bot Binding**: Clicking "Lumière Sales Bot" in the left navigation sidebar resets and binds the primary agent's prompt to `"It's Black Friday 14:30. Please prepare the data that will serve to find root cause of the problem of decreased revenue comparing to forecasted revenue during Black Week Sales."`
+- **Lumière Sales Bot Binding**: Clicking "Lumière Sales Bot" in the left navigation sidebar resets and binds the primary agent's prompt to `"Prepare sales, marketing, ads, inventory, all connected business domains data"`
 - **Dynamic Real Live Counts**: Null-coalesced live counts (`table_count`, `term_count`, `entry_link_count`) dynamically render across all 4 preparation steps without placeholder fallbacks.
 - **Action**: Clicking *"Please prepare the data to analyze the issue"* executes a live 4-step progressive data preparation sequence:
   1. `Querying Google Cloud Knowledge Catalog for business context...` 

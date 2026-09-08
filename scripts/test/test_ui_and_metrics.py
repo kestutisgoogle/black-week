@@ -78,7 +78,7 @@ def run_backend_api_tests():
     print(f"Health Check Status: {health_res.status_code} -> {health_res.json()}")
     
     # Test Data Preparation API
-    prep_res = requests.post(PREPARE_DATA_API, json={"prompt": "It's Black Friday 14:30. Please prepare the data that will serve to find root cause of the problem of decreased revenue comparing to forecasted revenue during Black Week Sales."})
+    prep_res = requests.post(PREPARE_DATA_API, json={"prompt": "Prepare sales, marketing, ads, inventory, all connected business domains data"})
     print(f"Prepare Data API Status: {prep_res.status_code}")
     if prep_res.status_code == 200:
         prep_data = prep_res.json()

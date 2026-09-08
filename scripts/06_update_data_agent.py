@@ -52,7 +52,7 @@ PROMPTS = {
         "DATA_AGENT_ID",
         DATA_AGENT_ID,
         "LumiereShop Primary Data Agent",
-        "It's Black Friday 14:30. Please prepare the data that will serve to find root cause of the problem of decreased revenue comparing to forecasted revenue during Black Week Sales."
+        "Prepare sales, marketing, ads, inventory, all connected business domains data"
     ),
     "agent_a": (
         "DATA_AGENT_A_ID",

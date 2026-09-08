@@ -109,7 +109,7 @@ def run_suite_2_knowledge_catalog():
     
     t0 = time.time()
     payload = {
-        "prompt": "It's Black Friday 14:30. Please prepare the data that will serve to find root cause of the problem of decreased revenue comparing to forecasted revenue during Black Week Sales."
+        "prompt": "Prepare sales, marketing, ads, inventory, all connected business domains data"
     }
     r = requests.post(f"{LOCAL_URL}/api/prepare-data", json=payload, timeout=20)
     lat = time.time() - t0

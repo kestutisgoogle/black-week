@@ -45,123 +45,97 @@ DATASET_ID = os.environ.get("BQ_DATASET_ID", "ecommerce_dw")
 # Import the 130+ table metadata dictionary from apply_bq_descriptions
 from apply_bq_descriptions import TABLE_METADATA
 
-# Explicit rich context for the 25 crucial forensic investigation tables (PRESERVED 100%)
+# Explicit rich context for the 25 core commerce & telemetry tables (Neutralized Enterprise Semantics)
 CRUCIAL_ASPECT_CONTEXT = {
     "categories": (
-        "Master product category taxonomy and merchandising hierarchy. Essential for Black Friday 14:30 root cause "
-        "analysis of decreased revenue comparing to forecasted revenue during Black Week Sales. Used to partition commercial intake "
-        "targets and actual sales revenue by category to isolate the EUR 530,000 revenue deficit in the Beauty category."
+        "Master product category taxonomy and merchandising hierarchy. Used to partition commercial intake targets, "
+        "category pacing curves, and actual sales revenue across retail merchandising lines."
     ),
     "products": (
-        "Master product catalog, default selling prices, cost of goods, and brand metadata. Essential for Black Friday 14:30 root cause "
-        "analysis of decreased revenue comparing to forecasted revenue during Black Week Sales. Identifies hero revenue drivers "
-        "(SKU 1001, 1002, 1003) experiencing stockouts, lost demand, and margin erosion during peak commercial sales pacing."
+        "Master product catalog, default selling prices, cost of goods, and brand metadata. Core dimension table for "
+        "evaluating product-level revenue contribution, margins, and SKU catalog attributes."
     ),
     "distribution_centers": (
-        "Regional warehouse fulfillment hubs and logistics centers (Paris Hub DC1, Frankfurt Hub DC2). Essential for Black Friday 14:30 "
-        "root cause analysis of decreased revenue comparing to forecasted revenue during Black Week Sales. Identifies regional inventory "
-        "allocation, out-of-stock warehouse locations, and carrier dispatch bottlenecks causing revenue underperformance."
+        "Regional warehouse fulfillment hubs and logistics centers (Paris Hub DC1, Frankfurt Hub DC2). Tracks regional "
+        "inventory allocation, dispatch capacity, and warehouse throughput."
     ),
     "inventory_items": (
-        "Real-time master stock allocations, warehouse batch availability, and safety stock thresholds. Essential for Black Friday 14:30 "
-        "root cause analysis of decreased revenue comparing to forecasted revenue during Black Week Sales. Tracks physical inventory "
-        "depletion and stock buffer exhaustion during Black Week sales waves."
+        "Real-time master stock allocations, warehouse batch availability, and safety stock thresholds. Tracks active "
+        "warehouse inventory levels, physical buffer quantities, and replenishment thresholds."
     ),
     "inventory_snapshots": (
-        "Historical hourly and daily inventory snapshots tracking stock depletion and stockout timelines. Essential for Black Friday 14:30 "
-        "root cause analysis of decreased revenue comparing to forecasted revenue during Black Week Sales. Captures the exact zero-stock "
-        "duration and stockout timestamps for Beauty hero items triggering EUR 530k in lost sales."
+        "Historical hourly and daily inventory snapshots tracking stock depletion and availability timelines across "
+        "distribution centers. Captures SKU inventory balances and zero-stock duration intervals."
     ),
     "users": (
-        "Registered customer accounts, country codes, geographic cohorts, and account creation dates. Essential for Black Friday 14:30 "
-        "root cause analysis of decreased revenue comparing to forecasted revenue during Black Week Sales. Segmenting buyer behavior and "
-        "regional conversion variations."
+        "Registered customer accounts, country codes, geographic cohorts, and account creation dates. Dimension table for "
+        "customer segmentation, cohort retention, and geographic market distribution."
     ),
     "orders": (
-        "Master order transactions, order timestamps, status, gross revenue, net revenue, and promo discounts. Central fact table for "
-        "Black Friday 14:30 root cause analysis of decreased revenue comparing to forecasted revenue during Black Week Sales. Quantifies the "
-        "overall top-line commercial shortfall and order volume gap."
+        "Master order transactions, order timestamps, status, gross revenue, net revenue, and promotional discounts. Central "
+        "fact table for analyzing commercial sales volume, transaction velocity, and overall revenue realization."
     ),
     "order_items": (
-        "Line-item level order transactions detailing purchased SKUs, unit quantities, item prices, and margins. Central fact table for "
-        "Black Friday 14:30 root cause analysis of decreased revenue comparing to forecasted revenue during Black Week Sales. Computes SKU-level "
-        "revenue contribution, basket sizes, and category-level commercial deficits."
+        "Line-item level order transactions detailing purchased SKUs, unit quantities, item prices, and margins. Computes "
+        "SKU-level revenue contribution, basket size distribution, and product gross margins."
     ),
     "sales_event_stream": (
-        "Real-time streaming transactional event feed capturing high-frequency sales events and intra-hour velocity. Central root cause table "
-        "for Black Friday 14:30 root cause analysis of decreased revenue comparing to forecasted revenue during Black Week Sales. Identifies "
-        "the sudden intraday drop in intake velocity across Friday afternoon."
+        "Real-time streaming transactional event feed capturing high-frequency sales events and intra-hour intake velocity "
+        "across all active digital storefront channels."
     ),
     "weekly_commercial_targets": (
-        "Executive weekly revenue budgets and targets by domain and country. Benchmark baseline for Black Friday 14:30 root cause "
-        "analysis of decreased revenue comparing to forecasted revenue during Black Week Sales. Establishes the EUR 1,750,000 Beauty commercial target."
+        "Executive weekly revenue budgets and targets by domain and country. Benchmark baseline for evaluating commercial "
+        "performance, sales target attainment, and seasonal demand planning."
     ),
     "daily_category_targets": (
-        "Daily commercial revenue targets, planned conversion rates, target ROAS, and expected order volume by category. Benchmark baseline table "
-        "for Black Friday 14:30 root cause analysis of decreased revenue comparing to forecasted revenue during Black Week Sales. Defines the "
-        "EUR 795,000 Friday target for the Beauty category against actual intake."
+        "Daily commercial revenue targets, planned conversion rates, target ROAS, and expected order volume by category. "
+        "Establishes commercial pacing quotas and planned daily conversion benchmarks."
     ),
     "category_15min_targets": (
-        "Intraday 15-minute expected revenue target curves and pacing baselines by category. Time-series benchmark table for Black Friday 14:30 "
-        "root cause analysis of decreased revenue comparing to forecasted revenue during Black Week Sales. Exposes the intraday divergence between "
-        "expected pacing and actual realized revenue."
+        "Intraday 15-minute expected revenue target curves and pacing baselines by category. Models hourly intraday customer "
+        "traffic curves, expected intake velocity, and hourly pacing benchmarks."
     ),
     "web_sessions": (
-        "Digital storefront user traffic sessions, device types, landing pages, and traffic channels. Digital experience diagnostic table for "
-        "Black Friday 14:30 root cause analysis of decreased revenue comparing to forecasted revenue during Black Week Sales. Confirms healthy "
-        "traffic volume to rule out site outage."
+        "Digital storefront user traffic sessions, device types, landing pages, UTM campaign parameters, and traffic acquisition channels."
     ),
     "web_events": (
-        "High-volume clickstream event logs tracking page views, search queries, cart additions, and checkout steps. Digital experience root cause table "
-        "for Black Friday 14:30 root cause analysis of decreased revenue comparing to forecasted revenue during Black Week Sales. Isolates conversion funnel "
-        "bottlenecks and cart drop-offs."
+        "High-volume clickstream event logs tracking page views, search queries, cart additions, and checkout steps. Telemetry "
+        "table for analyzing conversion funnel performance and user drop-off points."
     ),
     "oos_interactions": (
-        "Out-of-stock telemetry logging user attempts to purchase zero-stock SKUs, waitlist joins, and bounce events. Core root cause table for "
-        "Black Friday 14:30 root cause analysis of decreased revenue comparing to forecasted revenue during Black Week Sales. Quantifies EUR 530,000 "
-        "in lost consumer demand directly caused by Beauty inventory exhaustion."
+        "Out-of-stock telemetry logging user attempts to purchase zero-stock SKUs, waitlist joins, and bounce events. Captures "
+        "unfulfilled consumer demand and calculates estimated lost revenue due to stockouts."
     ),
     "competitor_price_feed": (
-        "Hourly competitor pricing scrapes, market discounts, and matched SKU price indices across EU retailers. Commercial pricing diagnostic table "
-        "for Black Friday 14:30 root cause analysis of decreased revenue comparing to forecasted revenue during Black Week Sales. Rules out competitor "
-        "price undercutting as cause of deficit."
+        "Hourly competitor pricing scrapes, market discounts, and matched SKU price indices across EU retailers. Benchmark "
+        "table for monitoring market price elasticity and retail price parity."
     ),
     "marketing_campaigns": (
-        "Paid acquisition campaign master directory, channel allocations, and daily budget caps (Google Search, Meta Ads, TikTok). "
-        "Marketing diagnostic table for Black Friday 14:30 root cause analysis of decreased revenue comparing to forecasted revenue during Black Week Sales."
+        "Paid acquisition campaign master directory, channel allocations, and daily budget caps across Google Search, Meta Ads, and video networks."
     ),
     "daily_ad_performance": (
-        "Daily marketing spend, ad impressions, clicks, attributed revenue, and realized ROAS. Core root cause table for Black Friday 14:30 "
-        "root cause analysis of decreased revenue comparing to forecasted revenue during Black Week Sales. Reveals advertising budget under-delivery."
+        "Daily marketing performance tracking ad impressions, clicks, advertising spend, attributed revenue, and realized return on ad spend (ROAS) across paid campaigns."
     ),
     "ad_bidding_log": (
-        "Automated smart bidding engine telemetry capturing bid status, target ROAS limits, budget pacing, and auction bid suppression. "
-        "Core root cause table for Black Friday 14:30 root cause analysis of decreased revenue comparing to forecasted revenue during Black Week Sales."
+        "Automated smart bidding engine telemetry capturing bid status, target ROAS constraints, budget adjustments, auction pacing, and algorithm learning states."
     ),
     "ad_creatives": (
-        "Marketing creative assets, banner copy, video tags, and algorithmic learning status. Core root cause table for Black Friday 14:30 "
-        "root cause analysis of decreased revenue comparing to forecasted revenue during Black Week Sales. Pinpoints creative fatigue and LEARNING_LIMITED."
+        "Marketing creative assets, banner copy, video tags, quality scores, click-through rates, and platform algorithmic learning status."
     ),
     "payment_gateway_logs": (
-        "Payment service provider (PSP) transaction logs, authorization latencies, and HTTP response codes (PayPal, Stripe, Adyen). "
-        "Core root cause table for Black Friday 14:30 root cause analysis of decreased revenue comparing to forecasted revenue during Black Week Sales. "
-        "Identifies checkout failure rates, HTTP 504 gateway timeouts, and payment drop-offs."
+        "Payment service provider (PSP) transaction logs, authorization latencies, gateway response codes, and payment error rates across PayPal, Stripe, and Adyen."
     ),
     "influencer_campaigns": (
-        "Influencer partner contracts, promotional promo codes, target revenue pacing, and commission rates. Marketing diagnostic table for "
-        "Black Friday 14:30 root cause analysis of decreased revenue comparing to forecasted revenue during Black Week Sales."
+        "Creator and influencer partner contracts, promotional coupon codes, target revenue quotas, commission rates, and attributed campaign revenue."
     ),
     "catalog_recommender_logs": (
-        "Product recommendation engine click logs, fallback recommendation flags, and relevance scoring. Core root cause table for Black Friday 14:30 "
-        "root cause analysis of decreased revenue comparing to forecasted revenue during Black Week Sales. Identifies recommender algorithm bug."
+        "Product recommendation engine impressions, click logs, fallback recommendation flags, and category relevance scoring."
     ),
     "shipping_lead_times": (
-        "Promised customer delivery lead times, carrier routing performance, and transit SLA compliance. Logistics diagnostic table for "
-        "Black Friday 14:30 root cause analysis of decreased revenue comparing to forecasted revenue during Black Week Sales. Tracks delivery SLA breaches."
+        "Promised customer delivery lead times, carrier routing performance, regional transit latency, and delivery SLA compliance."
     ),
     "competitor_promotions": (
-        "Competitor promotional campaign calendars, discount percentages, and flash sale tracking. Merchandising diagnostic table for "
-        "Black Friday 14:30 root cause analysis of decreased revenue comparing to forecasted revenue during Black Week Sales."
+        "Competitor promotional campaign calendars, sitewide discount depths, flash sales, and banner marketing intelligence."
     ),
 }
 

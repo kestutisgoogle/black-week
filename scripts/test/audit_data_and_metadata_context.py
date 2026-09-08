@@ -138,7 +138,7 @@ def run_audit():
         tier_counts[tier] += 1
         domain_counts[domain] += 1
 
-        has_5_part = all(tag in desc for tag in ["[PURPOSE]", "[DOMAIN]", "[GRAIN]", "[TIER & REFRESH]", "[DIAGNOSTIC ROLE]"])
+        has_5_part = all(tag in desc for tag in ["[PURPOSE]", "[DOMAIN]", "[GRAIN]", "[TIER & REFRESH]"]) and ("[ANALYTICAL ROLE]" in desc or "[DIAGNOSTIC ROLE]" in desc)
 
         if is_core:
             core_rows_total += num_rows

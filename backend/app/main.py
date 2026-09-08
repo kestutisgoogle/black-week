@@ -59,10 +59,9 @@ from app.services.prompt_evaluator import PromptEvaluatorService
 discovery_service = KnowledgeDiscoveryService()
 prompt_evaluator = PromptEvaluatorService()
 
-# Default executive incident prompt used for Black Friday revenue root-cause triage
+# Default active prompt used for Knowledge Catalog semantic discovery & BigQuery Data Agent data preparation
 _current_active_prompt = (
-    "It's Black Friday 14:30. Please prepare the data that will serve to find root cause of the "
-    "problem of decreased revenue comparing to forecasted revenue during Black Week Sales."
+    "Prepare sales, marketing, ads, inventory, all connected business domains data"
 )
 
 # Initialize FastAPI application instance
@@ -99,6 +98,7 @@ class ChatRequest(BaseModel):
     user_name: Optional[str] = Field(None, description="User identifier or display name submitting the prompt.")
     menu_item: Optional[str] = Field("chat", description="Interface menu item context ('chat').")
     agent_no: Optional[str] = Field(None, description="Agent identifier (NULL for single agent).")
+    thinking_mode: Optional[str] = Field(None, description="Thinking mode for the BigQuery Data Agent ('FAST' or 'THINKING').")
 
 
 class MultiAgentChatRequest(BaseModel):
@@ -111,6 +111,7 @@ class MultiAgentChatRequest(BaseModel):
     user_name: Optional[str] = Field(None, description="User identifier or display name submitting the prompt.")
     menu_item: Optional[str] = Field("compare chats", description="Interface menu item context ('compare chats').")
     agent_no: Optional[str] = Field(None, description="Agent identifier ('agentA', 'agentB', 'agentC').")
+    thinking_mode: Optional[str] = Field(None, description="Thinking mode for the BigQuery Data Agent ('FAST' or 'THINKING').")
 
 
 class MultiAgentSetupItem(BaseModel):
@@ -287,6 +288,7 @@ async def chat_endpoint(request: ChatRequest):
             request.user_name,
             request.menu_item or "chat",
             request.agent_no,
+            request.thinking_mode or "FAST",
         )
         return res
     except Exception as e:
@@ -344,6 +346,7 @@ async def multi_chat_endpoint(request: MultiAgentChatRequest):
             request.user_name,
             request.menu_item or "compare chats",
             agent_no,
+            request.thinking_mode or "FAST",
         )
         return res
     except Exception as e:

@@ -717,7 +717,34 @@
         </div>
 
         <!-- Input Bar -->
-        <div class="p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+        <div class="p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-2.5">
+          <div class="flex items-center justify-between px-1">
+            <div class="flex items-center gap-2">
+              <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400">Mode:</span>
+              <div id="thinkingModeGroup" class="inline-flex p-0.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs">
+                <button 
+                  type="button" 
+                  id="modeBtnFast"
+                  onclick="setThinkingMode('FAST')"
+                  class="px-3 py-1 rounded-lg flex items-center gap-1.5 transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer text-xs"
+                  title="Fast mode: Direct SQL, minimal reasoning, lower latency"
+                >
+                  <i data-lucide="zap" class="w-3.5 h-3.5 text-amber-500"></i>
+                  <span>Fast</span>
+                </button>
+                <button 
+                  type="button" 
+                  id="modeBtnThinking"
+                  onclick="setThinkingMode('THINKING')"
+                  class="px-3 py-1 rounded-lg flex items-center gap-1.5 transition bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 font-semibold shadow-xs cursor-pointer text-xs"
+                  title="Thinking mode: Detailed reasoning traces, intermediate validation queries, and raw data"
+                >
+                  <i data-lucide="brain" class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400"></i>
+                  <span>Thinking</span>
+                </button>
+              </div>
+            </div>
+          </div>
           <form id="chatForm" onsubmit="handleChatSubmit(event)" class="flex gap-3 items-center">
             <input 
               type="text" 
@@ -890,24 +917,53 @@
           </button>
         </div>
 
-        <!-- Input Form -->
-        <form onsubmit="handleMultiChatSubmit(event)" class="flex items-center gap-2">
-          <input 
-            type="text" 
-            id="multiPromptInput" 
-            class="flex-1 px-4 py-2.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-slate-900 dark:text-white" 
-            placeholder="Ask a diagnostic question across all 3 AI agents simultaneously (e.g. 'Show revenue by category')..." 
-            autocomplete="off"
-          />
-          <button 
-            type="submit" 
-            id="multiSendBtn" 
-            class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-semibold text-xs rounded-xl flex items-center gap-1.5 shadow-sm transition cursor-pointer shrink-0"
-          >
-            <i data-lucide="send" class="w-3.5 h-3.5"></i>
-            <span data-i18n="broadcast_btn">Broadcast to 3 Agents</span>
-          </button>
-        </form>
+        <!-- Mode Selector & Input Form -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between px-1">
+            <div class="flex items-center gap-2">
+              <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400">Mode:</span>
+              <div id="multiThinkingModeGroup" class="inline-flex p-0.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs">
+                <button 
+                  type="button" 
+                  id="multiModeBtnFast"
+                  onclick="setMultiThinkingMode('FAST')"
+                  class="px-2.5 py-1 rounded-lg flex items-center gap-1.5 transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer text-[11px]"
+                  title="Fast mode: Quick turnaround, minimal reasoning"
+                >
+                  <i data-lucide="zap" class="w-3 h-3 text-amber-500"></i>
+                  <span>Fast</span>
+                </button>
+                <button 
+                  type="button" 
+                  id="multiModeBtnThinking"
+                  onclick="setMultiThinkingMode('THINKING')"
+                  class="px-2.5 py-1 rounded-lg flex items-center gap-1.5 transition bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 font-semibold shadow-xs cursor-pointer text-[11px]"
+                  title="Thinking mode: Detailed reasoning traces, intermediate validation queries, and raw data"
+                >
+                  <i data-lucide="brain" class="w-3 h-3 text-indigo-600 dark:text-indigo-400"></i>
+                  <span>Thinking</span>
+                </button>
+              </div>
+            </div>
+          </div>
+          <form onsubmit="handleMultiChatSubmit(event)" class="flex items-center gap-2">
+            <input 
+              type="text" 
+              id="multiPromptInput" 
+              class="flex-1 px-4 py-2.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-slate-900 dark:text-white" 
+              placeholder="Ask a diagnostic question across all 3 AI agents simultaneously (e.g. 'Show revenue by category')..." 
+              autocomplete="off"
+            />
+            <button 
+              type="submit" 
+              id="multiSendBtn" 
+              class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-semibold text-xs rounded-xl flex items-center gap-1.5 shadow-sm transition cursor-pointer shrink-0"
+            >
+              <i data-lucide="send" class="w-3.5 h-3.5"></i>
+              <span data-i18n="broadcast_btn">Broadcast to 3 Agents</span>
+            </button>
+          </form>
+        </div>
       </div>
 
     </div>
@@ -1333,6 +1389,8 @@
     let currentSessionId = 'SESS-CMO-' + Math.random().toString(36).substring(2, 9);
     let currentUserName = '';
     let initialChatStarted = false;
+    let currentThinkingMode = 'THINKING';
+    let currentMultiThinkingMode = 'THINKING';
 
     // =========================================================================
     // MULTILINGUAL i18n SYSTEM (25 European & Global Languages in Alphabetical Order)
@@ -1521,7 +1579,7 @@
             "prep_step_3_done": "BigQuery Data Agent ({agentId}) успешно настроен с {count} таблици.",
             "prep_step_4_active": "BigQuery Data Agent е инициализиран с {count} източника. Стартиране на работното пространство...",
             "prep_step_4_done": "BigQuery Data Agent е готов с {count} източника. Влизане в работното пространство...",
-            "default_alert_prompt": "Черен петък е 14:30 ч. Моля, подгответе данните за откриване на причината за спада в приходите спрямо прогнозата по време на продажбите в Black Week.",
+            "default_alert_prompt": "Подгответе данни за продажби, маркетинг, реклами, складови наличности и всички свързани бизнес домейни",
             "compare_prompts": "Сравни промптове",
             "compare_chats": "Сравни чатове",
             "cmo_workspace_badge": "Аналитично пространство на CMO",
@@ -1656,7 +1714,7 @@
             "prep_step_3_done": "BigQuery Data Agent ({agentId}) uspješno mapiran s {count} tablica.",
             "prep_step_4_active": "BigQuery Data Agent inicijaliziran s {count} izvora. Pokretanje radnog prostora...",
             "prep_step_4_done": "BigQuery Data Agent spreman s {count} izvora. Ulazak u radni prostor...",
-            "default_alert_prompt": "Crni je petak 14:30. Molimo pripremite podatke kako biste utvrdili uzrok pada prihoda u odnosu na prognozu tijekom Black Week rasprodaje.",
+            "default_alert_prompt": "Pripremite podatke o prodaji, marketingu, oglasima, zalihama i svim povezanim poslovnim domenama",
             "compare_prompts": "Usporedi prompte",
             "compare_chats": "Usporedi razgovore",
             "cmo_workspace_badge": "CMO Analitički radni prostor",
@@ -1791,7 +1849,7 @@
             "prep_step_3_done": "BigQuery Data Agent ({agentId}) úspěšně namapován s {count} tabulkami.",
             "prep_step_4_active": "BigQuery Data Agent inicializován s {count} datovými zdroji. Spouštění pracovního prostoru...",
             "prep_step_4_done": "BigQuery Data Agent připraven s {count} datovými zdroji. Vstup do pracovního prostoru...",
-            "default_alert_prompt": "Je Černý pátek 14:30. Připravte prosím data pro analýzu příčiny poklesu tržeb oproti prognóze během výprodejů Black Week.",
+            "default_alert_prompt": "Připravte data týkající se prodeje, marketingu, reklam, zásob a všech souvisejících obchodních domén",
             "compare_prompts": "Porovnat prompty",
             "compare_chats": "Porovnat chaty",
             "cmo_workspace_badge": "Pracovní prostor CMO",
@@ -1926,7 +1984,7 @@
             "prep_step_3_done": "BigQuery Data Agent ({agentId}) succesvol gekoppeld aan {count} tabellen.",
             "prep_step_4_active": "BigQuery Data Agent geïnitialiseerd met {count} bronnen. Werkruimte starten...",
             "prep_step_4_done": "BigQuery Data Agent gereed met {count} bronnen. Werkruimte laden...",
-            "default_alert_prompt": "Het is Black Friday 14:30 uur. Bereid de gegevens voor die dienen om de hoofdoorzaak te vinden van de gedaalde omzet ten opzichte van de prognose tijdens Black Week.",
+            "default_alert_prompt": "Bereid gegevens voor over verkoop, marketing, advertenties, voorraad en alle verbonden bedrijfsdomeinen",
             "compare_prompts": "Prompts vergelijken",
             "compare_chats": "Chats vergelijken",
             "cmo_workspace_badge": "CMO Analytics Workspace",
@@ -2022,7 +2080,7 @@
             "prep_step_3_done": "BigQuery Data Agent ({agentId}) mapped with {count} tables ({linkCount} EntryLinks).",
             "prep_step_4_active": "BigQuery Data Agent initialized ({count} tables, {linkCount} EntryLinks). Launching Workspace...",
             "prep_step_4_done": "BigQuery Data Agent ready with {count} tables, {termCount} terms, and {linkCount} EntryLinks. Entering Workspace...",
-            "default_alert_prompt": "It's Black Friday 14:30. Please prepare the data that will serve to find root cause of the problem of decreased revenue comparing to forecasted revenue during Black Week Sales.",
+            "default_alert_prompt": "Prepare sales, marketing, ads, inventory, all connected business domains data",
             "compare_prompts": "Compare prompts",
             "compare_chats": "Compare chats",
             "cmo_workspace_badge": "CMO Analytics Workspace",
@@ -2157,7 +2215,7 @@
             "prep_step_3_done": "BigQuery Data Agent ({agentId}) edukalt seotud {count} tabeliga.",
             "prep_step_4_active": "BigQuery Data Agent initsialiseeritud {count} allikaga. Tööruumi käivitamine...",
             "prep_step_4_done": "BigQuery Data Agent valmis {count} allikaga. Tööruumi sisenemine...",
-            "default_alert_prompt": "On Must Reede 14:30. Palun valmistage ette andmed, et selgitada välja tulude languse põhjus Black Week müügi ajal.",
+            "default_alert_prompt": "Valmistage ette müügi-, turundus-, reklaami-, lao- ja kõigi seotud ärivaldkondade andmed",
             "compare_prompts": "Võrdle viipasid",
             "compare_chats": "Võrdle vestlusi",
             "cmo_workspace_badge": "CMO Analüütiline Tööruum",
@@ -2292,7 +2350,7 @@
             "prep_step_3_done": "BigQuery Data Agent ({agentId}) liitetty onnistuneesti {count} taulukkoon.",
             "prep_step_4_active": "BigQuery Data Agent alustettu {count} lähteellä. Käynnistetään työtila...",
             "prep_step_4_done": "BigQuery Data Agent valmis {count} lähteellä. Avataan työtila...",
-            "default_alert_prompt": "Kello on Black Fridayna 14:30. Valmistele tiedot, joiden avulla selvitetään Black Weekin ennusteeseen nähden laskeneen myynnin perimmäinen syy.",
+            "default_alert_prompt": "Valmistele myynnin, markkinoinnin, mainosten, varaston ja kaikkien liittyvien liiketoiminta-alueiden tiedot",
             "compare_prompts": "Vertaa kehotteita",
             "compare_chats": "Vertaa keskusteluja",
             "cmo_workspace_badge": "CMO Analytics -työtila",
@@ -2388,7 +2446,7 @@
             "prep_step_3_done": "BigQuery Data Agent ({agentId}) associé avec succès à {count} tables.",
             "prep_step_4_active": "BigQuery Data Agent initialisé avec {count} sources. Lancement de l'espace...",
             "prep_step_4_done": "BigQuery Data Agent prêt avec {count} sources. Ouverture de l'espace...",
-            "default_alert_prompt": "Nous sommes le Black Friday à 14h30. Veuillez préparer les données qui permettront de trouver la cause de la baisse des revenus par rapport aux prévisions pendant la Black Week.",
+            "default_alert_prompt": "Préparer les données relatives aux ventes, au marketing, aux publicités, aux stocks et à tous les domaines d'activité associés",
             "compare_prompts": "Comparer les invites",
             "compare_chats": "Comparer les discussions",
             "cmo_workspace_badge": "Espace Analytique CMO",
@@ -2484,7 +2542,7 @@
             "prep_step_3_done": "BigQuery Data Agent ({agentId}) erfolgreich mit {count} Tabellen verknüpft.",
             "prep_step_4_active": "BigQuery Data Agent initialisiert mit {count} Datenquellen. Workspace startet...",
             "prep_step_4_done": "BigQuery Data Agent bereit mit {count} Datenquellen. Workspace wird geladen...",
-            "default_alert_prompt": "Es ist Black Friday 14:30 Uhr. Bitte bereiten Sie die Daten vor, um die Ursache für den Umsatzrückgang im Vergleich zur Prognose während der Black Week zu ermitteln.",
+            "default_alert_prompt": "Bereiten Sie Daten zu Vertrieb, Marketing, Werbung, Lagerbestand und allen verbundenen Geschäftsbereichen vor",
             "compare_prompts": "Prompts vergleichen",
             "compare_chats": "Chats vergleichen",
             "cmo_workspace_badge": "CMO Analytics Workspace",
@@ -2580,7 +2638,7 @@
             "prep_step_3_done": "Το BigQuery Data Agent ({agentId}) αντιστοιχίστηκε με επιτυχία με {count} πίνακες.",
             "prep_step_4_active": "Το BigQuery Data Agent αρχικοποιήθηκε με {count} πηγές. Εκκίνηση χώρου εργασίας...",
             "prep_step_4_done": "Το BigQuery Data Agent είναι έτοιμο με {count} πηγές. Είσοδος στον χώρο εργασίας...",
-            "default_alert_prompt": "Είναι Black Friday 14:30. Παρακαλώ προετοιμάστε τα δεδομένα για να εντοπιστεί η αιτία της μείωσης των εσόδων σε σχέση με την πρόβλεψη.",
+            "default_alert_prompt": "Προετοιμάστε δεδομένα πωλήσεων, μάρκετινγκ, διαφημίσεων, αποθεμάτων και όλων των συνδεδεμένων επιχειρηματικών τομέων",
             "compare_prompts": "Σύγκριση προτροπών",
             "compare_chats": "Σύγκριση συνομιλιών",
             "cmo_workspace_badge": "Χώρος Αναλυτικής CMO",
@@ -2715,7 +2773,7 @@
             "prep_step_3_done": "BigQuery Data Agent ({agentId}) sikeresen beállítva {count} táblával.",
             "prep_step_4_active": "BigQuery Data Agent inicializálva {count} adatforrással. Munkaterület indítása...",
             "prep_step_4_done": "BigQuery Data Agent kész {count} adatforrással. Belépés a munkaterületre...",
-            "default_alert_prompt": "Fekete Péntek 14:30 van. Kérjük, készítse elő az adatokat a Black Week eladások során a várthoz képest csökkent bevétel okának feltárásához.",
+            "default_alert_prompt": "Készítse elő az értékesítési, marketing-, hirdetési, készlet- és minden kapcsolódó üzleti terület adatait",
             "compare_prompts": "Promptek összehasonlítása",
             "compare_chats": "Chat-ek összehasonlítása",
             "cmo_workspace_badge": "CMO Analitikai Munkaterület",
@@ -2850,7 +2908,7 @@
             "prep_step_3_done": "BigQuery Data Agent ({agentId}) mappato con successo su {count} tabelle.",
             "prep_step_4_active": "BigQuery Data Agent inizializzato con {count} origini. Avvio dell'area...",
             "prep_step_4_done": "BigQuery Data Agent pronto con {count} origini. Apertura dell'area...",
-            "default_alert_prompt": "È il Black Friday alle 14:30. Preparare i dati che serviranno a trovare la causa principale del calo delle entrate rispetto alle previsioni durante la Black Week.",
+            "default_alert_prompt": "Preparare i dati relativi a vendite, marketing, annunci pubblicitari, inventario e tutti i domini aziendali collegati",
             "compare_prompts": "Confronta prompt",
             "compare_chats": "Confronta chat",
             "cmo_workspace_badge": "Area Analitica CMO",
@@ -2946,7 +3004,7 @@
             "prep_step_3_done": "BigQuery Data Agent ({agentId}) veiksmīgi piesaistīts {count} tabulām.",
             "prep_step_4_active": "BigQuery Data Agent inicializēts ar {count} avotiem. Palaiž darba vidi...",
             "prep_step_4_done": "BigQuery Data Agent gatavs ar {count} avotiem. Ieeja darba vidē...",
-            "default_alert_prompt": "Melnā piektdiena 14:30. Lūdzu, sagatavojiet datus, lai noskaidrotu ieņēmumu samazināšanās cēloni Black Week laikā.",
+            "default_alert_prompt": "Sagatavojiet datus par pārdošanu, mārketingu, reklāmām, krājumiem un visām saistītajām biznesa jomām",
             "compare_prompts": "Salīdzināt vaicājumus",
             "compare_chats": "Salīdzināt tērzēšanas",
             "cmo_workspace_badge": "CMO Analītikas Darba Vide",
@@ -3081,7 +3139,7 @@
             "prep_step_3_done": "BigQuery Data Agent ({agentId}) sėkmingai sukonfigūruotas su {count} lentelėmis.",
             "prep_step_4_active": "BigQuery Data Agent inicializuotas su {count} šaltiniais. Paleidžiama darbo erdvė...",
             "prep_step_4_done": "BigQuery Data Agent paruoštas su {count} šaltiniais. Įeinama į darbo erdvę...",
-            "default_alert_prompt": "Juodasis penktadienis 14:30. Paruoškite duomenis, kad nustatytumėte pajamų sumažėjimo priežastį Black Week metu.",
+            "default_alert_prompt": "Paruoškite duomenis apie pardavimus, rinkodarą, skelbimus, atsargas ir visas susijusias verslo sritis",
             "compare_prompts": "Palyginti užklausas",
             "compare_chats": "Palyginti pokalbius",
             "cmo_workspace_badge": "CMO Analitinė Darbo Erdvė",
@@ -3216,7 +3274,7 @@
             "prep_step_3_done": "BigQuery Data Agent ({agentId}) vellykket tilknyttet {count} tabeller.",
             "prep_step_4_active": "BigQuery Data Agent initialisert med {count} kilder. Starter arbeidsområde...",
             "prep_step_4_done": "BigQuery Data Agent klar med {count} kilder. Åpner arbeidsområde...",
-            "default_alert_prompt": "Det er Black Friday kl. 14:30. Vennligst klargjør data som vil tjene til å finne grunnårsaken til inntektsfallet sammenlignet med prognosen under Black Week.",
+            "default_alert_prompt": "Klargjør data for salg, markedsføring, annonser, lager og alle tilknyttede forretningsområder",
             "compare_prompts": "Sammenlign ledetekster",
             "compare_chats": "Sammenlign samtaler",
             "cmo_workspace_badge": "CMO Analytics Workspace",
@@ -3312,7 +3370,7 @@
             "prep_step_3_done": "BigQuery Data Agent ({agentId}) pomyślnie zmapowany z {count} tabelami ({linkCount} EntryLinks).",
             "prep_step_4_active": "BigQuery Data Agent zainicjalizowany ({count} tabel, {linkCount} EntryLinks). Uruchamianie przestrzeni roboczej...",
             "prep_step_4_done": "BigQuery Data Agent gotowy z {count} tabelami, {termCount} pojęciami i {linkCount} EntryLinks. Przechodzenie do przestrzeni roboczej...",
-            "default_alert_prompt": "Jest Czarny Piątek 14:30. Proszę przygotować dane, które pozwolą ustalić przyczynę spadku przychodów w stosunku do prognozy podczas wyprzedaży Black Week.",
+            "default_alert_prompt": "Przygotuj dane dotyczące sprzedaży, marketingu, reklam, zapasów i wszystkich powiązanych domen biznesowych",
             "compare_prompts": "Porównaj prompty",
             "compare_chats": "Porównaj czaty",
             "cmo_workspace_badge": "Przestrzeń Analityczna CMO",
@@ -3447,7 +3505,7 @@
             "prep_step_3_done": "BigQuery Data Agent ({agentId}) mapeado com sucesso em {count} tabelas.",
             "prep_step_4_active": "BigQuery Data Agent inicializado com {count} fontes. A iniciar espaço...",
             "prep_step_4_done": "BigQuery Data Agent pronto com {count} fontes. A carregar espaço...",
-            "default_alert_prompt": "É Black Friday às 14:30. Por favor, prepare os dados que servirão para encontrar a causa raiz da diminuição da receita em relação às previsões durante a Black Week.",
+            "default_alert_prompt": "Preparar dados de vendas, marketing, anúncios, estoque e todos os domínios de negócios conectados",
             "compare_prompts": "Comparar prompts",
             "compare_chats": "Comparar conversas",
             "cmo_workspace_badge": "Painel Analítico CMO",
@@ -3543,7 +3601,7 @@
             "prep_step_3_done": "BigQuery Data Agent ({agentId}) a fost mapat cu succes cu {count} tabele.",
             "prep_step_4_active": "BigQuery Data Agent inițializat cu {count} surse de date. Lansare spațiu de lucru...",
             "prep_step_4_done": "BigQuery Data Agent pregătit cu {count} surse de date. Intrare în spațiul de lucru...",
-            "default_alert_prompt": "Este Black Friday 14:30. Vă rugăm să pregătiți datele pentru a găsi cauza scăderii veniturilor față de prognoză în timpul vânzărilor Black Week.",
+            "default_alert_prompt": "Pregătiți datele privind vânzările, marketingul, reclamele, stocurile și toate domeniile de afaceri conectate",
             "compare_prompts": "Compară prompturi",
             "compare_chats": "Compară conversații",
             "cmo_workspace_badge": "Spațiu Analitic CMO",
@@ -3678,7 +3736,7 @@
             "prep_step_3_done": "BigQuery Data Agent ({agentId}) успешно настроен с {count} таблицами.",
             "prep_step_4_active": "BigQuery Data Agent инициализирован с {count} источниками. Запуск рабочей области...",
             "prep_step_4_done": "BigQuery Data Agent готов с {count} источниками. Вход в рабочую область...",
-            "default_alert_prompt": "Сейчас Черная пятница 14:30. Пожалуйста, подготовьте данные для поиска первопричины снижения выручки по сравнению с прогнозом во время Black Week.",
+            "default_alert_prompt": "Подготовьте данные по продажам, маркетингу, рекламе, складским запасам и всем связанным бизнес-доменам",
             "compare_prompts": "Сравнить промпты",
             "compare_chats": "Сравнить чаты",
             "cmo_workspace_badge": "Аналитическая панель CMO",
@@ -3774,7 +3832,7 @@
             "prep_step_3_done": "BigQuery Data Agent ({agentId}) успешно мапиран са {count} табела.",
             "prep_step_4_active": "BigQuery Data Agent иницијализован са {count} извора. Покретање радног простора...",
             "prep_step_4_done": "BigQuery Data Agent спреман са {count} извора. Улазак у радни простор...",
-            "default_alert_prompt": "Црни је петак 14:30. Молимо припремите податке како бисте утврдили узрок пада прихода у односу на прогнозу током Black Week распродаје.",
+            "default_alert_prompt": "Припремите податке о продаји, маркетингу, огласима, залихама и свим повезаним пословним доменима",
             "compare_prompts": "Упореди промпте",
             "compare_chats": "Упореди разговоре",
             "cmo_workspace_badge": "CMO Аналитички радни простор",
@@ -3909,7 +3967,7 @@
             "prep_step_3_done": "BigQuery Data Agent ({agentId}) úspešne namapovaný s {count} tabuľkami.",
             "prep_step_4_active": "BigQuery Data Agent inicializovaný s {count} zdrojmi údajov. Spúšťanie pracovného priestoru...",
             "prep_step_4_done": "BigQuery Data Agent pripravený s {count} zdrojmi údajov. Vstup do pracovného priestoru...",
-            "default_alert_prompt": "Je Čierny piatok 14:30. Pripravte prosím údaje pre analýzu príčiny poklesu tržieb oproti prognóze počas výpredajov Black Week.",
+            "default_alert_prompt": "Pripravte údaje týkajúce sa predaja, marketingu, reklám, zásob a všetkých súvisiacich obchodných domén",
             "compare_prompts": "Porovnať prompty",
             "compare_chats": "Porovnať chaty",
             "cmo_workspace_badge": "Pracovný priestor CMO",
@@ -4044,7 +4102,7 @@
             "prep_step_3_done": "BigQuery Data Agent ({agentId}) uspešno preslikan z {count} tabelami.",
             "prep_step_4_active": "BigQuery Data Agent inicializiran z {count} viri. Zagon delovnega prostora...",
             "prep_step_4_done": "BigQuery Data Agent pripravljen z {count} viri. Vstop v delovni prostor...",
-            "default_alert_prompt": "Je Črni petek 14:30. Pripravite podatke za ugotavljanje vzroka za padec prihodkov glede na napoved med razprodajo Black Week.",
+            "default_alert_prompt": "Pripravite podatke o prodaji, trženju, oglasih, zalogah in vseh povezanih poslovnih domenah",
             "compare_prompts": "Primerjaj pozive",
             "compare_chats": "Primerjaj pogovore",
             "cmo_workspace_badge": "Analitični delovni prostor CMO",
@@ -4179,7 +4237,7 @@
             "prep_step_3_done": "BigQuery Data Agent ({agentId}) vinculado exitosamente a {count} tablas.",
             "prep_step_4_active": "BigQuery Data Agent inicializado con {count} fuentes. Iniciando espacio...",
             "prep_step_4_done": "BigQuery Data Agent listo con {count} fuentes. Abriendo espacio...",
-            "default_alert_prompt": "Es Black Friday a las 14:30. Por favor, prepare los datos que servirán para encontrar la causa raíz de la disminución de ingresos en comparación con las previsiones durante la Black Week.",
+            "default_alert_prompt": "Preparar datos de ventas, marketing, anuncios, inventario y todos los dominios comerciales conectados",
             "compare_prompts": "Comparar prompts",
             "compare_chats": "Comparar chats",
             "cmo_workspace_badge": "Espacio Analítico CMO",
@@ -4275,7 +4333,7 @@
             "prep_step_3_done": "BigQuery Data Agent ({agentId}) mappad till {count} tabeller.",
             "prep_step_4_active": "BigQuery Data Agent initierad med {count} källor. Startar arbetsyta...",
             "prep_step_4_done": "BigQuery Data Agent redo med {count} källor. Öppnar arbetsyta...",
-            "default_alert_prompt": "Det är Black Friday kl. 14:30. Förbered data som ska användas för att hitta grundorsaken till intäktsminskningen jämfört med prognosen under Black Week.",
+            "default_alert_prompt": "Förbered data för försäljning, marknadsföring, annonser, lager och alla relaterade affärsdomäner",
             "compare_prompts": "Jämför prompter",
             "compare_chats": "Jämför chattar",
             "cmo_workspace_badge": "CMO Analytics Workspace",
@@ -4371,7 +4429,7 @@
             "prep_step_3_done": "BigQuery Data Agent ({agentId}) успішно налаштований із {count} таблицями.",
             "prep_step_4_active": "BigQuery Data Agent ініціалізовано з {count} джерелами. Запуск робочого простору...",
             "prep_step_4_done": "BigQuery Data Agent готовий із {count} джерелами. Вхід у робочий простір...",
-            "default_alert_prompt": "Чорна п'ятниця 14:30. Будь ласка, підготуйте дані для з'ясування причини падіння доходу відносно прогнозу під час розпродажу Black Week.",
+            "default_alert_prompt": "Підготуйте дані щодо продажів, маркетингу, реклами, складських запасів та всіх пов'язаних бізнес-доменів",
             "compare_prompts": "Порівняти промпти",
             "compare_chats": "Порівняти чати",
             "cmo_workspace_badge": "Аналітичний простір CMO",
@@ -4702,7 +4760,7 @@
     }
 
     // Active preparation prompt (dynamically updated by Prompt Studio or default)
-    const DEFAULT_PRIMARY_PROMPT = "It's Black Friday 14:30. Please prepare the data that will serve to find root cause of the problem of decreased revenue comparing to forecasted revenue during Black Week Sales.";
+    const DEFAULT_PRIMARY_PROMPT = "Prepare sales, marketing, ads, inventory, all connected business domains data";
     let activePreparationPrompt = DEFAULT_PRIMARY_PROMPT;
 
     function handleLumiereSalesBotClick(e) {
@@ -4995,6 +5053,38 @@
       sendMultiAgentPrompt(promptText);
     }
 
+    function setThinkingMode(mode) {
+      currentThinkingMode = mode === 'FAST' ? 'FAST' : 'THINKING';
+      const fastBtn = document.getElementById('modeBtnFast');
+      const thinkBtn = document.getElementById('modeBtnThinking');
+      if (fastBtn && thinkBtn) {
+        if (currentThinkingMode === 'FAST') {
+          fastBtn.className = 'px-3 py-1 rounded-lg flex items-center gap-1.5 transition bg-white dark:bg-slate-700 text-amber-600 dark:text-amber-400 font-semibold shadow-xs cursor-pointer text-xs';
+          thinkBtn.className = 'px-3 py-1 rounded-lg flex items-center gap-1.5 transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer text-xs';
+        } else {
+          thinkBtn.className = 'px-3 py-1 rounded-lg flex items-center gap-1.5 transition bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 font-semibold shadow-xs cursor-pointer text-xs';
+          fastBtn.className = 'px-3 py-1 rounded-lg flex items-center gap-1.5 transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer text-xs';
+        }
+      }
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function setMultiThinkingMode(mode) {
+      currentMultiThinkingMode = mode === 'FAST' ? 'FAST' : 'THINKING';
+      const fastBtn = document.getElementById('multiModeBtnFast');
+      const thinkBtn = document.getElementById('multiModeBtnThinking');
+      if (fastBtn && thinkBtn) {
+        if (currentMultiThinkingMode === 'FAST') {
+          fastBtn.className = 'px-2.5 py-1 rounded-lg flex items-center gap-1.5 transition bg-white dark:bg-slate-700 text-amber-600 dark:text-amber-400 font-semibold shadow-xs cursor-pointer text-[11px]';
+          thinkBtn.className = 'px-2.5 py-1 rounded-lg flex items-center gap-1.5 transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer text-[11px]';
+        } else {
+          thinkBtn.className = 'px-2.5 py-1 rounded-lg flex items-center gap-1.5 transition bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 font-semibold shadow-xs cursor-pointer text-[11px]';
+          fastBtn.className = 'px-2.5 py-1 rounded-lg flex items-center gap-1.5 transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer text-[11px]';
+        }
+      }
+      if (window.lucide) lucide.createIcons();
+    }
+
     async function sendPrompt(text) {
       const input = document.getElementById('promptInput') || document.getElementById('cmoChatInput');
       if (input) input.value = text;
@@ -5033,7 +5123,8 @@
             session_id: reqSessionId,
             user_name: currentUserName,
             menu_item: 'chat',
-            agent_no: null
+            agent_no: null,
+            thinking_mode: currentThinkingMode
           })
         });
 
@@ -5319,6 +5410,18 @@
           <i data-lucide="bot" class="w-5 h-5 text-blue-700 dark:text-blue-400"></i>
         </div>
         <div class="max-w-[85%] min-w-0 bg-white dark:bg-slate-800 border border-slate-200/90 dark:border-slate-700 p-6 md:p-7 rounded-3xl rounded-tl-sm text-sm space-y-4 shadow-sm overflow-hidden break-words">
+          <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-700/60 mb-2">
+            <span class="text-xs font-bold text-slate-900 dark:text-white">Lumière Sales Bot</span>
+            ${data.thinking_mode === 'FAST' ? `
+              <span class="inline-flex items-center gap-1 text-[11px] font-medium text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 rounded-full border border-amber-200 dark:border-amber-800/80">
+                <i data-lucide="zap" class="w-3 h-3 text-amber-500"></i> Fast
+              </span>
+            ` : `
+              <span class="inline-flex items-center gap-1 text-[11px] font-medium text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-800/80">
+                <i data-lucide="brain" class="w-3 h-3 text-blue-600 dark:text-blue-400"></i> Thinking
+              </span>
+            `}
+          </div>
           ${htmlContent}
         </div>
       `;
@@ -6112,7 +6215,8 @@
             tables: agent.tables,
             user_name: currentUserName,
             menu_item: 'compare chats',
-            agent_no: 'agent' + key
+            agent_no: 'agent' + key,
+            thinking_mode: currentMultiThinkingMode || 'THINKING'
           })
         });
 
@@ -6267,6 +6371,18 @@
           ${key}
         </div>
         <div class="flex-1 bg-white dark:bg-slate-800 border border-slate-200/90 dark:border-slate-700 p-4 rounded-2xl rounded-tl-sm text-xs space-y-2 shadow-xs overflow-hidden break-words">
+          <div class="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-slate-700/60 mb-1.5">
+            <span class="font-bold text-${color}-700 dark:text-${color}-300">${escapeHtml(agent.name || 'Agent ' + key)}</span>
+            ${data.thinking_mode === 'FAST' ? `
+              <span class="inline-flex items-center gap-1 text-[10px] font-medium text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 rounded-full border border-amber-200 dark:border-amber-800/80">
+                <i data-lucide="zap" class="w-2.5 h-2.5 text-amber-500"></i> Fast
+              </span>
+            ` : `
+              <span class="inline-flex items-center gap-1 text-[10px] font-medium text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded-full border border-indigo-200 dark:border-indigo-800/80">
+                <i data-lucide="brain" class="w-2.5 h-2.5 text-indigo-600 dark:text-indigo-400"></i> Thinking
+              </span>
+            `}
+          </div>
           ${htmlContent}
         </div>
       `;
