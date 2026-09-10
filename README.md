@@ -260,7 +260,28 @@ Open your browser at `http://localhost:8000/`.
 
 ---
 
-### Step 4.6: Deploy to Google Cloud Run (Production)
+### Step 4.6: Export Knowledge Catalog Business Glossary to CSV
+
+To export the 85 business terms and 17 categories from the Google Cloud Knowledge Catalog global glossary (`ecommerce-glossary`) into RFC4180-compliant CSV files in the `export/` directory:
+
+```bash
+# Standard export to export/business-glossary.csv and export/categories.csv
+python3 scripts/export_business_glossary_to_csv.py
+
+# Custom output paths and flags
+python3 scripts/export_business_glossary_to_csv.py \
+  --output export/business-glossary.csv \
+  --categories-csv export/categories.csv \
+  --include-header
+```
+
+Generated files:
+- `export/business-glossary.csv`: 7-column RFC4180 terms schema (`term_display_name,description,steward,tagged_assets,synonyms,related_terms,belongs_to_category`).
+- `export/categories.csv`: 4-column RFC4180 categories schema (`category_display_name,description,steward,belongs_to_category`).
+
+---
+
+### Step 4.7: Deploy to Google Cloud Run (Production)
 
 ### Turnkey Single-Command Cloud Run Deployment (Recommended)
 

@@ -842,43 +842,36 @@
         <!-- Column 1: Agent A -->
         <div class="flex flex-col bg-white dark:bg-slate-900 rounded-2xl border border-blue-200 dark:border-blue-900/60 overflow-hidden shadow-xs">
           <!-- Column Header -->
-          <div class="p-3 border-b border-blue-100 dark:border-blue-900/50 bg-blue-50/50 dark:bg-blue-950/30 flex flex-col gap-1.5 shrink-0">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-1.5">
-                <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
-                <span class="text-xs font-bold text-blue-700 dark:text-blue-300">Agent A</span>
-                <span class="text-[10px] px-1.5 py-0.2 rounded bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 font-mono font-bold">ecommerce_dw</span>
-              </div>
-              <!-- Per-Agent Thinking Toggle -->
-              <div class="inline-flex p-0.5 rounded-lg bg-white/90 dark:bg-slate-800 border border-blue-200 dark:border-blue-800 text-[10px]">
-                <button 
-                  type="button" 
-                  id="agentThinkingBtn_A_fast" 
-                  onclick="setAgentThinkingMode('A', 'FAST')" 
-                  class="px-2 py-0.5 rounded-md flex items-center gap-1 transition text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white cursor-pointer text-[10px]"
-                  title="Fast mode for Agent A"
-                >
-                  <i data-lucide="zap" class="w-2.5 h-2.5 text-amber-500"></i>
-                  <span>Fast</span>
-                </button>
-                <button 
-                  type="button" 
-                  id="agentThinkingBtn_A_thinking" 
-                  onclick="setAgentThinkingMode('A', 'THINKING')" 
-                  class="px-2 py-0.5 rounded-md flex items-center gap-1 transition bg-blue-100 dark:bg-slate-700 text-blue-700 dark:text-blue-300 font-bold shadow-2xs cursor-pointer text-[10px]"
-                  title="Thinking mode for Agent A"
-                >
-                  <i data-lucide="brain" class="w-2.5 h-2.5 text-blue-600 dark:text-blue-400"></i>
-                  <span>Thinking</span>
-                </button>
-              </div>
+          <div class="p-3 border-b border-blue-100 dark:border-blue-900/50 bg-blue-50/50 dark:bg-blue-950/30 flex items-center justify-between gap-2 shrink-0">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+              <span class="text-xs font-bold text-blue-700 dark:text-blue-300">Agent A</span>
+              <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 font-medium">ecommerce_dw</span>
+              <span id="multiBadgeA" class="px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 font-semibold text-[10px]">Full Knowledge Catalog</span>
             </div>
-            <div class="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400">
-              <span id="multiBadgeA" class="px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 font-mono font-bold">Full Knowledge Catalog</span>
-              <span class="font-mono">85 Terms &bull; Custom Aspects</span>
+            <!-- Per-Agent Thinking Toggle -->
+            <div class="inline-flex p-0.5 rounded-lg bg-white/90 dark:bg-slate-800 border border-blue-200 dark:border-blue-800 text-[10px] shrink-0">
+              <button 
+                type="button" 
+                id="agentThinkingBtn_A_fast" 
+                onclick="setAgentThinkingMode('A', 'FAST')" 
+                class="px-2 py-0.5 rounded-md flex items-center gap-1 transition text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white cursor-pointer text-[10px]"
+                title="Fast mode for Agent A"
+              >
+                <i data-lucide="zap" class="w-2.5 h-2.5 text-amber-500"></i>
+                <span>Fast</span>
+              </button>
+              <button 
+                type="button" 
+                id="agentThinkingBtn_A_thinking" 
+                onclick="setAgentThinkingMode('A', 'THINKING')" 
+                class="px-2 py-0.5 rounded-md flex items-center gap-1 transition bg-blue-100 dark:bg-slate-700 text-blue-700 dark:text-blue-300 font-bold shadow-2xs cursor-pointer text-[10px]"
+                title="Thinking mode for Agent A"
+              >
+                <i data-lucide="brain" class="w-2.5 h-2.5 text-blue-600 dark:text-blue-400"></i>
+                <span>Thinking</span>
+              </button>
             </div>
-            <!-- Full Prompt Header in smaller font -->
-            <p id="multiPromptHeaderA" class="text-[10px] text-slate-500 dark:text-slate-400 italic line-clamp-1 hover:line-clamp-none transition-all leading-tight cursor-default" title="Prompt used for Knowledge Catalog discovery"></p>
           </div>
           <!-- Message Thread -->
           <div id="threadAgentA" class="flex-1 p-3.5 overflow-y-auto space-y-3.5 custom-scrollbar bg-slate-50/20 dark:bg-slate-950/20 text-xs">
@@ -909,43 +902,36 @@
         <!-- Column 2: Agent B -->
         <div class="flex flex-col bg-white dark:bg-slate-900 rounded-2xl border border-indigo-200 dark:border-indigo-900/60 overflow-hidden shadow-xs">
           <!-- Column Header -->
-          <div class="p-3 border-b border-indigo-100 dark:border-indigo-900/50 bg-indigo-50/50 dark:bg-indigo-950/30 flex flex-col gap-1.5 shrink-0">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-1.5">
-                <span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
-                <span class="text-xs font-bold text-indigo-700 dark:text-indigo-300">Agent B</span>
-                <span class="text-[10px] px-1.5 py-0.2 rounded bg-indigo-100 dark:bg-indigo-900/60 text-indigo-800 dark:text-indigo-200 font-mono font-bold">ecommerce_dw_2nd</span>
-              </div>
-              <!-- Per-Agent Thinking Toggle -->
-              <div class="inline-flex p-0.5 rounded-lg bg-white/90 dark:bg-slate-800 border border-indigo-200 dark:border-indigo-800 text-[10px]">
-                <button 
-                  type="button" 
-                  id="agentThinkingBtn_B_fast" 
-                  onclick="setAgentThinkingMode('B', 'FAST')" 
-                  class="px-2 py-0.5 rounded-md flex items-center gap-1 transition text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white cursor-pointer text-[10px]"
-                  title="Fast mode for Agent B"
-                >
-                  <i data-lucide="zap" class="w-2.5 h-2.5 text-amber-500"></i>
-                  <span>Fast</span>
-                </button>
-                <button 
-                  type="button" 
-                  id="agentThinkingBtn_B_thinking" 
-                  onclick="setAgentThinkingMode('B', 'THINKING')" 
-                  class="px-2 py-0.5 rounded-md flex items-center gap-1 transition bg-indigo-100 dark:bg-slate-700 text-indigo-700 dark:text-indigo-300 font-bold shadow-2xs cursor-pointer text-[10px]"
-                  title="Thinking mode for Agent B"
-                >
-                  <i data-lucide="brain" class="w-2.5 h-2.5 text-indigo-600 dark:text-indigo-400"></i>
-                  <span>Thinking</span>
-                </button>
-              </div>
+          <div class="p-3 border-b border-indigo-100 dark:border-indigo-900/50 bg-indigo-50/50 dark:bg-indigo-950/30 flex items-center justify-between gap-2 shrink-0">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
+              <span class="text-xs font-bold text-indigo-700 dark:text-indigo-300">Agent B</span>
+              <span class="text-[10px] px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/60 text-indigo-800 dark:text-indigo-200 font-medium">ecommerce_dw_2nd</span>
+              <span id="multiBadgeB" class="px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-800 dark:text-indigo-200 font-semibold text-[10px]">Descriptions Only</span>
             </div>
-            <div class="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400">
-              <span id="multiBadgeB" class="px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-800 dark:text-indigo-200 font-mono font-bold">Descriptions Only</span>
-              <span class="font-mono text-slate-400">0 Terms &bull; 0 Aspects</span>
+            <!-- Per-Agent Thinking Toggle -->
+            <div class="inline-flex p-0.5 rounded-lg bg-white/90 dark:bg-slate-800 border border-indigo-200 dark:border-indigo-800 text-[10px] shrink-0">
+              <button 
+                type="button" 
+                id="agentThinkingBtn_B_fast" 
+                onclick="setAgentThinkingMode('B', 'FAST')" 
+                class="px-2 py-0.5 rounded-md flex items-center gap-1 transition text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white cursor-pointer text-[10px]"
+                title="Fast mode for Agent B"
+              >
+                <i data-lucide="zap" class="w-2.5 h-2.5 text-amber-500"></i>
+                <span>Fast</span>
+              </button>
+              <button 
+                type="button" 
+                id="agentThinkingBtn_B_thinking" 
+                onclick="setAgentThinkingMode('B', 'THINKING')" 
+                class="px-2 py-0.5 rounded-md flex items-center gap-1 transition bg-indigo-100 dark:bg-slate-700 text-indigo-700 dark:text-indigo-300 font-bold shadow-2xs cursor-pointer text-[10px]"
+                title="Thinking mode for Agent B"
+              >
+                <i data-lucide="brain" class="w-2.5 h-2.5 text-indigo-600 dark:text-indigo-400"></i>
+                <span>Thinking</span>
+              </button>
             </div>
-            <!-- Full Prompt Header in smaller font -->
-            <p id="multiPromptHeaderB" class="text-[10px] text-slate-500 dark:text-slate-400 italic line-clamp-1 hover:line-clamp-none transition-all leading-tight cursor-default" title="Prompt used for Knowledge Catalog discovery"></p>
           </div>
           <!-- Message Thread -->
           <div id="threadAgentB" class="flex-1 p-3.5 overflow-y-auto space-y-3.5 custom-scrollbar bg-slate-50/20 dark:bg-slate-950/20 text-xs">
@@ -976,43 +962,36 @@
         <!-- Column 3: Agent C -->
         <div class="flex flex-col bg-white dark:bg-slate-900 rounded-2xl border border-purple-200 dark:border-purple-900/60 overflow-hidden shadow-xs">
           <!-- Column Header -->
-          <div class="p-3 border-b border-purple-100 dark:border-purple-900/50 bg-purple-50/50 dark:bg-purple-950/30 flex flex-col gap-1.5 shrink-0">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-1.5">
-                <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
-                <span class="text-xs font-bold text-purple-700 dark:text-purple-300">Agent C</span>
-                <span class="text-[10px] px-1.5 py-0.2 rounded bg-purple-100 dark:bg-purple-900/60 text-purple-800 dark:text-purple-200 font-mono font-bold">ecommerce_dw_3rd</span>
-              </div>
-              <!-- Per-Agent Thinking Toggle -->
-              <div class="inline-flex p-0.5 rounded-lg bg-white/90 dark:bg-slate-800 border border-purple-200 dark:border-purple-800 text-[10px]">
-                <button 
-                  type="button" 
-                  id="agentThinkingBtn_C_fast" 
-                  onclick="setAgentThinkingMode('C', 'FAST')" 
-                  class="px-2 py-0.5 rounded-md flex items-center gap-1 transition text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white cursor-pointer text-[10px]"
-                  title="Fast mode for Agent C"
-                >
-                  <i data-lucide="zap" class="w-2.5 h-2.5 text-amber-500"></i>
-                  <span>Fast</span>
-                </button>
-                <button 
-                  type="button" 
-                  id="agentThinkingBtn_C_thinking" 
-                  onclick="setAgentThinkingMode('C', 'THINKING')" 
-                  class="px-2 py-0.5 rounded-md flex items-center gap-1 transition bg-purple-100 dark:bg-slate-700 text-purple-700 dark:text-purple-300 font-bold shadow-2xs cursor-pointer text-[10px]"
-                  title="Thinking mode for Agent C"
-                >
-                  <i data-lucide="brain" class="w-2.5 h-2.5 text-purple-600 dark:text-purple-400"></i>
-                  <span>Thinking</span>
-                </button>
-              </div>
+          <div class="p-3 border-b border-purple-100 dark:border-purple-900/50 bg-purple-50/50 dark:bg-purple-950/30 flex items-center justify-between gap-2 shrink-0">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
+              <span class="text-xs font-bold text-purple-700 dark:text-purple-300">Agent C</span>
+              <span class="text-[10px] px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-900/60 text-purple-800 dark:text-purple-200 font-medium">ecommerce_dw_3rd</span>
+              <span id="multiBadgeC" class="px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/60 text-purple-800 dark:text-purple-200 font-semibold text-[10px]">Raw Schema Only</span>
             </div>
-            <div class="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400">
-              <span id="multiBadgeC" class="px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/60 text-purple-800 dark:text-purple-200 font-mono font-bold">Raw Schema Only</span>
-              <span class="font-mono text-slate-400">0 Desc &bull; 0 Terms</span>
+            <!-- Per-Agent Thinking Toggle -->
+            <div class="inline-flex p-0.5 rounded-lg bg-white/90 dark:bg-slate-800 border border-purple-200 dark:border-purple-800 text-[10px] shrink-0">
+              <button 
+                type="button" 
+                id="agentThinkingBtn_C_fast" 
+                onclick="setAgentThinkingMode('C', 'FAST')" 
+                class="px-2 py-0.5 rounded-md flex items-center gap-1 transition text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white cursor-pointer text-[10px]"
+                title="Fast mode for Agent C"
+              >
+                <i data-lucide="zap" class="w-2.5 h-2.5 text-amber-500"></i>
+                <span>Fast</span>
+              </button>
+              <button 
+                type="button" 
+                id="agentThinkingBtn_C_thinking" 
+                onclick="setAgentThinkingMode('C', 'THINKING')" 
+                class="px-2 py-0.5 rounded-md flex items-center gap-1 transition bg-purple-100 dark:bg-slate-700 text-purple-700 dark:text-purple-300 font-bold shadow-2xs cursor-pointer text-[10px]"
+                title="Thinking mode for Agent C"
+              >
+                <i data-lucide="brain" class="w-2.5 h-2.5 text-purple-600 dark:text-purple-400"></i>
+                <span>Thinking</span>
+              </button>
             </div>
-            <!-- Full Prompt Header in smaller font -->
-            <p id="multiPromptHeaderC" class="text-[10px] text-slate-500 dark:text-slate-400 italic line-clamp-1 hover:line-clamp-none transition-all leading-tight cursor-default" title="Prompt used for Knowledge Catalog discovery"></p>
           </div>
           <!-- Message Thread -->
           <div id="threadAgentC" class="flex-1 p-3.5 overflow-y-auto space-y-3.5 custom-scrollbar bg-slate-50/20 dark:bg-slate-950/20 text-xs">
@@ -1223,11 +1202,7 @@
             <i data-lucide="columns-3" class="w-5 h-5"></i>
           </div>
           <div>
-            <div class="flex items-center gap-2">
-              <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">3-Tier Metadata Isolation Setup</span>
-              <span class="text-[10px] px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-800 dark:text-indigo-200 font-mono font-bold">Unified Knowledge Catalog Discovery</span>
-            </div>
-            <h2 class="text-lg font-bold text-slate-900 dark:text-white tracking-tight mt-0.5">Compare Chats • 3 Levels of Metadata Grounding Isolation</h2>
+            <h2 class="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Compare Chats</h2>
           </div>
         </div>
         <button onclick="closeCompareChatsModal()" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
@@ -1245,7 +1220,6 @@
               <i data-lucide="search" class="w-4 h-4 text-indigo-500"></i>
               <span>Knowledge Catalog Table Discovery Prompt</span>
             </span>
-            <span class="text-[11px] text-slate-500 font-medium">Discovers tables once &bull; Maps identically across all 3 tiers</span>
           </div>
           <textarea id="chatDiscoveryPrompt" rows="4" class="w-full p-3.5 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 resize-y min-h-[100px] font-sans leading-relaxed text-slate-900 dark:text-slate-100" placeholder="Enter business inquiry for Knowledge Catalog semantic table discovery (e.g. 'Prepare sales, marketing, ads, inventory, all connected business domains data')...">Prepare sales, marketing, ads, inventory, all connected business domains data</textarea>
           <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-normal">
@@ -1284,16 +1258,16 @@
             <!-- Tier A Card -->
             <div class="p-5 rounded-2xl border-2 border-blue-400 dark:border-blue-600/80 bg-white dark:bg-slate-800/90 shadow-md flex flex-col justify-between space-y-3">
               <div>
-                <div class="flex items-center justify-between mb-2">
+                <div class="mb-2">
                   <span class="text-xs font-bold text-blue-700 dark:text-blue-300 uppercase tracking-wider flex items-center gap-1.5">
                     <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span> Agent A
                   </span>
-                  <span class="px-2.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 font-mono text-[10px] font-bold">
+                </div>
+                <div class="flex items-center gap-2 mb-2 flex-wrap">
+                  <span class="text-xs font-medium text-slate-900 dark:text-slate-100">Dataset: ecommerce_dw</span>
+                  <span class="px-2.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 font-semibold text-[10px]">
                     Full Knowledge Catalog
                   </span>
-                </div>
-                <div class="text-xs font-mono font-bold text-slate-900 dark:text-slate-100 mb-2">
-                  Dataset: ecommerce_dw
                 </div>
                 <p class="text-[11px] text-slate-600 dark:text-slate-300 mb-3 leading-relaxed">
                   Primary warehouse with full enterprise semantic intelligence and data governance layer.
@@ -1321,16 +1295,16 @@
             <!-- Tier B Card -->
             <div class="p-5 rounded-2xl border-2 border-indigo-400 dark:border-indigo-600/80 bg-white dark:bg-slate-800/90 shadow-md flex flex-col justify-between space-y-3">
               <div>
-                <div class="flex items-center justify-between mb-2">
+                <div class="mb-2">
                   <span class="text-xs font-bold text-indigo-700 dark:text-indigo-300 uppercase tracking-wider flex items-center gap-1.5">
                     <span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span> Agent B
                   </span>
-                  <span class="px-2.5 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-800 dark:text-indigo-200 font-mono text-[10px] font-bold">
+                </div>
+                <div class="flex items-center gap-2 mb-2 flex-wrap">
+                  <span class="text-xs font-medium text-slate-900 dark:text-slate-100">Dataset: ecommerce_dw_2nd</span>
+                  <span class="px-2.5 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-800 dark:text-indigo-200 font-semibold text-[10px]">
                     Descriptions Only
                   </span>
-                </div>
-                <div class="text-xs font-mono font-bold text-slate-900 dark:text-slate-100 mb-2">
-                  Dataset: ecommerce_dw_2nd
                 </div>
                 <p class="text-[11px] text-slate-600 dark:text-slate-300 mb-3 leading-relaxed">
                   Physical BigQuery replica with column descriptions, but isolated from Knowledge Catalog glossary terms.
@@ -1358,16 +1332,16 @@
             <!-- Tier C Card -->
             <div class="p-5 rounded-2xl border-2 border-purple-400 dark:border-purple-600/80 bg-white dark:bg-slate-800/90 shadow-md flex flex-col justify-between space-y-3">
               <div>
-                <div class="flex items-center justify-between mb-2">
+                <div class="mb-2">
                   <span class="text-xs font-bold text-purple-700 dark:text-purple-300 uppercase tracking-wider flex items-center gap-1.5">
                     <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span> Agent C
                   </span>
-                  <span class="px-2.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/60 text-purple-800 dark:text-purple-200 font-mono text-[10px] font-bold">
+                </div>
+                <div class="flex items-center gap-2 mb-2 flex-wrap">
+                  <span class="text-xs font-medium text-slate-900 dark:text-slate-100">Dataset: ecommerce_dw_3rd</span>
+                  <span class="px-2.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/60 text-purple-800 dark:text-purple-200 font-semibold text-[10px]">
                     Raw Schema Only
                   </span>
-                </div>
-                <div class="text-xs font-mono font-bold text-slate-900 dark:text-slate-100 mb-2">
-                  Dataset: ecommerce_dw_3rd
                 </div>
                 <p class="text-[11px] text-slate-600 dark:text-slate-300 mb-3 leading-relaxed">
                   Physical BigQuery replica stripped of all descriptions, terms, and aspects for baseline raw schema reasoning.
@@ -1424,7 +1398,7 @@
       <div class="px-6 md:px-8 py-3.5 border-t border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/80 flex items-center justify-between shrink-0 text-xs text-slate-500">
         <div class="flex items-center gap-2">
           <i data-lucide="shield-check" class="w-4 h-4 text-emerald-500"></i>
-          <span>Knowledge Catalog Semantic Search &bull; 3-Tier Physical BigQuery Isolation</span>
+          <span>Knowledge Catalog Semantic Search</span>
         </div>
         <button onclick="closeCompareChatsModal()" class="px-4 py-1.5 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg font-medium transition-colors cursor-pointer">
           <span>Close</span>
@@ -6151,14 +6125,6 @@
         multiAgents[key].table_count = count;
       });
 
-      // Update Column Headers
-      const headerA = document.getElementById('multiPromptHeaderA');
-      const headerB = document.getElementById('multiPromptHeaderB');
-      const headerC = document.getElementById('multiPromptHeaderC');
-      if (headerA) headerA.textContent = prompt;
-      if (headerB) headerB.textContent = prompt;
-      if (headerC) headerC.textContent = prompt;
-
       closeCompareChatsModal();
       switchToMultiAgentWorkspaceView();
 
@@ -6173,35 +6139,16 @@
       if (!thread) return;
 
       const color = key === 'A' ? 'blue' : (key === 'B' ? 'indigo' : 'purple');
-      let tierBadge = "";
-      let tierDesc = "";
-
-      if (key === 'A') {
-        tierBadge = "Tier A: Full Knowledge Catalog (ecommerce_dw)";
-        tierDesc = "Benchmark agent with rich column descriptions, 85 business glossary terms linked via EntryLinks, and custom governance aspects. Demonstrates complete semantic business understanding.";
-      } else if (key === 'B') {
-        tierBadge = "Tier B: Isolated - Descriptions Only (ecommerce_dw_2nd)";
-        tierDesc = "Physical BigQuery replica with column descriptions preserved, but ZERO Knowledge Catalog glossary terms, ZERO EntryLinks, and ZERO custom aspects. Tests schema descriptions without enterprise semantics.";
-      } else {
-        tierBadge = "Tier C: Isolated - Raw Schema Only (ecommerce_dw_3rd)";
-        tierDesc = "Physical BigQuery replica completely stripped of descriptions, glossary terms, EntryLinks, and aspects. Tests zero-metadata baseline LLM syntactic reasoning against raw column and table names.";
-      }
 
       thread.innerHTML = `
         <div class="flex gap-2.5">
           <div class="w-7 h-7 rounded-full bg-${color}-100 dark:bg-${color}-950 text-${color}-800 dark:text-${color}-200 flex items-center justify-center shrink-0 mt-0.5 shadow-2xs font-bold text-xs">
             ${key}
           </div>
-          <div class="flex-1 bg-white dark:bg-slate-800 border border-slate-200/90 dark:border-slate-700 p-3.5 rounded-2xl rounded-tl-sm space-y-2 shadow-2xs leading-relaxed">
+          <div class="flex-1 bg-white dark:bg-slate-800 border border-slate-200/90 dark:border-slate-700 p-3 rounded-2xl rounded-tl-sm shadow-2xs leading-relaxed">
             <div class="flex items-center gap-1.5 font-bold text-${color}-600 dark:text-${color}-400 text-xs">
               <i data-lucide="bot" class="w-3.5 h-3.5"></i>
-              <span>Agent ${key} Online &bull; ${tierBadge}</span>
-            </div>
-            <p class="text-slate-600 dark:text-slate-300 text-xs leading-relaxed">
-              ${tierDesc}
-            </p>
-            <div class="text-[10px] font-mono text-slate-400 dark:text-slate-500 pt-1 border-t border-slate-100 dark:border-slate-700">
-              Grounded Tables: ${agent.table_count || 37} &bull; Dataset: ${agent.dataset || (key === 'A' ? 'ecommerce_dw' : (key === 'B' ? 'ecommerce_dw_2nd' : 'ecommerce_dw_3rd'))}
+              <span>Agent ${key} Online</span>
             </div>
           </div>
         </div>

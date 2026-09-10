@@ -58,15 +58,13 @@ def test_dom_structure():
     assert workspace_view is not None, "❌ #multiAgentWorkspaceView missing!"
     print("   ✅ #multiAgentWorkspaceView container found.")
 
-    # Check 3-column headers and prompt subheaders
+    # Check 3-column headers
     for key in ['A', 'B', 'C']:
         badge = soup.find(id=f"multiBadge{key}")
-        header = soup.find(id=f"multiPromptHeader{key}")
         thread = soup.find(id=f"threadAgent{key}")
         assert badge is not None, f"❌ #multiBadge{key} missing!"
-        assert header is not None, f"❌ #multiPromptHeader{key} missing!"
         assert thread is not None, f"❌ #threadAgent{key} missing!"
-        print(f"   ✅ Column for Agent {key} verified (Badge, Prompt Subheader, Thread).")
+        print(f"   ✅ Column for Agent {key} verified (Badge, Thread).")
 
     # Check that 'The issue is solved' button is NOT in #multiAgentWorkspaceView
     solved_in_multi = workspace_view.find(id="issueSolvedBtn")
