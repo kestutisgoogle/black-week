@@ -737,9 +737,9 @@ COLUMN_DESCRIPTIONS = {
     },
     "order_items": {
         "order_item_id": "Transaction line item identifier (Primary Key)",
-        "order_id": "Foreign key to orders table",
+        "ord_hdr_num": "Foreign key referencing master orders.order_id",
         "user_id": "Foreign key to users table",
-        "product_id": "Foreign key to products table",
+        "mat_nr": "Material article identifier referencing products.product_id",
         "inventory_item_id": "Foreign key to inventory_items table",
         "quantity": "Quantity of product units purchased",
         "sale_price": "Captured unit selling price at checkout in EUR",
@@ -820,9 +820,9 @@ COLUMN_DESCRIPTIONS = {
     "oos_interactions": {
         "interaction_id": "Out of stock interaction identifier (Primary Key)",
         "session_id": "Foreign key to web_sessions table",
-        "product_id": "Foreign key to products table",
+        "art_code": "Catalog article SKU code referencing products.product_id",
         "clicked_at": "Interaction timestamp",
-        "estimated_lost_revenue": "Estimated lost revenue in EUR based on SKU retail price"
+        "pot_val": "Estimated unrealized sales value from out-of-stock user friction"
     },
     "competitor_price_feed": {
         "feed_id": "Scraped pricing feed identifier (Primary Key)",
@@ -854,7 +854,7 @@ COLUMN_DESCRIPTIONS = {
     },
     "daily_ad_performance": {
         "perf_id": "Ad performance record identifier (Primary Key)",
-        "campaign_id": "Foreign key to marketing_campaigns table",
+        "cid_ref": "External marketing campaign identifier referencing marketing_campaigns.campaign_id",
         "date": "Calendar tracking date (2026-11-23 to 2026-11-27)",
         "impressions": "Total ad impressions served",
         "clicks": "Total ad clicks generated",
@@ -874,11 +874,11 @@ COLUMN_DESCRIPTIONS = {
     },
     "ad_creatives": {
         "creative_id": "Creative asset identifier (Primary Key)",
-        "campaign_id": "Foreign key to marketing_campaigns table",
+        "parent_adgroup_id": "Parent marketing campaign hierarchy identifier referencing marketing_campaigns.campaign_id",
         "name": "Creative asset name",
         "ad_format": "Creative format (Video, Carousel, Static Image)",
         "quality_score": "Ad platform quality score (1 to 10 scale)",
-        "is_learning_limited": "Boolean flag indicating algorithmic delivery bottleneck",
+        "ill": "Boolean flag indicating algorithmic delivery bottleneck",
         "relevance_status": "Relevance status (ACTIVE, FATIGUED, LOW_QUALITY)",
         "last_refreshed_at": "Timestamp when creative asset was last updated"
     },
@@ -905,12 +905,12 @@ COLUMN_DESCRIPTIONS = {
     "catalog_recommender_logs": {
         "log_id": "Recommendation impression log identifier (Primary Key)",
         "session_id": "Foreign key to web_sessions table",
-        "product_id": "Viewed catalog product ID",
-        "recommended_product_id": "Recommended product ID served by widget",
-        "is_fallback_triggered": "Boolean flag indicating recommender fallback activation",
-        "is_category_mismatch": "Boolean flag indicating category mismatch bug (e.g. Electronics on Beauty OOS)",
+        "src_sku": "Source product item viewed on active page (FK to products)",
+        "rec_sku": "Recommended product candidate suggested by ML engine (FK to products)",
+        "fb_rule_id": "Rule engine identifier: 99 = global category fallback, 0 = standard collaborative filter",
+        "cat_mismatch_flg": "Cross-department mismatch flag: 1 = taxonomy parity error (e.g. Beauty displaying Electronics), 0 = normal",
         "user_action": "Visitor action (BOUNCED, CLICKED, IGNORED)",
-        "estimated_lost_substitution_revenue": "Estimated lost substitute sale in EUR",
+        "opp_cost_eur": "Estimated lost substitution revenue from failed recommendation cross-sell",
         "recorded_at": "Impression timestamp"
     },
     "shipping_lead_times": {

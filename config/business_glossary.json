@@ -146,7 +146,7 @@
         "display_name": "Learning Limited (Ad Platform Status)",
         "category_id": "marketing",
         "definition": "Algorithmic state in Meta Ads/Google Ads where an ad set fails to exit the initial machine learning phase or becomes restricted due to creative fatigue or low conversion volume.",
-        "formula": "is_learning_limited = TRUE",
+        "formula": "ill = TRUE",
         "synonyms": [
           "ad fatigue",
           "algorithm lockout",
@@ -156,7 +156,7 @@
         "bindings": [
           {
             "table": "ad_creatives",
-            "column": "is_learning_limited"
+            "column": "ill"
           },
           {
             "table": "ad_bidding_log",
@@ -238,7 +238,7 @@
         "display_name": "Stockout Estimated Lost Revenue",
         "category_id": "supply_chain",
         "definition": "Calculated monetary loss incurred when high-intent shoppers attempt to purchase an out-of-stock SKU.",
-        "formula": "SUM(estimated_lost_revenue) from oos_interactions",
+        "formula": "SUM(pot_val) from oos_interactions",
         "synonyms": [
           "OOS lost revenue",
           "stockout loss",
@@ -248,7 +248,7 @@
         "bindings": [
           {
             "table": "oos_interactions",
-            "column": "estimated_lost_revenue"
+            "column": "pot_val"
           }
         ]
       },
@@ -358,7 +358,7 @@
         "display_name": "Catalog Recommender Category Mismatch",
         "category_id": "pricing_merchandising",
         "definition": "Algorithmic failure mode where the product recommendation engine displays unrelated categories (e.g. Electronics on Beauty pages) upon fallback.",
-        "formula": "is_category_mismatch = TRUE",
+        "formula": "cat_mismatch_flg = 1 AND fb_rule_id = 99",
         "synonyms": [
           "recommender bug",
           "cross-sell failure",
@@ -368,11 +368,11 @@
         "bindings": [
           {
             "table": "catalog_recommender_logs",
-            "column": "is_category_mismatch"
+            "column": "cat_mismatch_flg"
           },
           {
             "table": "catalog_recommender_logs",
-            "column": "estimated_lost_substitution_revenue"
+            "column": "opp_cost_eur"
           }
         ]
       },

@@ -18,7 +18,7 @@ The dataset is partitioned into:
 | :--- | :---: | :---: | :--- | :--- |
 | `web_events` | **17,290,297** | 1590.80 MB | `session_id` | [PURPOSE]: User interaction clickstream funnel events capturing product page views, cart additions, checkout initiations, and transaction successes for conversion funnel drop-off analysis |
 | `web_sessions` | **1,716,000** | 138.00 MB | `session_id` | [PURPOSE]: Web clickstream traffic sessions recording marketing channels, UTM acquisition tags, device operating systems, browsers, and user journey attribution |
-| `order_items` | **83,788** | 7.06 MB | `order_id, order_item_id` | [PURPOSE]: Discrete purchase line items recording product SKU references, realized sale prices, promotional discounts, and basket-level revenue realization |
+| `order_items` | **83,788** | 7.06 MB | `ord_hdr_num, order_item_id` | [PURPOSE]: Discrete purchase line items recording product SKU references, realized sale prices, promotional discounts, and basket-level revenue realization |
 | `sales_event_stream` | **83,788** | 7.51 MB | `event_id` | [PURPOSE]: Real-time streaming transactional event feed capturing high-frequency sales events and intra-hour intake velocity |
 | `orders` | **52,365** | 3.35 MB | `order_id` | [PURPOSE]: Core transactional sales order headers capturing customer checkout completion, gross merchandise value (GMV), order status, payment confirmation, and timestamps for commercial revenue analysis |
 | `payment_gateway_logs` | **51,182** | 5.13 MB | `session_id` | [PURPOSE]: Payment service provider (PSP) authorization logs capturing transaction success rates, latency in milliseconds, error codes, and checkout drop-offs across Stripe, PayPal, and Adyen |
@@ -377,8 +377,8 @@ Detailed column schemas, primary keys, foreign keys, and exact record counts for
 ### 📋 `order_items`
 - **Business Meaning**: [PURPOSE]: Discrete purchase line items recording product SKU references, realized sale prices, promotional discounts, and basket-level revenue realization. [DOMAIN]: Domain B: Transactions & Target Curves. [GRAIN]: One row per purchased item line (order_item_id). [TIER & REFRESH]: GOLD_CURATED | Real-Time Streaming. [ANALYTICAL ROLE]: Line Item Sales - SKU-Level Contribution, Basket Margins & Volume Breakdown.
 - **Record Count**: **83,788 rows** (7.06 MB)
-- **Primary Key (PK)**: `order_id + order_item_id`
-- **Foreign Keys (FK)**: inventory_item_id ➔ `inventory_items.inventory_item_id`, product_id ➔ `products.product_id`, user_id ➔ `users.user_id`
+- **Primary Key (PK)**: `ord_hdr_num + order_item_id`
+- **Foreign Keys (FK)**: inventory_item_id ➔ `inventory_items.inventory_item_id`, mat_nr ➔ `products.product_id`, user_id ➔ `users.user_id`
 
 | Column Name | Data Type | Field Meaning & Calculation Formula |
 | :--- | :--- | :--- |
@@ -386,9 +386,9 @@ Detailed column schemas, primary keys, foreign keys, and exact record counts for
 | `delivered_at` | `TIMESTAMP` | Customer delivery confirmation timestamp |
 | `discount_amount` | `FLOAT64` | Promotional discount applied in EUR |
 | `inventory_item_id` | `INT64` | Foreign key to inventory_items table |
-| `order_id` | `INT64` | Foreign key to orders table |
+| `mat_nr` | `INT64` | Material article identifier referencing products.product_id |
+| `ord_hdr_num` | `INT64` | Foreign key referencing master orders.order_id |
 | `order_item_id` | `INT64` | Transaction line item identifier (Primary Key) |
-| `product_id` | `INT64` | Foreign key to products table |
 | `quantity` | `INT64` | Quantity of product units purchased |
 | `returned_at` | `TIMESTAMP` | Customer return receipt timestamp |
 | `sale_price` | `FLOAT64` | Captured unit selling price at checkout in EUR |
@@ -445,14 +445,14 @@ Detailed column schemas, primary keys, foreign keys, and exact record counts for
 - **Business Meaning**: [PURPOSE]: Customer browsing and cart interactions on out-of-stock items, capturing unfulfilled demand and estimated lost revenue in EUR due to inventory stockouts. [DOMAIN]: Domain C: Out-of-Stock Telemetry. [GRAIN]: One row per out-of-stock user click interaction (interaction_id). [TIER & REFRESH]: GOLD_CURATED | Real-Time Event Feed. [ANALYTICAL ROLE]: Lost Demand Telemetry - Stockout Click Tracking & Unfulfilled Demand Estimation.
 - **Record Count**: **1,182 rows** (51.8 KB)
 - **Primary Key (PK)**: `interaction_id`
-- **Foreign Keys (FK)**: product_id ➔ `products.product_id`, session_id ➔ `sessions.session_id`
+- **Foreign Keys (FK)**: art_code ➔ `products.product_id`, session_id ➔ `sessions.session_id`
 
 | Column Name | Data Type | Field Meaning & Calculation Formula |
 | :--- | :--- | :--- |
+| `art_code` | `INT64` | Catalog article SKU code referencing products.product_id |
 | `clicked_at` | `TIMESTAMP` | Interaction timestamp |
-| `estimated_lost_revenue` | `FLOAT64` | Estimated lost revenue in EUR based on SKU retail price |
 | `interaction_id` | `INT64` | Out of stock interaction identifier (Primary Key) |
-| `product_id` | `INT64` | Foreign key to products table |
+| `pot_val` | `FLOAT64` | Estimated unrealized sales value from out-of-stock user friction |
 | `session_id` | `STRING` | Foreign key to web_sessions table |
 
 ### 📋 `distribution_centers`
@@ -486,13 +486,13 @@ Detailed column schemas, primary keys, foreign keys, and exact record counts for
 ### 📋 `daily_ad_performance`
 - **Business Meaning**: [PURPOSE]: Daily marketing performance tracking impressions, clicks, advertising spend in EUR, attributed conversions, average CPC, and ROAS efficiency. [DOMAIN]: Domain E: Ad Spend & Paid Traffic. [GRAIN]: One row per campaign per calendar day (perf_id). [TIER & REFRESH]: GOLD_CURATED | Batch Daily @ 03:00 UTC. [ANALYTICAL ROLE]: Paid Acquisition - Daily Spend Velocity, CPC Efficiency & Attributed ROAS Tracking.
 - **Record Count**: **173 rows** (10.8 KB)
-- **Primary Key (PK)**: `campaign_id + date`
+- **Primary Key (PK)**: `cid_ref + date`
 - **Foreign Keys (FK)**: performance_id ➔ `performances.performance_id`
 
 | Column Name | Data Type | Field Meaning & Calculation Formula |
 | :--- | :--- | :--- |
 | `average_cpc` | `FLOAT64` | Average cost per click in EUR |
-| `campaign_id` | `INT64` | Foreign key to marketing_campaigns table |
+| `cid_ref` | `INT64` | External marketing campaign identifier referencing marketing_campaigns.campaign_id |
 | `clicks` | `INT64` | Total ad clicks generated |
 | `conversions` | `INT64` | Total attributed order conversions count |
 | `date` | `DATE` | Calendar tracking date (2026-11-23 to 2026-11-27) |
@@ -518,16 +518,16 @@ Detailed column schemas, primary keys, foreign keys, and exact record counts for
 - **Business Meaning**: [PURPOSE]: Creative asset performance tracking creative fatigue, quality scores, click-through rates, and learning-limited states impacting ad delivery. [DOMAIN]: Domain E: Creative Fatigue & Quality Scores. [GRAIN]: One row per creative visual asset (creative_id). [TIER & REFRESH]: GOLD_CURATED | Batch Daily @ 04:00 UTC. [ANALYTICAL ROLE]: Creative Performance - Asset Fatigue, Quality Scores & Algorithmic Delivery Status.
 - **Record Count**: **5 rows** (0.4 KB)
 - **Primary Key (PK)**: `None`
-- **Foreign Keys (FK)**: campaign_id ➔ `marketing_campaigns.campaign_id`, creative_id ➔ `creatives.creative_id`
+- **Foreign Keys (FK)**: parent_adgroup_id ➔ `marketing_campaigns.campaign_id`, creative_id ➔ `creatives.creative_id`
 
 | Column Name | Data Type | Field Meaning & Calculation Formula |
 | :--- | :--- | :--- |
 | `ad_format` | `STRING` | Creative format (Video, Carousel, Static Image) |
-| `campaign_id` | `INT64` | Foreign key to marketing_campaigns table |
 | `creative_id` | `INT64` | Creative asset identifier (Primary Key) |
-| `is_learning_limited` | `BOOL` | Boolean flag indicating algorithmic delivery bottleneck |
+| `ill` | `BOOL` | Boolean flag indicating algorithmic delivery bottleneck |
 | `last_refreshed_at` | `TIMESTAMP` | Timestamp when creative asset was last updated |
 | `name` | `STRING` | Creative asset name |
+| `parent_adgroup_id` | `INT64` | Parent marketing campaign hierarchy identifier referencing marketing_campaigns.campaign_id |
 | `quality_score` | `INT64` | Ad platform quality score (1 to 10 scale) |
 | `relevance_status` | `STRING` | Relevance status (ACTIVE, FATIGUED, LOW_QUALITY) |
 
@@ -589,20 +589,20 @@ Detailed column schemas, primary keys, foreign keys, and exact record counts for
 - **Business Meaning**: [PURPOSE]: On-page product recommendation widget impressions capturing algorithm fallback events, category mismatch errors, and lost substitution sales. [DOMAIN]: Domain F: Recommender Engine Telemetry. [GRAIN]: One row per widget recommendation display event (log_id). [TIER & REFRESH]: GOLD_CURATED | Real-Time Clickstream Telemetry. [ANALYTICAL ROLE]: Recommender Telemetry - Algorithmic Fallback Rates & Cross-Sell Engagement.
 - **Record Count**: **3,250 rows** (248.8 KB)
 - **Primary Key (PK)**: `session_id`
-- **Foreign Keys (FK)**: log_id ➔ `logs.log_id`, page_category_id ➔ `page_categorys.page_category_id`, page_product_id ➔ `page_products.page_product_id`, recommended_category_id ➔ `recommended_categorys.recommended_category_id`, recommended_product_id ➔ `recommended_products.recommended_product_id`
+- **Foreign Keys (FK)**: log_id ➔ `logs.log_id`, page_category_id ➔ `page_categorys.page_category_id`, rec_sku ➔ `products.product_id`, recommended_category_id ➔ `recommended_categorys.recommended_category_id`, src_sku ➔ `products.product_id`
 
 | Column Name | Data Type | Field Meaning & Calculation Formula |
 | :--- | :--- | :--- |
-| `estimated_lost_substitution_revenue` | `FLOAT64` | Estimated lost substitute sale in EUR |
-| `is_category_mismatch` | `BOOL` | Boolean flag indicating category mismatch bug (e.g. Electronics on Beauty OOS) |
-| `is_fallback_triggered` | `BOOL` | Boolean flag indicating recommender fallback activation |
+| `cat_mismatch_flg` | `INT64` | Cross-department mismatch flag: 1 = taxonomy parity error (e.g. Beauty displaying Electronics), 0 = normal |
+| `fb_rule_id` | `INT64` | Rule engine identifier: 99 = global category fallback, 0 = standard collaborative filter |
 | `log_id` | `STRING` | Recommendation impression log identifier (Primary Key) |
+| `opp_cost_eur` | `NUMERIC` | Estimated lost substitution revenue from failed recommendation cross-sell |
 | `page_category_id` | `INT64` | Product category ID of the page the customer was viewing when recommendations were served. |
-| `page_product_id` | `INT64` | Product ID of the primary item the customer was inspecting. |
+| `rec_sku` | `INT64` | Recommended product candidate suggested by ML engine (FK to products) |
 | `recommended_category_id` | `INT64` | Product category ID of the item recommended by the personalization algorithm (used to detect category mismatch fallbacks). |
-| `recommended_product_id` | `INT64` | Recommended product ID served by widget |
 | `recorded_at` | `TIMESTAMP` | Impression timestamp |
 | `session_id` | `STRING` | Foreign key to web_sessions table |
+| `src_sku` | `INT64` | Source product item viewed on active page (FK to products) |
 | `user_action` | `STRING` | Visitor action (BOUNCED, CLICKED, IGNORED) |
 
 ### 📋 `shipping_lead_times`

@@ -300,9 +300,9 @@ def generate_all_data():
 
                 order_items.append({
                     "order_item_id": order_item_id,
-                    "order_id": order_id,
+                    "ord_hdr_num": order_id,
                     "user_id": user_id,
-                    "product_id": p_id,
+                    "mat_nr": p_id,
                     "inventory_item_id": p_id - (p_id // 1000 - 1) * 850,
                     "quantity": qty,
                     "sale_price": float(price),
@@ -559,9 +559,9 @@ def generate_all_data():
         oos_interactions.append({
             "interaction_id": o_idx,
             "session_id": f"SESS-{random.randint(1, TARGET_TOTAL_SESSIONS)}",
-            "product_id": p_id,
+            "art_code": p_id,
             "clicked_at": oos_dt,
-            "estimated_lost_revenue": float(loss_val)
+            "pot_val": float(loss_val)
         })
 
     # 16. Competitor Price Feed (5 Days: Mon-Fri at 06:00:00 UTC)
@@ -600,11 +600,11 @@ def generate_all_data():
 
     # 18. Daily Ad Performance (5 Days: Mon Nov 23 to Fri Nov 27)
     daily_ad_performance = [
-        {"performance_id": 1, "campaign_id": 1001, "date": "2026-11-23", "impressions": 1300000, "clicks": 80000, "spend": 35000.00, "conversions": 2480, "average_cpc": 0.44},
-        {"performance_id": 2, "campaign_id": 1001, "date": "2026-11-24", "impressions": 950000, "clicks": 55000, "spend": 26000.00, "conversions": 1705, "average_cpc": 0.47},
-        {"performance_id": 3, "campaign_id": 1001, "date": "2026-11-25", "impressions": 950000, "clicks": 55000, "spend": 26000.00, "conversions": 1705, "average_cpc": 0.47},
-        {"performance_id": 4, "campaign_id": 1001, "date": "2026-11-26", "impressions": 1000000, "clicks": 58000, "spend": 27000.00, "conversions": 1800, "average_cpc": 0.47},
-        {"performance_id": 5, "campaign_id": 1001, "date": "2026-11-27", "impressions": 1050000, "clicks": 62000, "spend": 28000.00, "conversions": 1920, "average_cpc": 0.45}
+        {"performance_id": 1, "cid_ref": 1001, "date": "2026-11-23", "impressions": 1300000, "clicks": 80000, "spend": 35000.00, "conversions": 2480, "average_cpc": 0.44},
+        {"performance_id": 2, "cid_ref": 1001, "date": "2026-11-24", "impressions": 950000, "clicks": 55000, "spend": 26000.00, "conversions": 1705, "average_cpc": 0.47},
+        {"performance_id": 3, "cid_ref": 1001, "date": "2026-11-25", "impressions": 950000, "clicks": 55000, "spend": 26000.00, "conversions": 1705, "average_cpc": 0.47},
+        {"performance_id": 4, "cid_ref": 1001, "date": "2026-11-26", "impressions": 1000000, "clicks": 58000, "spend": 27000.00, "conversions": 1800, "average_cpc": 0.47},
+        {"performance_id": 5, "cid_ref": 1001, "date": "2026-11-27", "impressions": 1050000, "clicks": 62000, "spend": 28000.00, "conversions": 1920, "average_cpc": 0.45}
     ]
 
     # 19. Ad Bidding Log
@@ -616,11 +616,11 @@ def generate_all_data():
 
     # 20. Ad Creatives
     ad_creatives = [
-        {"creative_id": 501, "campaign_id": 1001, "name": "Beauty Serum Video Ad Q3", "ad_format": "Video", "quality_score": 4, "relevance_status": "FATIGUED", "is_learning_limited": True, "last_refreshed_at": "2026-08-15T00:00:00Z"},
-        {"creative_id": 502, "campaign_id": 1001, "name": "Eclat Radiance Carousel", "ad_format": "Carousel", "quality_score": 4, "relevance_status": "LEARNING_LIMITED", "is_learning_limited": True, "last_refreshed_at": "2026-08-20T00:00:00Z"},
-        {"creative_id": 503, "campaign_id": 1001, "name": "Aura Glow Cream UGC Spotlight", "ad_format": "Video", "quality_score": 3, "relevance_status": "FATIGUED", "is_learning_limited": True, "last_refreshed_at": "2026-08-10T00:00:00Z"},
-        {"creative_id": 504, "campaign_id": 1001, "name": "Velvet Hydrating Cleanser Demo", "ad_format": "Video", "quality_score": 4, "relevance_status": "LEARNING_LIMITED", "is_learning_limited": True, "last_refreshed_at": "2026-08-25T00:00:00Z"},
-        {"creative_id": 505, "campaign_id": 1001, "name": "Satin Lip Elixir Influencer Cut", "ad_format": "Video", "quality_score": 3, "relevance_status": "FATIGUED", "is_learning_limited": True, "last_refreshed_at": "2026-08-18T00:00:00Z"}
+        {"creative_id": 501, "parent_adgroup_id": 1001, "name": "Beauty Serum Video Ad Q3", "ad_format": "Video", "quality_score": 4, "relevance_status": "FATIGUED", "ill": True, "last_refreshed_at": "2026-08-15T00:00:00Z"},
+        {"creative_id": 502, "parent_adgroup_id": 1001, "name": "Eclat Radiance Carousel", "ad_format": "Carousel", "quality_score": 4, "relevance_status": "LEARNING_LIMITED", "ill": True, "last_refreshed_at": "2026-08-20T00:00:00Z"},
+        {"creative_id": 503, "parent_adgroup_id": 1001, "name": "Aura Glow Cream UGC Spotlight", "ad_format": "Video", "quality_score": 3, "relevance_status": "FATIGUED", "ill": True, "last_refreshed_at": "2026-08-10T00:00:00Z"},
+        {"creative_id": 504, "parent_adgroup_id": 1001, "name": "Velvet Hydrating Cleanser Demo", "ad_format": "Video", "quality_score": 4, "relevance_status": "LEARNING_LIMITED", "ill": True, "last_refreshed_at": "2026-08-25T00:00:00Z"},
+        {"creative_id": 505, "parent_adgroup_id": 1001, "name": "Satin Lip Elixir Influencer Cut", "ad_format": "Video", "quality_score": 3, "relevance_status": "FATIGUED", "ill": True, "last_refreshed_at": "2026-08-18T00:00:00Z"}
     ]
 
     # 21. Payment Gateway Logs:
@@ -759,14 +759,14 @@ def generate_all_data():
         catalog_recommender_logs.append({
             "log_id": f"REC-{rec_id}",
             "session_id": f"SESS-REC-{rec_id}",
-            "page_product_id": p_page,
+            "src_sku": p_page,
             "page_category_id": 1,
-            "recommended_product_id": p_rec,
+            "rec_sku": p_rec,
             "recommended_category_id": 2,
-            "is_fallback_triggered": True,
-            "is_category_mismatch": True,
+            "fb_rule_id": 99,
+            "cat_mismatch_flg": 1,
             "user_action": "BOUNCED",
-            "estimated_lost_substitution_revenue": 40.00,
+            "opp_cost_eur": 40.00,
             "recorded_at": r_dt
         })
         rec_id += 1
@@ -783,14 +783,14 @@ def generate_all_data():
         catalog_recommender_logs.append({
             "log_id": f"REC-{rec_id}",
             "session_id": f"SESS-REC-{rec_id}",
-            "page_product_id": p_obj["product_id"],
+            "src_sku": p_obj["product_id"],
             "page_category_id": p_cat,
-            "recommended_product_id": p_rec_obj["product_id"],
+            "rec_sku": p_rec_obj["product_id"],
             "recommended_category_id": p_cat,
-            "is_fallback_triggered": False,
-            "is_category_mismatch": False,
+            "fb_rule_id": 0,
+            "cat_mismatch_flg": 0,
             "user_action": act,
-            "estimated_lost_substitution_revenue": None,
+            "opp_cost_eur": None,
             "recorded_at": r_dt
         })
         rec_id += 1

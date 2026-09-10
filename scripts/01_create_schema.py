@@ -107,9 +107,9 @@ TABLE_SCHEMAS = {
     ],
     "order_items": [
         bigquery.SchemaField("order_item_id", "INT64", description="Transaction line item."),
-        bigquery.SchemaField("order_id", "INT64", description="Link to header in orders."),
+        bigquery.SchemaField("ord_hdr_num", "INT64", description="Foreign key referencing master orders.order_id."),
         bigquery.SchemaField("user_id", "INT64", description="Link to users."),
-        bigquery.SchemaField("product_id", "INT64", description="Link to products."),
+        bigquery.SchemaField("mat_nr", "INT64", description="Material article identifier referencing products.product_id."),
         bigquery.SchemaField("inventory_item_id", "INT64", description="Mapping to physical unit in inventory_items."),
         bigquery.SchemaField("quantity", "INT64", description="Number of units purchased."),
         bigquery.SchemaField("sale_price", "NUMERIC", description="Capture price at checkout."),
@@ -183,9 +183,9 @@ TABLE_SCHEMAS = {
     "oos_interactions": [
         bigquery.SchemaField("interaction_id", "INT64", description="Event tracking ID."),
         bigquery.SchemaField("session_id", "STRING", description="Link to active session."),
-        bigquery.SchemaField("product_id", "INT64", description="Link to out-of-stock product."),
+        bigquery.SchemaField("art_code", "INT64", description="Catalog article SKU code referencing products.product_id."),
         bigquery.SchemaField("clicked_at", "TIMESTAMP", description="Moment user requested out-of-stock item."),
-        bigquery.SchemaField("estimated_lost_revenue", "NUMERIC", description="Financial loss from out-of-stock bounce.")
+        bigquery.SchemaField("pot_val", "NUMERIC", description="Estimated unrealized sales value from out-of-stock user friction.")
     ],
     "competitor_price_feed": [
         bigquery.SchemaField("scrape_id", "INT64", description="Tracking index of scraper run."),
@@ -205,7 +205,7 @@ TABLE_SCHEMAS = {
     ],
     "daily_ad_performance": [
         bigquery.SchemaField("performance_id", "INT64", description="Aggregated record identifier."),
-        bigquery.SchemaField("campaign_id", "INT64", description="Link to active campaign metadata."),
+        bigquery.SchemaField("cid_ref", "INT64", description="External marketing campaign identifier referencing marketing_campaigns.campaign_id."),
         bigquery.SchemaField("date", "DATE", description="Date performance recorded."),
         bigquery.SchemaField("impressions", "INT64", description="View totals."),
         bigquery.SchemaField("clicks", "INT64", description="Click interaction totals."),
@@ -222,12 +222,12 @@ TABLE_SCHEMAS = {
     ],
     "ad_creatives": [
         bigquery.SchemaField("creative_id", "INT64", description="Unique identifier for ad creative asset."),
-        bigquery.SchemaField("campaign_id", "INT64", description="Reference to marketing_campaigns."),
+        bigquery.SchemaField("parent_adgroup_id", "INT64", description="Parent marketing campaign hierarchy identifier referencing marketing_campaigns.campaign_id."),
         bigquery.SchemaField("name", "STRING", description="Display name of creative asset."),
         bigquery.SchemaField("ad_format", "STRING", description="Visual medium or format."),
         bigquery.SchemaField("quality_score", "INT64", description="Ad quality and performance rating (1-10)."),
         bigquery.SchemaField("relevance_status", "STRING", description="Status of ad relevance."),
-        bigquery.SchemaField("is_learning_limited", "BOOL", description="Flag indicating creative limited by learning constraints."),
+        bigquery.SchemaField("ill", "BOOL", description="Boolean flag indicating algorithmic delivery bottleneck."),
         bigquery.SchemaField("last_refreshed_at", "TIMESTAMP", description="Timestamp asset was last updated.")
     ],
     "payment_gateway_logs": [
@@ -261,14 +261,14 @@ TABLE_SCHEMAS = {
     "catalog_recommender_logs": [
         bigquery.SchemaField("log_id", "STRING", description="Unique recommender widget event identifier."),
         bigquery.SchemaField("session_id", "STRING", description="User web session identifier."),
-        bigquery.SchemaField("page_product_id", "INT64", description="Product ID being viewed on the page."),
+        bigquery.SchemaField("src_sku", "INT64", description="Source product item viewed on active page (FK to products)."),
         bigquery.SchemaField("page_category_id", "INT64", description="Category ID of the current page."),
-        bigquery.SchemaField("recommended_product_id", "INT64", description="Product ID suggested by the recommendation engine."),
+        bigquery.SchemaField("rec_sku", "INT64", description="Recommended product candidate suggested by ML engine (FK to products)."),
         bigquery.SchemaField("recommended_category_id", "INT64", description="Category ID of the recommended product."),
-        bigquery.SchemaField("is_fallback_triggered", "BOOL", description="Whether the recommender triggered global fallback rules."),
-        bigquery.SchemaField("is_category_mismatch", "BOOL", description="Flag indicating category mismatch (e.g. Beauty page showing Electronics)."),
+        bigquery.SchemaField("fb_rule_id", "INT64", description="Rule engine identifier: 99 = global category fallback, 0 = standard collaborative filter."),
+        bigquery.SchemaField("cat_mismatch_flg", "INT64", description="Cross-department mismatch flag: 1 = taxonomy parity error (e.g. Beauty displaying Electronics), 0 = normal."),
         bigquery.SchemaField("user_action", "STRING", description="User interaction ('CLICKED', 'BOUNCED', 'IGNORED')."),
-        bigquery.SchemaField("estimated_lost_substitution_revenue", "NUMERIC", description="Estimated lost revenue when recommendation failed."),
+        bigquery.SchemaField("opp_cost_eur", "NUMERIC", description="Estimated lost substitution revenue from failed recommendation cross-sell."),
         bigquery.SchemaField("recorded_at", "TIMESTAMP", description="Timestamp of recommender event.")
     ],
     "shipping_lead_times": [

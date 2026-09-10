@@ -76,7 +76,7 @@ def get_access_token() -> Optional[str]:
     try:
         from google.auth import default
         from google.auth.transport.requests import Request
-        creds, _ = default(scopes=["https://www.googleapis.com/auth/cloud-platform"])
+        creds, _ = default()
         creds.refresh(Request())
         if creds.token:
             return creds.token
