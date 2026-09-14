@@ -5,7 +5,8 @@ Verifies:
 1. Operational data strictly respects Friday Nov 27, 2026 14:30:00 UTC cutoff (0 rows post-cutoff).
 2. Target tables cover the full 8 days (Nov 23 to Nov 30).
 3. Statistical ratios across Black Week.
-4. Reconciled variance matches €530,000.00 exactly (€65k + €50k + €415k).
+4. The Beauty deficit MEASURED against the pro-rated plan matches the published
+   figure, and the published allocation still adds up to it.
 """
 
 import os
@@ -98,13 +99,26 @@ def run_validation():
         print(f"  ❌ `daily_category_targets`: Expected 32 records (Nov 23 to Nov 30), got {res.cnt} ({res.min_d} to {res.max_d}) [FAIL]")
 
     total += 1
-    query = f"SELECT COUNT(*) AS cnt FROM `{PROJECT_ID}.{DATASET_ID}.category_15min_targets`"
+    # `category_15min_targets` stores a repeating WEEKLY pattern, not a date-keyed
+    # series: 7 day_of_week values * 96 fifteen-minute buckets * 4 categories = 2,688
+    # rows. Consumers expand it to the 3,072 bucket-days of Black Week (8 days * 96
+    # * 4) by joining it to a date spine on EXTRACT(DAYOFWEEK). The previous
+    # expectation of 3,072 assumed the table was date-keyed and was simply wrong.
+    query = f"""
+      SELECT COUNT(*) AS cnt,
+             COUNT(DISTINCT day_of_week) AS dows,
+             COUNT(DISTINCT time_bucket) AS buckets,
+             COUNT(DISTINCT category_id) AS cats
+      FROM `{PROJECT_ID}.{DATASET_ID}.category_15min_targets`
+    """
     res = list(client.query(query).result())[0]
-    if res.cnt == 3072:
-        print(f"  ✅ `category_15min_targets`: 3,072 intervals (8 days * 96 * 4) [PASS]")
+    if res.cnt == 2688 and res.dows == 7 and res.buckets == 96 and res.cats == 4:
+        print("  ✅ `category_15min_targets`: 2,688 rows = 7 day_of_week x 96 buckets "
+              "x 4 categories (weekly pattern) [PASS]")
         passed += 1
     else:
-        print(f"  ❌ `category_15min_targets`: Expected 3,072 records, got {res.cnt} [FAIL]")
+        print(f"  ❌ `category_15min_targets`: Expected 2,688 rows (7x96x4), got "
+              f"{res.cnt} ({res.dows} dows, {res.buckets} buckets, {res.cats} cats) [FAIL]")
 
 
 
@@ -170,19 +184,91 @@ def run_validation():
         except Exception as e:
             print(f"  ❌ `{table_name}`: Error querying table: {e}")
 
-    # 5. Check Mathematical Reconciliation of Beauty Deficit
-    print("\n5. Validating Mathematical Reconciliation of Beauty €530,000 Deficit...")
+    # 5. Beauty deficit, MEASURED against the pro-rated plan.
+    #
+    # This check previously summed three hardcoded literals and asserted they
+    # equalled a fourth. It never queried BigQuery, so it passed on an empty
+    # warehouse and proved only that addition works. It now measures the deficit.
+    #
+    # Basis: period-to-date at the cutoff against the PRO-RATED plan, per the
+    # `target_to_date` and `pacing_variance` glossary terms. Comparing to-date
+    # actuals against the full-period plan is the classic promotional-reporting
+    # error and would overstate the gap badly.
+    #
+    # `category_15min_targets` stores a weekly pattern keyed by BigQuery's native
+    # DAYOFWEEK convention (1=Sunday..7=Saturday). Sanity check if you touch this:
+    # summed over Nov 23-30 it must reproduce daily_category_targets' 10,702,571.
+    print("\n5. Validating the Beauty deficit against the pro-rated plan...")
     total += 1
-    stockout_loss = 65000.00
-    recommender_loss = 50000.00
-    ad_throttling_loss = 415000.00
-    reconciled_sum = stockout_loss + recommender_loss + ad_throttling_loss
 
-    if abs(reconciled_sum - 530000.00) < 0.01:
-        print(f"  ✅ Reconciled Math: €{stockout_loss:,.2f} (Stockouts) + €{recommender_loss:,.2f} (Recommender) + €{ad_throttling_loss:,.2f} (Ad Throttling) = €{reconciled_sum:,.2f} [PASS]")
+    EXPECTED_DEFICIT = 520871.0   # measured 2026-09-11; see TECHNICAL_SPECIFICATION 3.4
+    TOLERANCE = 0.05              # regeneration drift is acceptable if the story holds
+
+    deficit_query = f"""
+    WITH days AS (
+      SELECT d AS dt FROM UNNEST(GENERATE_DATE_ARRAY('2026-11-23','2026-11-30')) AS d
+    ),
+    beauty AS (
+      SELECT category_id FROM `{PROJECT_ID}.{DATASET_ID}.categories` WHERE name = 'Beauty'
+    ),
+    plan AS (
+      SELECT SUM(t.target_revenue) AS plan_to_date
+      FROM days dy
+      JOIN `{PROJECT_ID}.{DATASET_ID}.category_15min_targets` t
+        ON t.day_of_week = EXTRACT(DAYOFWEEK FROM dy.dt)
+      WHERE t.category_id IN (SELECT category_id FROM beauty)
+        AND TIMESTAMP(DATETIME(dy.dt, t.time_bucket)) < TIMESTAMP('{CUTOFF_TIMESTAMP}')
+    ),
+    act AS (
+      SELECT SUM(oi.sale_price * oi.quantity) AS actual_to_date
+      FROM `{PROJECT_ID}.{DATASET_ID}.order_items` oi
+      JOIN `{PROJECT_ID}.{DATASET_ID}.orders`   o ON o.order_id   = oi.ord_hdr_num
+      JOIN `{PROJECT_ID}.{DATASET_ID}.products` p ON p.product_id = oi.mat_nr
+      WHERE p.category_id IN (SELECT category_id FROM beauty)
+        AND o.created_at >= TIMESTAMP('{START_TIMESTAMP}')
+        AND o.created_at <  TIMESTAMP('{CUTOFF_TIMESTAMP}')
+    )
+    SELECT act.actual_to_date, plan.plan_to_date,
+           plan.plan_to_date - act.actual_to_date AS deficit
+    FROM act, plan
+    """
+    d_res = list(client.query(deficit_query).result())[0]
+    bty_actual = float(d_res.actual_to_date or 0.0)
+    bty_plan = float(d_res.plan_to_date or 0.0)
+    bty_deficit = float(d_res.deficit or 0.0)
+    pct_behind = (bty_deficit / bty_plan * 100.0) if bty_plan else 0.0
+    drift = abs(bty_deficit - EXPECTED_DEFICIT) / EXPECTED_DEFICIT
+
+    if drift <= TOLERANCE:
+        print(f"  ✅ Beauty to date: actual €{bty_actual:,.0f} vs pro-rated plan "
+              f"€{bty_plan:,.0f} = €{bty_deficit:,.0f} behind ({pct_behind:.2f}%), "
+              f"within {TOLERANCE*100:.0f}% of the documented €{EXPECTED_DEFICIT:,.0f} [PASS]")
         passed += 1
     else:
-        print(f"  ❌ Reconciled Sum Mismatch: €{reconciled_sum:,.2f} != €530,000.00 [FAIL]")
+        print(f"  ❌ Beauty deficit €{bty_deficit:,.0f} has drifted {drift*100:.1f}% from "
+              f"the documented €{EXPECTED_DEFICIT:,.0f}. Either refresh the published "
+              f"figures or investigate the generator. [FAIL]")
+
+    # 5b. The published allocation must still add up to what we just measured.
+    # These constants are deliberately COPIES of the documented figures, not
+    # imports of the live calculation: comparing documented constants against a
+    # measured value is what makes this a genuine documentation-drift check.
+    # Source of truth: measure_shortfall_allocation.compute_allocation().
+    print("\n5b. Validating the published shortfall allocation still adds up...")
+    total += 1
+    allocation = {"Stockouts": 62386.0, "Recommender": 49803.86, "Ad throttling": 408681.0}
+    alloc_sum = sum(allocation.values())
+    alloc_drift = abs(alloc_sum - bty_deficit) / bty_deficit if bty_deficit else 1.0
+
+    if alloc_drift <= 0.02:
+        parts = " + ".join(f"€{v:,.0f} ({k})" for k, v in allocation.items())
+        print(f"  ✅ Allocation {parts} = €{alloc_sum:,.0f}, within 2% of the "
+              f"measured €{bty_deficit:,.0f} [PASS]")
+        passed += 1
+    else:
+        print(f"  ❌ Published allocation sums to €{alloc_sum:,.0f} but the measured "
+              f"deficit is €{bty_deficit:,.0f} ({alloc_drift*100:.1f}% apart). "
+              f"Update TECHNICAL_SPECIFICATION 3.4 and the case study. [FAIL]")
 
     print("\n" + "=" * 80)
     success_rate = (passed / total) * 100.0

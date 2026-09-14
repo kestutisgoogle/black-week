@@ -18,6 +18,7 @@ sys.path.insert(0, PROJECT_ROOT)
 sys.path.insert(0, os.path.join(PROJECT_ROOT, "backend"))
 
 from test_utils import load_project_env
+import yaml
 load_project_env()
 
 PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "")
@@ -45,11 +46,11 @@ TEMPORAL_TERM_IDS = [
 
 def test_glossary_manifest_structure():
     print("\n[Test 1] Verifying business glossary manifest structure...")
-    manifest_path = os.path.join(PROJECT_ROOT, "config", "business_glossary.json")
-    assert os.path.exists(manifest_path), "business_glossary.json missing"
+    manifest_path = os.path.join(PROJECT_ROOT, "config", "business_glossary.yaml")
+    assert os.path.exists(manifest_path), "business_glossary.yaml missing"
     
-    with open(manifest_path, "r") as f:
-        data = json.load(f)
+    with open(manifest_path, "r", encoding="utf-8") as f:
+        data = yaml.safe_load(f)
     
     glossary = data.get("glossary", {})
     categories = glossary.get("categories", [])
@@ -78,9 +79,9 @@ def test_glossary_manifest_structure():
 
 def test_temporal_definitions_accuracy():
     print("\n[Test 2] Verifying accuracy of temporal definitions and simulation dates...")
-    manifest_path = os.path.join(PROJECT_ROOT, "config", "business_glossary.json")
-    with open(manifest_path, "r") as f:
-        terms = json.load(f)["glossary"]["terms"]
+    manifest_path = os.path.join(PROJECT_ROOT, "config", "business_glossary.yaml")
+    with open(manifest_path, "r", encoding="utf-8") as f:
+        terms = yaml.safe_load(f)["glossary"]["terms"]
     
     term_dict = {t["id"]: t for t in terms}
     

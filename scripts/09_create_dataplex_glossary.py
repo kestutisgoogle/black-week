@@ -8,6 +8,10 @@ Terms contain clean business definitions, formulas, and synonyms.
 Physical table/column relationships are provisioned natively as Knowledge Catalog EntryLinks
 connecting BigQuery table entries to their respective business terms.
 
+This script will REFUSE to run if scripts/verify_metadata_integrity.py
+reports any finding. Metadata that contradicts the warehouse is worse than
+no metadata, so the check is a hard gate rather than a warning.
+
 Usage:
 ------
   python3 scripts/09_create_dataplex_glossary.py
@@ -20,6 +24,7 @@ import subprocess
 import requests
 import json
 import hashlib
+import yaml
 
 
 def load_dotenv():
@@ -43,8 +48,14 @@ BQ_LOCATION = os.environ.get("BQ_LOCATION", os.environ.get("BIGQUERY_LOCATION", 
 GLOSSARY_ID = "ecommerce-glossary"
 
 
-def get_access_token():
-    token = os.environ.get("GCP_ACCESS_TOKEN")
+def get_access_token(force_refresh=False):
+    """Mint an OAuth access token.
+
+    force_refresh=True skips the GCP_ACCESS_TOKEN environment variable. That
+    variable holds a token captured once at start-up; re-reading it during a
+    long run would just hand back the same expired string.
+    """
+    token = None if force_refresh else os.environ.get("GCP_ACCESS_TOKEN")
     if not token:
         gcloud_paths = ["/google/data/ro/teams/cloud-sdk/gcloud", "gcloud"]
         for gcloud_cmd in gcloud_paths:
@@ -61,6 +72,29 @@ def get_access_token():
             except Exception:
                 continue
     return token
+
+
+_TOKEN_MINTED_AT = 0.0
+
+
+def refresh_auth(headers, max_age_seconds=900):
+    """Re-mint the OAuth token in place once it passes max_age_seconds.
+
+    Provisioning ~300 EntryLinks takes several minutes, and the whole run
+    previously shared one token fetched at start-up. If that token expired
+    mid-flight every remaining call failed with HTTP 401 and the catalogue was
+    left half-provisioned - which is exactly what happened on 2026-09-12, with
+    the run dying at 179 of 295 links. Refreshing on a timer is cheap: the
+    check is a float comparison, and gcloud is only invoked every 15 minutes.
+    """
+    global _TOKEN_MINTED_AT
+    now = time.time()
+    if now - _TOKEN_MINTED_AT < max_age_seconds:
+        return
+    fresh = get_access_token(force_refresh=True)
+    if fresh:
+        headers["Authorization"] = f"Bearer {fresh}"
+        _TOKEN_MINTED_AT = now
 
 
 def get_project_number(project_id, token):
@@ -131,7 +165,37 @@ def api_request_with_retry(method: str, url: str, headers: dict, json_payload: d
     return res
 
 
+def run_integrity_gate():
+    """Hard gate: refuse to deploy metadata that does not validate.
+
+    A glossary term whose formula references a renamed column is worse than
+    having no glossary at all - instead of failing to help, it makes the agent
+    confidently wrong. The validator runs offline against the schema creation
+    scripts, needs no credentials and takes about a second, so there is no
+    operational reason to skip it.
+
+    The glossary is read from config/business_glossary.yaml, which is the
+    single source of truth; there is no second copy to fall out of step.
+    """
+    checker = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                           "verify_metadata_integrity.py")
+    print("\n0. Metadata integrity gate...")
+    result = subprocess.run([sys.executable, checker, "--strict"],
+                            capture_output=True, text=True)
+    if result.returncode != 0:
+        sys.stderr.write(result.stdout)
+        sys.stderr.write(result.stderr)
+        print("\n\u274c ABORTED: the glossary failed its integrity check. "
+              "Nothing was deployed.", file=sys.stderr)
+        print("   Fix the findings above, then re-run this script.",
+              file=sys.stderr)
+        sys.exit(1)
+    print("   \u2705 Glossary passed the integrity check.")
+
+
 def deploy_glossary():
+    run_integrity_gate()
+
     print(f"\nDeploying Knowledge Catalog Business Glossary `{GLOSSARY_ID}` in `{PROJECT_ID}` (Location: `{LOCATION}`)...")
     token = get_access_token()
     if not token:
@@ -145,10 +209,15 @@ def deploy_glossary():
         "Content-Type": "application/json",
         "x-goog-user-project": PROJECT_ID,
     }
+    global _TOKEN_MINTED_AT
+    _TOKEN_MINTED_AT = time.time()
 
-    config_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config", "business_glossary.json")
-    with open(config_path, "r") as f:
-        glossary_data = json.load(f).get("glossary", {})
+    # config/business_glossary.yaml is the single source of truth for the
+    # glossary. It is read directly here so that there is no second copy
+    # of the same content that could silently fall out of step with it.
+    config_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config", "business_glossary.yaml")
+    with open(config_path, "r", encoding="utf-8") as f:
+        glossary_data = yaml.safe_load(f).get("glossary", {})
 
     base_url = f"https://dataplex.googleapis.com/v1/projects/{PROJECT_ID}/locations/{LOCATION}/glossaries"
     glossary_resource_name = f"projects/{PROJECT_ID}/locations/{LOCATION}/glossaries/{GLOSSARY_ID}"
@@ -238,6 +307,7 @@ def deploy_glossary():
                 "description": desc_text[:1000],
             }
 
+            refresh_auth(headers)
             term_check = api_request_with_retry("GET", term_url, headers)
             success = False
             if term_check is not None and term_check.status_code == 200:
@@ -301,6 +371,7 @@ def deploy_glossary():
         pacing_delay = 0.45 if pass_num == 1 else 0.75
 
         for idx, (term_id, table_name, bq_source_name, term_target_name, link_id) in enumerate(list(pending_links), 1):
+            refresh_auth(headers)
             link_url = f"https://dataplex.googleapis.com/v1/projects/{PROJECT_ID}/locations/{BQ_LOCATION}/entryGroups/@bigquery/entryLinks?entryLinkId={link_id}"
             link_payload = {
                 "entryLinkType": link_type,

@@ -24,6 +24,7 @@ SCRATCHPAD.md
 PROGRESS.md
 POSTMORTEM.md
 PROJECT_CONTEXT.md
+BACKLOG.md
 jetski_conversation_log.md
 
 # ==============================================================================
@@ -73,6 +74,7 @@ backup/
 backups/
 *.bak
 *.tmp
+export/
 exports/
 *.tar.gz
 *.zip
@@ -84,3 +86,4 @@ exports/
 test-output/
 *verification.txt
 
+*.bak.*

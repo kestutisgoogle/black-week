@@ -190,22 +190,25 @@ erDiagram
     ORDERS {
         int64 order_id PK
         int64 user_id FK
-        string status
+        string session_id FK
+        string order_status
         numeric total_amount
         timestamp created_at
     }
     ORDER_ITEMS {
         int64 order_item_id PK
-        int64 order_id FK
-        int64 product_id FK
+        int64 ord_hdr_num FK
+        int64 mat_nr FK
         int64 quantity
-        numeric item_price
+        numeric sale_price
+        timestamp returned_at
     }
     PAYMENT_GATEWAY_LOGS {
-        int64 log_id PK
+        string gateway_log_id PK
         int64 order_id FK
-        string gateway_status
-        numeric amount
+        string payment_provider
+        string status
+        numeric total_amount
     }
 ```
 
@@ -222,22 +225,25 @@ erDiagram
     MARKETING_CAMPAIGNS {
         int64 campaign_id PK
         int64 target_category_id FK
-        string campaign_name
+        string name
+        string platform
         string bidding_strategy
-        numeric target_roas
+        bool is_active
     }
     DAILY_AD_PERFORMANCE {
-        int64 campaign_id PK,FK
-        date date PK
+        int64 performance_id PK
+        int64 cid_ref FK
+        date date
         numeric spend
         int64 clicks
-        numeric reported_roas
+        int64 conversions
     }
     AD_BIDDING_LOG {
         int64 log_id PK
         int64 campaign_id FK
         string status_change
-        string trigger_details
+        string action_taken
+        float64 budget_multiplier
         timestamp logged_at
     }
 ```
@@ -255,21 +261,23 @@ erDiagram
     INVENTORY_ITEMS {
         int64 inventory_item_id PK
         int64 product_id FK
-        int64 distribution_center_id FK
-        int64 available_stock
+        int64 dc_id FK
+        int64 quantity_on_hand
+        int64 safety_stock_level
     }
     OOS_INTERACTIONS {
         int64 interaction_id PK
-        int64 product_id FK
-        int64 user_id FK
-        numeric estimated_lost_revenue
+        string session_id FK
+        int64 art_code FK
+        numeric pot_val
         timestamp clicked_at
     }
     SHIPPING_LEAD_TIMES {
-        int64 route_id PK
-        int64 origin_dc_id FK
-        int64 promised_lead_hours
-        int64 actual_lead_hours
+        string lead_time_id PK
+        int64 dc_id FK
+        string destination_region
+        int64 standard_lead_time_hours
+        int64 actual_promised_lead_time_hours
     }
 ```
 
@@ -281,7 +289,7 @@ Detailed column schemas, primary keys, foreign keys, and exact record counts for
 
 ### 📋 `weekly_commercial_targets`
 - **Business Meaning**: [PURPOSE]: Executive commercial financial planning benchmarks, expected visitor sessions, target revenue in EUR, and conversion rate (CVR) goals by product category and calendar week for sales target tracking and commercial performance analysis. [DOMAIN]: Domain B: Commercial Pacing Targets. [GRAIN]: One row per product category per calendar week (target_id). [TIER & REFRESH]: GOLD_CURATED | Pre-Season Financial Benchmark. [ANALYTICAL ROLE]: Commercial Planning - Weekly Commercial Quotas & Financial Benchmark Targets.
-- **Record Count**: **28 rows** (1.3 KB)
+- **Record Count**: **28 rows** (1.8 KB)
 - **Primary Key (PK)**: `category_id + week_start_date`
 - **Foreign Keys (FK)**: target_id ➔ `targets.target_id`
 
@@ -296,7 +304,7 @@ Detailed column schemas, primary keys, foreign keys, and exact record counts for
 
 ### 📋 `daily_category_targets`
 - **Business Meaning**: [PURPOSE]: Intra-week daily pacing targets, budget allocations, expected conversion rates, and commercial revenue quotas per category for daily sales pacing and commercial performance analysis. [DOMAIN]: Domain B: Commercial Pacing Targets. [GRAIN]: One row per category per calendar day (target_id). [TIER & REFRESH]: GOLD_CURATED | Daily Benchmark. [ANALYTICAL ROLE]: Commercial Planning - Daily Revenue Quotas, Planned Conversion Rates & Pacing Baselines.
-- **Record Count**: **200 rows** (16.7 KB)
+- **Record Count**: **200 rows** (24.4 KB)
 - **Primary Key (PK)**: `category_id + date`
 - **Foreign Keys (FK)**: target_id ➔ `targets.target_id`
 
@@ -314,7 +322,7 @@ Detailed column schemas, primary keys, foreign keys, and exact record counts for
 
 ### 📋 `category_15min_targets`
 - **Business Meaning**: [PURPOSE]: Intraday 15-minute pacing targets modeling hourly customer traffic waves, intake velocity benchmarks, and intra-day pacing curves. [DOMAIN]: Domain B: Commercial Pacing Targets. [GRAIN]: One row per category per 15-minute time window (target_id). [TIER & REFRESH]: GOLD_CURATED | Intraday Curve Benchmark. [ANALYTICAL ROLE]: Intraday Pacing - 15-Minute Intake Velocity & Demand Curves.
-- **Record Count**: **3,072 rows** (171.0 KB)
+- **Record Count**: **2,688 rows** (162.8 KB)
 - **Primary Key (PK)**: `category_id + interval_start_time`
 - **Foreign Keys (FK)**: target_id ➔ `targets.target_id`
 
@@ -342,7 +350,7 @@ Detailed column schemas, primary keys, foreign keys, and exact record counts for
 
 ### 📋 `products`
 - **Business Meaning**: [PURPOSE]: Master catalog of all retail products, default selling prices, cost of goods, brands, and category mappings for commercial intake tracking. [DOMAIN]: Domain A: Core Commerce Catalog. [GRAIN]: One row per distinct product SKU (product_id). [TIER & REFRESH]: GOLD_CURATED | Batch Daily @ 01:00 UTC. [ANALYTICAL ROLE]: Product Dimension - SKU Metadata, Pricing & Unit Economics.
-- **Record Count**: **600 rows** (45.5 KB)
+- **Record Count**: **600 rows** (55.1 KB)
 - **Primary Key (PK)**: `product_id`
 - **Foreign Keys (FK)**: category_id ➔ `categories.category_id`
 
@@ -359,7 +367,7 @@ Detailed column schemas, primary keys, foreign keys, and exact record counts for
 
 ### 📋 `orders`
 - **Business Meaning**: [PURPOSE]: Core transactional sales order headers capturing customer checkout completion, gross merchandise value (GMV), order status, payment confirmation, and timestamps for commercial revenue analysis. [DOMAIN]: Domain B: Transactions & Target Curves. [GRAIN]: One row per checkout order header (order_id). [TIER & REFRESH]: GOLD_CURATED | Real-Time Streaming. [ANALYTICAL ROLE]: Sales Intake - Gross Merchandise Value (GMV) & Revenue Realization Reporting.
-- **Record Count**: **52,365 rows** (3.35 MB)
+- **Record Count**: **128,997 rows** (13.16 MB)
 - **Primary Key (PK)**: `order_id`
 - **Foreign Keys (FK)**: user_id ➔ `users.user_id`
 
@@ -376,7 +384,7 @@ Detailed column schemas, primary keys, foreign keys, and exact record counts for
 
 ### 📋 `order_items`
 - **Business Meaning**: [PURPOSE]: Discrete purchase line items recording product SKU references, realized sale prices, promotional discounts, and basket-level revenue realization. [DOMAIN]: Domain B: Transactions & Target Curves. [GRAIN]: One row per purchased item line (order_item_id). [TIER & REFRESH]: GOLD_CURATED | Real-Time Streaming. [ANALYTICAL ROLE]: Line Item Sales - SKU-Level Contribution, Basket Margins & Volume Breakdown.
-- **Record Count**: **83,788 rows** (7.06 MB)
+- **Record Count**: **207,062 rows** (19.97 MB)
 - **Primary Key (PK)**: `ord_hdr_num + order_item_id`
 - **Foreign Keys (FK)**: inventory_item_id ➔ `inventory_items.inventory_item_id`, mat_nr ➔ `products.product_id`, user_id ➔ `users.user_id`
 
@@ -397,7 +405,7 @@ Detailed column schemas, primary keys, foreign keys, and exact record counts for
 
 ### 📋 `sales_event_stream`
 - **Business Meaning**: [PURPOSE]: Real-time streaming transactional event feed capturing high-frequency sales events and intra-hour intake velocity. [DOMAIN]: Domain B: Transactions & Target Curves. [GRAIN]: One row per real-time purchase event (event_id). [TIER & REFRESH]: GOLD_CURATED | Streaming Event-Driven (<1s). [ANALYTICAL ROLE]: Streaming Velocity - Real-Time Sales Rate & Intra-Hour Order Volume Monitoring.
-- **Record Count**: **83,788 rows** (7.51 MB)
+- **Record Count**: **207,062 rows** (21.72 MB)
 - **Primary Key (PK)**: `event_id`
 - **Foreign Keys (FK)**: category_id ➔ `categories.category_id`, order_id ➔ `orders.order_id`, product_id ➔ `products.product_id`
 
@@ -414,7 +422,7 @@ Detailed column schemas, primary keys, foreign keys, and exact record counts for
 
 ### 📋 `inventory_items`
 - **Business Meaning**: [PURPOSE]: Real-time master stock allocations, safety stock warning thresholds, and warehouse batch availability tracking across distribution centers. [DOMAIN]: Domain A: Core Commerce Catalog. [GRAIN]: One row per inventory allocation batch per hub (inventory_item_id). [TIER & REFRESH]: GOLD_CURATED | Real-Time Micro-batch (5 min). [ANALYTICAL ROLE]: Inventory Balance - Real-Time Stock Buffer & Safety Stock Level Tracking.
-- **Record Count**: **600 rows** (28.1 KB)
+- **Record Count**: **804 rows** (37.7 KB)
 - **Primary Key (PK)**: `inventory_item_id`
 - **Foreign Keys (FK)**: dc_id ➔ `dcs.dc_id`, product_id ➔ `products.product_id`
 
@@ -429,7 +437,7 @@ Detailed column schemas, primary keys, foreign keys, and exact record counts for
 
 ### 📋 `inventory_snapshots`
 - **Business Meaning**: [PURPOSE]: Daily and hourly historical inventory snapshots tracking stock depletion, stockouts, and inventory availability across warehouse hubs. [DOMAIN]: Domain A: Core Commerce Catalog. [GRAIN]: One row per SKU per recording timestamp (snapshot_id). [TIER & REFRESH]: GOLD_CURATED | Hourly Snapshot. [ANALYTICAL ROLE]: Inventory Availability - Historical Stock Depletion & Zero-Stock Duration Tracking.
-- **Record Count**: **28,200 rows** (908.8 KB)
+- **Record Count**: **43,800 rows** (1.38 MB)
 - **Primary Key (PK)**: `product_id + distribution_center_id + snapshot_hour`
 - **Foreign Keys (FK)**: snapshot_id ➔ `snapshots.snapshot_id`
 
@@ -443,7 +451,7 @@ Detailed column schemas, primary keys, foreign keys, and exact record counts for
 
 ### 📋 `oos_interactions`
 - **Business Meaning**: [PURPOSE]: Customer browsing and cart interactions on out-of-stock items, capturing unfulfilled demand and estimated lost revenue in EUR due to inventory stockouts. [DOMAIN]: Domain C: Out-of-Stock Telemetry. [GRAIN]: One row per out-of-stock user click interaction (interaction_id). [TIER & REFRESH]: GOLD_CURATED | Real-Time Event Feed. [ANALYTICAL ROLE]: Lost Demand Telemetry - Stockout Click Tracking & Unfulfilled Demand Estimation.
-- **Record Count**: **1,182 rows** (51.8 KB)
+- **Record Count**: **49,960 rows** (2.51 MB)
 - **Primary Key (PK)**: `interaction_id`
 - **Foreign Keys (FK)**: art_code ➔ `products.product_id`, session_id ➔ `sessions.session_id`
 
@@ -457,7 +465,7 @@ Detailed column schemas, primary keys, foreign keys, and exact record counts for
 
 ### 📋 `distribution_centers`
 - **Business Meaning**: [PURPOSE]: Regional fulfillment centers and warehouse logistics hubs managing physical inventory and order dispatch across Europe. [DOMAIN]: Domain A: Core Commerce Catalog. [GRAIN]: One row per logistics hub (dc_id). [TIER & REFRESH]: GOLD_CURATED | Master Static. [ANALYTICAL ROLE]: Fulfillment Dimension - Regional Logistics Hub Partitioning & Dispatch Routing.
-- **Record Count**: **2 rows** (0.1 KB)
+- **Record Count**: **5 rows** (0.2 KB)
 - **Primary Key (PK)**: `None`
 - **Foreign Keys (FK)**: dc_id ➔ `dcs.dc_id`
 
@@ -466,11 +474,11 @@ Detailed column schemas, primary keys, foreign keys, and exact record counts for
 | `dc_id` | `INT64` | Unique identifier for the logistics hub (Primary Key) |
 | `latitude` | `FLOAT64` | Hub geolocation latitude |
 | `longitude` | `FLOAT64` | Hub geolocation longitude |
-| `name` | `STRING` | Logistics hub name (Paris Hub, Frankfurt Hub) |
+| `name` | `STRING` | Logistics hub name (e.g. Paris Nord Fulfilment Centre, Rotterdam Port Hub) |
 
 ### 📋 `marketing_campaigns`
 - **Business Meaning**: [PURPOSE]: Paid digital marketing campaign configurations across Meta Ads and Google Ads with target ROAS, target CPA, and bidding strategy definitions. [DOMAIN]: Domain E: Paid Advertising & Attribution. [GRAIN]: One row per advertising campaign (campaign_id). [TIER & REFRESH]: GOLD_CURATED | Batch Hourly Sync. [ANALYTICAL ROLE]: Marketing Directory - Paid Search & Social Campaign Metadata Master.
-- **Record Count**: **4 rows** (0.3 KB)
+- **Record Count**: **7 rows** (0.5 KB)
 - **Primary Key (PK)**: `None`
 - **Foreign Keys (FK)**: campaign_id ➔ `marketing_campaigns.campaign_id`, target_category_id ➔ `target_categorys.target_category_id`
 
@@ -485,7 +493,7 @@ Detailed column schemas, primary keys, foreign keys, and exact record counts for
 
 ### 📋 `daily_ad_performance`
 - **Business Meaning**: [PURPOSE]: Daily marketing performance tracking impressions, clicks, advertising spend in EUR, attributed conversions, average CPC, and ROAS efficiency. [DOMAIN]: Domain E: Ad Spend & Paid Traffic. [GRAIN]: One row per campaign per calendar day (perf_id). [TIER & REFRESH]: GOLD_CURATED | Batch Daily @ 03:00 UTC. [ANALYTICAL ROLE]: Paid Acquisition - Daily Spend Velocity, CPC Efficiency & Attributed ROAS Tracking.
-- **Record Count**: **173 rows** (10.8 KB)
+- **Record Count**: **188 rows** (14.7 KB)
 - **Primary Key (PK)**: `cid_ref + date`
 - **Foreign Keys (FK)**: performance_id ➔ `performances.performance_id`
 
@@ -502,7 +510,7 @@ Detailed column schemas, primary keys, foreign keys, and exact record counts for
 
 ### 📋 `ad_bidding_log`
 - **Business Meaning**: [PURPOSE]: Automated ad platform bidding engine telemetry capturing target ROAS constraints, budget throttling events, and algorithmic learning phase status. [DOMAIN]: Domain E: Bidding Engine Telemetry. [GRAIN]: One row per bidding algorithm throttle/adjustment event (log_id). [TIER & REFRESH]: GOLD_CURATED | Real-Time Platform Webhook. [ANALYTICAL ROLE]: Bidding Telemetry - Automated Target ROAS Constraints & Budget Throttling Telemetry.
-- **Record Count**: **27 rows** (3.0 KB)
+- **Record Count**: **46 rows** (3.9 KB)
 - **Primary Key (PK)**: `log_id`
 - **Foreign Keys (FK)**: campaign_id ➔ `marketing_campaigns.campaign_id`
 
@@ -512,11 +520,15 @@ Detailed column schemas, primary keys, foreign keys, and exact record counts for
 | `log_id` | `INT64` | Bidding telemetry log identifier (Primary Key) |
 | `logged_at` | `TIMESTAMP` | UTC timestamp when the bidding algorithm state change or audit event was logged. |
 | `status_change` | `STRING` | Lifecycle status of the automated bidding engine (e.g. LEARNING_COMPLETE, BUDGET_NORMAL, TARGET_ROAS_BREACH_THROTTLED). |
-| `trigger_details` | `STRING` | Algorithmic root cause description explaining why the ad bidding engine altered campaign budget or pacing. |
+| `action_taken` | `STRING` | Action the bidding engine performed in response to the state change. |
+| `observed_cvr_7d` | `FLOAT64` | Trailing seven-day conversion rate the engine observed when it acted. |
+| `target_roas_multiplier` | `FLOAT64` | Target return-on-ad-spend constraint in force at the time of the event. |
+| `budget_multiplier` | `FLOAT64` | Fraction of nominal daily budget the engine allowed. Below 1.0 means budget was throttled. |
+| `bid_adjustment_pct` | `FLOAT64` | Percentage bid adjustment applied alongside the budget change. |
 
 ### 📋 `ad_creatives`
 - **Business Meaning**: [PURPOSE]: Creative asset performance tracking creative fatigue, quality scores, click-through rates, and learning-limited states impacting ad delivery. [DOMAIN]: Domain E: Creative Fatigue & Quality Scores. [GRAIN]: One row per creative visual asset (creative_id). [TIER & REFRESH]: GOLD_CURATED | Batch Daily @ 04:00 UTC. [ANALYTICAL ROLE]: Creative Performance - Asset Fatigue, Quality Scores & Algorithmic Delivery Status.
-- **Record Count**: **5 rows** (0.4 KB)
+- **Record Count**: **17 rows** (1.4 KB)
 - **Primary Key (PK)**: `None`
 - **Foreign Keys (FK)**: parent_adgroup_id ➔ `marketing_campaigns.campaign_id`, creative_id ➔ `creatives.creative_id`
 
@@ -524,7 +536,7 @@ Detailed column schemas, primary keys, foreign keys, and exact record counts for
 | :--- | :--- | :--- |
 | `ad_format` | `STRING` | Creative format (Video, Carousel, Static Image) |
 | `creative_id` | `INT64` | Creative asset identifier (Primary Key) |
-| `ill` | `BOOL` | Boolean flag indicating algorithmic delivery bottleneck |
+| `dlv_lrn_lmt_flg` | `BOOL` | Boolean flag indicating algorithmic delivery bottleneck (delivery learning-limited) |
 | `last_refreshed_at` | `TIMESTAMP` | Timestamp when creative asset was last updated |
 | `name` | `STRING` | Creative asset name |
 | `parent_adgroup_id` | `INT64` | Parent marketing campaign hierarchy identifier referencing marketing_campaigns.campaign_id |
@@ -533,7 +545,7 @@ Detailed column schemas, primary keys, foreign keys, and exact record counts for
 
 ### 📋 `influencer_campaigns`
 - **Business Meaning**: [PURPOSE]: Creator marketing performance tracking sponsored content views, promo code redemptions, target vs actual revenue quotas, and creator fees. [DOMAIN]: Domain F: Creator & Influencer Marketing. [GRAIN]: One row per creator partnership campaign (campaign_id). [TIER & REFRESH]: GOLD_CURATED | Batch Daily @ 05:00 UTC. [ANALYTICAL ROLE]: Creator Marketing - Influencer Campaign Redemptions & Commission Tracking.
-- **Record Count**: **3 rows** (0.3 KB)
+- **Record Count**: **8 rows** (1.2 KB)
 - **Primary Key (PK)**: `None`
 - **Foreign Keys (FK)**: influencer_id ➔ `influencers.influencer_id`
 
@@ -554,7 +566,7 @@ Detailed column schemas, primary keys, foreign keys, and exact record counts for
 
 ### 📋 `competitor_price_feed`
 - **Business Meaning**: [PURPOSE]: Daily competitor retail pricing scrapes benchmarking price parity indices, market elasticity, and competitor price movements. [DOMAIN]: Domain D: Competitor Pricing Intelligence. [GRAIN]: One row per product SKU per competitor scrape (feed_id). [TIER & REFRESH]: GOLD_CURATED | Batch Daily @ 06:00 UTC. [ANALYTICAL ROLE]: Pricing Intelligence - Competitor Price Parity & Elasticity Tracking.
-- **Record Count**: **500 rows** (22.9 KB)
+- **Record Count**: **1,200 rows** (62.9 KB)
 - **Primary Key (PK)**: `None`
 - **Foreign Keys (FK)**: product_id ➔ `products.product_id`, scrape_id ➔ `scrapes.scrape_id`
 
@@ -569,7 +581,7 @@ Detailed column schemas, primary keys, foreign keys, and exact record counts for
 
 ### 📋 `competitor_promotions`
 - **Business Meaning**: [PURPOSE]: Scraped competitor retail promotional campaigns, discount depths, promotional banners, and relative price parity benchmarking data. [DOMAIN]: Domain D: Competitor Campaign Intelligence. [GRAIN]: One row per competitor promotion campaign (promo_id). [TIER & REFRESH]: GOLD_CURATED | Batch Daily @ 06:00 UTC. [ANALYTICAL ROLE]: Promotional Intelligence - Competitor Campaign Monitoring & Discount Tracking.
-- **Record Count**: **4 rows** (0.4 KB)
+- **Record Count**: **12 rows** (1.1 KB)
 - **Primary Key (PK)**: `None`
 - **Foreign Keys (FK)**: category_id ➔ `categories.category_id`, promo_id ➔ `promos.promo_id`
 
@@ -587,7 +599,7 @@ Detailed column schemas, primary keys, foreign keys, and exact record counts for
 
 ### 📋 `catalog_recommender_logs`
 - **Business Meaning**: [PURPOSE]: On-page product recommendation widget impressions capturing algorithm fallback events, category mismatch errors, and lost substitution sales. [DOMAIN]: Domain F: Recommender Engine Telemetry. [GRAIN]: One row per widget recommendation display event (log_id). [TIER & REFRESH]: GOLD_CURATED | Real-Time Clickstream Telemetry. [ANALYTICAL ROLE]: Recommender Telemetry - Algorithmic Fallback Rates & Cross-Sell Engagement.
-- **Record Count**: **3,250 rows** (248.8 KB)
+- **Record Count**: **106,175 rows** (9.01 MB)
 - **Primary Key (PK)**: `session_id`
 - **Foreign Keys (FK)**: log_id ➔ `logs.log_id`, page_category_id ➔ `page_categorys.page_category_id`, rec_sku ➔ `products.product_id`, recommended_category_id ➔ `recommended_categorys.recommended_category_id`, src_sku ➔ `products.product_id`
 
@@ -607,7 +619,7 @@ Detailed column schemas, primary keys, foreign keys, and exact record counts for
 
 ### 📋 `shipping_lead_times`
 - **Business Meaning**: [PURPOSE]: Fulfillment center operational metrics, carrier workload, promised delivery SLAs, and delivery delay impacts on cart abandonment and conversion. [DOMAIN]: Domain F: Fulfillment & Delivery SLAs. [GRAIN]: One row per carrier per destination region per calendar day (lead_time_id). [TIER & REFRESH]: GOLD_CURATED | Batch Daily @ 05:00 UTC. [ANALYTICAL ROLE]: Fulfillment Reliability - Carrier Transit Lead Times & Delivery SLA Tracking.
-- **Record Count**: **94 rows** (9.6 KB)
+- **Record Count**: **209 rows** (21.3 KB)
 - **Primary Key (PK)**: `None`
 - **Foreign Keys (FK)**: dc_id ➔ `dcs.dc_id`, lead_time_id ➔ `lead_times.lead_time_id`
 
@@ -626,7 +638,7 @@ Detailed column schemas, primary keys, foreign keys, and exact record counts for
 
 ### 📋 `payment_gateway_logs`
 - **Business Meaning**: [PURPOSE]: Payment service provider (PSP) authorization logs capturing transaction success rates, latency in milliseconds, error codes, and checkout drop-offs across Stripe, PayPal, and Adyen. [DOMAIN]: Domain F: Payment Gateway Processing. [GRAIN]: One row per PSP gateway transaction attempt (log_id). [TIER & REFRESH]: GOLD_CURATED | Real-Time Streaming Gateway Logs. [ANALYTICAL ROLE]: Checkout Reliability - Payment Gateway Processing Health & Latency Monitoring.
-- **Record Count**: **51,182 rows** (5.13 MB)
+- **Record Count**: **131,283 rows** (14.52 MB)
 - **Primary Key (PK)**: `session_id`
 - **Foreign Keys (FK)**: gateway_log_id ➔ `gateway_logs.gateway_log_id`, order_id ➔ `orders.order_id`
 
@@ -647,7 +659,7 @@ Detailed column schemas, primary keys, foreign keys, and exact record counts for
 
 ### 📋 `web_sessions`
 - **Business Meaning**: [PURPOSE]: Web clickstream traffic sessions recording marketing channels, UTM acquisition tags, device operating systems, browsers, and user journey attribution. [DOMAIN]: Domain C: Web Clickstream & Funnel. [GRAIN]: One row per browser session (session_id). [TIER & REFRESH]: GOLD_CURATED | Real-Time Streaming Sessionization. [ANALYTICAL ROLE]: Web Traffic - Acquisition Channel Sessions & Conversion Rate Attribution.
-- **Record Count**: **1,716,000 rows** (138.00 MB)
+- **Record Count**: **4,270,393 rows** (470.06 MB)
 - **Primary Key (PK)**: `session_id`
 - **Foreign Keys (FK)**: user_id ➔ `users.user_id`
 
@@ -665,7 +677,7 @@ Detailed column schemas, primary keys, foreign keys, and exact record counts for
 
 ### 📋 `web_events`
 - **Business Meaning**: [PURPOSE]: User interaction clickstream funnel events capturing product page views, cart additions, checkout initiations, and transaction successes for conversion funnel drop-off analysis. [DOMAIN]: Domain C: Web Clickstream & Funnel. [GRAIN]: One row per clickstream interaction event (event_id). [TIER & REFRESH]: GOLD_CURATED | Real-Time Ingestion Feed. [ANALYTICAL ROLE]: Clickstream Funnel - Micro-Conversions, Page Navigation & Cart Telemetry.
-- **Record Count**: **17,290,297 rows** (1590.80 MB)
+- **Record Count**: **85,605,795 rows** (8.05 GB)
 - **Primary Key (PK)**: `session_id`
 - **Foreign Keys (FK)**: event_id ➔ `events.event_id`, product_id ➔ `products.product_id`
 
@@ -684,7 +696,7 @@ Detailed column schemas, primary keys, foreign keys, and exact record counts for
 
 ### 📋 `users`
 - **Business Meaning**: [PURPOSE]: Customer user accounts with demographic localization, country mapping, and lifetime activity profiles. [DOMAIN]: Domain A: Core Commerce Catalog. [GRAIN]: One row per registered customer account (user_id). [TIER & REFRESH]: GOLD_CURATED | Real-Time Ingestion. [ANALYTICAL ROLE]: Customer Dimension - Geographic Cohort Partitioning & Demographic Breakdown.
-- **Record Count**: **10,000 rows** (964.5 KB)
+- **Record Count**: **10,000 rows** (1.01 MB)
 - **Primary Key (PK)**: `user_id`
 
 | Column Name | Data Type | Field Meaning & Calculation Formula |

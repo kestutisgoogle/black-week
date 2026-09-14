@@ -48,6 +48,7 @@ from google.cloud import bigquery
 from google.oauth2 import credentials as oauth2_credentials
 from app.config import (
     PROJECT_ID,
+    LOCATION,
     DATASET_ID,
     DATASET_2ND_ID,
     DATASET_3RD_ID,
@@ -65,7 +66,31 @@ from app.config import (
 CHAT_API_ENDPOINT = f"https://geminidataanalytics.googleapis.com/v1beta/projects/{PROJECT_ID}/locations/global:chat"
 
 # Static system instruction anchoring all Conversational Analytics Data Agents to Black Friday 2026
-AGENT_SYSTEM_INSTRUCTION = "Today is Friday, November 27th, 2026"
+AGENT_SYSTEM_INSTRUCTION = (
+    "Today is Friday, 27 November 2026. The current time is 14:30:00 UTC.\n"
+    "This data warehouse is a point-in-time snapshot taken at that instant: "
+    "no operational record exists after 2026-11-27 14:30:00 UTC.\n"
+    "\n"
+    "Resolve every relative time expression - \"now\", \"today\", \"so far\", "
+    "\"the last hour\", \"this week\", \"yesterday\", \"week to date\" - against "
+    "2026-11-27 14:30:00 UTC, never against the real-world clock.\n"
+    "\n"
+    "Never use CURRENT_DATE(), CURRENT_TIMESTAMP(), CURRENT_DATETIME() or NOW() "
+    "in generated SQL. They resolve to the real-world date, which falls outside "
+    "this data\'s range, so they silently match either every row or no rows. "
+    "Always write explicit date and timestamp literals.\n"
+    "\n"
+    "When a question concerns one product category, every rate and ratio in your "
+    "answer must be computed for that same category. Do not pair a category-level "
+    "numerator with a site-level denominator, and do not substitute a sitewide "
+    "rate for a category rate - the two differ materially and the error is "
+    "silent.\n"
+    "\n"
+    "When a metric has more than one accepted convention - for example a rate "
+    "restricted to paid sessions versus one covering all sessions - state which "
+    "convention you used, and apply the same convention to both the figure and "
+    "anything you compare it against."
+)
 
 # Cached Google OAuth credential instance
 _google_creds = None
@@ -317,14 +342,40 @@ def reset_session_conversation(session_id: str = None, data_agent_name: str = No
         _session_conversations[session_id] = conv
     return conv
 
-def update_multi_agent_sources(agent_name: str, table_names: List[str]) -> None:
+def update_multi_agent_sources(
+    agent_name: str,
+    table_names: List[str],
+    glossary_terms: Optional[List[Dict[str, str]]] = None,
+) -> None:
     """
     Updates the mapped table data sources for a specific agent in the 3-Agent Parallel Workspace
     (Agent A, Agent B, or Agent C).
 
     Args:
         agent_name: Key in MULTI_DATA_AGENTS ('Agent A', 'Agent B', 'Agent C').
-        table_names: List of BigQuery table identifiers to map to this agent.
+        table_names: BigQuery table identifiers to map to this agent. The names
+            are remapped into the agent's own dataset via DATASET_MAPPING, so
+            all three tiers see identical data with different metadata.
+        glossary_terms: Knowledge Catalog terms, as
+            [{"displayName", "description"}]. Pass them for the catalog tier;
+            pass None for Tiers B and C, which have no governed glossary.
+
+    WHY glossaryTerms IS ALWAYS IN THE UPDATE MASK
+    ----------------------------------------------
+    Until 2026-09-13 this function wrote only tableReferences and
+    systemInstruction, and the mask omitted glossaryTerms entirely.
+
+    Agent A nevertheless had 33 glossary terms attached, which looked correct.
+    It was not: those terms had been written by `scripts/06_update_data_agent.py`
+    and merely SURVIVED this call, because a field absent from the update mask
+    is left alone. The live demo was not injecting catalog context at all - it
+    was inheriting it from a setup script that had run hours earlier, and the
+    day someone added glossaryTerms to the mask for any other reason, Agent A
+    would have silently lost its entire catalog advantage mid-demo.
+
+    Keeping the field in the mask ALWAYS makes the behaviour explicit in both
+    directions: the catalog tier gets its terms written every time, and Tiers B
+    and C get theirs actively cleared rather than left to chance.
     """
     agent_res = MULTI_DATA_AGENTS.get(agent_name)
     if not agent_res:
@@ -338,26 +389,35 @@ def update_multi_agent_sources(agent_name: str, table_names: List[str]) -> None:
     if token:
         try:
             target_dataset = DATASET_MAPPING.get(agent_name, DATASET_ID)
-            update_url = f"https://geminidataanalytics.googleapis.com/v1beta/{agent_res}?updateMask=dataAnalyticsAgent.publishedContext.datasourceReferences.bq.tableReferences,dataAnalyticsAgent.publishedContext.systemInstruction"
+            update_url = (
+                f"https://geminidataanalytics.googleapis.com/v1beta/{agent_res}"
+                "?updateMask=dataAnalyticsAgent.publishedContext.datasourceReferences.bq.tableReferences"
+                ",dataAnalyticsAgent.publishedContext.systemInstruction"
+                ",dataAnalyticsAgent.publishedContext.glossaryTerms"
+            )
             table_refs = [
                 {"projectId": PROJECT_ID, "datasetId": target_dataset, "tableId": t}
                 for t in table_names
             ]
-            payload = {
-                "dataAnalyticsAgent": {
-                    "publishedContext": {
-                        "systemInstruction": AGENT_SYSTEM_INSTRUCTION,
-                        "datasourceReferences": {
-                            "bq": {
-                                "tableReferences": table_refs
-                            }
-                        }
+            published: Dict[str, Any] = {
+                "systemInstruction": AGENT_SYSTEM_INSTRUCTION,
+                "datasourceReferences": {
+                    "bq": {
+                        "tableReferences": table_refs
                     }
                 }
             }
+            if glossary_terms:
+                published["glossaryTerms"] = glossary_terms
+            payload = {"dataAnalyticsAgent": {"publishedContext": published}}
+
+            gloss_note = (
+                f" and {len(glossary_terms)} Knowledge Catalog glossary terms"
+                if glossary_terms else ""
+            )
             res = requests.patch(update_url, headers=headers, json=payload, timeout=15)
             if res.status_code in [200, 201]:
-                print(f"✅ Successfully updated {agent_name} ({agent_res}) with {len(table_names)} tables in '{target_dataset}'.")
+                print(f"✅ Successfully updated {agent_name} ({agent_res}) with {len(table_names)} tables in '{target_dataset}'{gloss_note}.")
             elif res.status_code == 404:
                 agent_id = agent_res.split("/")[-1]
                 print(f"ℹ️ Agent {agent_name} ({agent_id}) does not exist. Creating dynamically with {len(table_names)} tables in '{target_dataset}'...")
@@ -369,9 +429,11 @@ def update_multi_agent_sources(agent_name: str, table_names: List[str]) -> None:
                 }
                 c_res = requests.post(create_url, headers=headers, json=create_payload, timeout=20)
                 if c_res.status_code in [200, 201]:
-                    print(f"✅ Successfully created and grounded {agent_name} ({agent_id}) with {len(table_names)} tables in '{target_dataset}'.")
+                    print(f"✅ Successfully created and grounded {agent_name} ({agent_id}) with {len(table_names)} tables in '{target_dataset}'{gloss_note}.")
                 else:
                     print(f"Notice: Failed to create {agent_name}: HTTP {c_res.status_code} - {c_res.text}")
+            else:
+                print(f"Notice: Failed to update {agent_name}: HTTP {res.status_code} - {res.text}")
         except Exception as e:
             print(f"Notice: Multi-agent source update exception for {agent_name}: {e}", file=sys.stderr)
 
@@ -532,7 +594,7 @@ def send_cmo_prompt(
                         if "bigQueryJob" in data_obj:
                             bq_job_info = data_obj["bigQueryJob"]
                             bq_job_id = bq_job_info.get("jobId")
-                            bq_job_location = bq_job_info.get("location", "europe-west4")
+                            bq_job_location = bq_job_info.get("location", LOCATION)
                         if "query" in data_obj and "datasources" in data_obj["query"]:
                             for ds in data_obj["query"]["datasources"]:
                                 if "bigqueryTableReference" in ds:
@@ -710,20 +772,32 @@ def get_recent_logs(limit: int = 20, session_id: Optional[str] = None) -> List[D
 _active_mapped_tables: List[str] = []
 
 
-def update_data_agent_sources(table_names: List[str]) -> Dict[str, Any]:
+def update_data_agent_sources(
+    table_names: List[str],
+    glossary_terms: Optional[List[Dict[str, str]]] = None,
+) -> Dict[str, Any]:
     """
     Updates the mapped table data sources for the primary BigQuery Data Agent (DATA_AGENT_ID).
     Preserves the exact same agent ID while configuring its authorized BigQuery table sources.
 
     Args:
-        table_names: List of BigQuery table names discovered via Knowledge Catalog.
+        table_names: BigQuery table names discovered via Knowledge Catalog.
+        glossary_terms: Knowledge Catalog business glossary terms, as
+            [{"displayName", "description"}]. The primary agent backs the
+            single-agent CMO workspace, which is the catalog-equipped
+            experience, so it should normally receive them.
 
     Returns:
         Dict[str, Any]: Confirmation dictionary with table count and mapped names.
+
+    glossaryTerms is in the update mask for the same reason as in
+    `update_multi_agent_sources` - so that what the agent ends up holding is
+    always what this call decided, never a leftover from an earlier run of
+    `scripts/06_update_data_agent.py`.
     """
     global _active_mapped_tables
     _active_mapped_tables = table_names
-    
+
     token = get_access_token()
     headers = {
         "Authorization": f"Bearer {token}",
@@ -734,23 +808,27 @@ def update_data_agent_sources(table_names: List[str]) -> Dict[str, Any]:
     # Update the live GCP BigQuery Data Agent publishedContext via REST API
     if token:
         try:
-            update_url = f"https://geminidataanalytics.googleapis.com/v1beta/{DATA_AGENT_NAME}?updateMask=dataAnalyticsAgent.publishedContext.datasourceReferences.bq.tableReferences,dataAnalyticsAgent.publishedContext.systemInstruction"
+            update_url = (
+                f"https://geminidataanalytics.googleapis.com/v1beta/{DATA_AGENT_NAME}"
+                "?updateMask=dataAnalyticsAgent.publishedContext.datasourceReferences.bq.tableReferences"
+                ",dataAnalyticsAgent.publishedContext.systemInstruction"
+                ",dataAnalyticsAgent.publishedContext.glossaryTerms"
+            )
             table_refs = [
                 {"projectId": PROJECT_ID, "datasetId": DATASET_ID, "tableId": t}
                 for t in table_names
             ]
-            payload = {
-                "dataAnalyticsAgent": {
-                    "publishedContext": {
-                        "systemInstruction": AGENT_SYSTEM_INSTRUCTION,
-                        "datasourceReferences": {
-                            "bq": {
-                                "tableReferences": table_refs
-                            }
-                        }
+            published: Dict[str, Any] = {
+                "systemInstruction": AGENT_SYSTEM_INSTRUCTION,
+                "datasourceReferences": {
+                    "bq": {
+                        "tableReferences": table_refs
                     }
                 }
             }
+            if glossary_terms:
+                published["glossaryTerms"] = glossary_terms
+            payload = {"dataAnalyticsAgent": {"publishedContext": published}}
             res = requests.patch(update_url, headers=headers, json=payload, timeout=12)
             if res.status_code in [200, 201]:
                 print(f"✅ Successfully updated live GCP BigQuery Data Agent `{DATA_AGENT_ID}` with {len(table_names)} tables.")

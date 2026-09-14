@@ -64,6 +64,100 @@ def get_bigquery_client():
         return bigquery.Client(project=PROJECT_ID, credentials=creds)
     return bigquery.Client(project=PROJECT_ID)
 
+# ---------------------------------------------------------------------------
+# Temporal cutoff normalisation
+# ---------------------------------------------------------------------------
+SIM_CUTOFF = datetime(2026, 11, 27, 14, 30, 0, tzinfo=timezone.utc)
+_TS_FMT = "%Y-%m-%dT%H:%M:%SZ"
+
+# Fields that are legitimately dated after the snapshot. These express a
+# forward-looking entitlement (how long something stays valid), not an event
+# that has already been observed, so a future value is correct and they must
+# never be rescaled.
+FUTURE_DATED_FIELDS = {
+    ("store_credit_issuances", "expires_at"),
+    ("discount_coupons_master", "valid_to"),
+    ("gift_card_transactions", "expires_at"),
+}
+
+
+def _parse_ts(value):
+    """Return a datetime if `value` is one of our ISO-Z timestamp strings."""
+    if not isinstance(value, str) or len(value) != 20 or not value.endswith("Z"):
+        return None
+    try:
+        return datetime.strptime(value, _TS_FMT).replace(tzinfo=timezone.utc)
+    except ValueError:
+        return None
+
+
+def _normalise_event_timestamps(data):
+    """Compress observed-event timestamps so none fall after the snapshot.
+
+    Many generators above lay rows out at a fixed cadence -- for example
+    `nov23 + timedelta(hours=i * 2)` for 600 rows -- without scaling that
+    cadence to the length of the simulation window. A 600-row table at two
+    hours per row spans 50 days and so runs months past the Friday 14:30
+    snapshot, which is impossible: these columns record things that already
+    happened.
+
+    Deleting the overflow would remove up to 73% of some tables and destroy
+    their row counts. Instead each affected table gets a single affine
+    transform that pins its earliest timestamp in place and maps its latest
+    onto the cutoff. Row counts, ordering and relative spacing all survive;
+    only the cadence tightens. The transform is shared across every timestamp
+    field in a table so that intra-row relationships (a shift starting before
+    it ends) are preserved.
+    """
+    adjusted = []
+    for table_name, rows in data.items():
+        if not rows:
+            continue
+
+        ts_fields = {
+            key for row in rows for key, value in row.items()
+            if _parse_ts(value) is not None
+            and (table_name, key) not in FUTURE_DATED_FIELDS
+        }
+        if not ts_fields:
+            continue
+
+        values = [
+            parsed for row in rows for key in ts_fields
+            if (parsed := _parse_ts(row.get(key))) is not None
+        ]
+        if not values:
+            continue
+
+        t_min, t_max = min(values), max(values)
+        if t_max <= SIM_CUTOFF:
+            continue
+
+        span = (t_max - t_min).total_seconds()
+        if span <= 0:
+            # Every value is identical and in the future: pin them to the cutoff.
+            scale = 0.0
+            t_min = min(t_min, SIM_CUTOFF)
+        else:
+            scale = (SIM_CUTOFF - t_min).total_seconds() / span
+
+        for row in rows:
+            for key in ts_fields:
+                parsed = _parse_ts(row.get(key))
+                if parsed is None:
+                    continue
+                shifted = t_min + timedelta(
+                    seconds=(parsed - t_min).total_seconds() * scale
+                )
+                row[key] = shifted.strftime(_TS_FMT)
+
+        adjusted.append(f"{table_name} (was {t_max.strftime(_TS_FMT)})")
+
+    if adjusted:
+        print(f"  Temporal normalisation: rescaled {len(adjusted)} tables "
+              f"whose events overran the {SIM_CUTOFF.strftime(_TS_FMT)} snapshot.")
+
+
 def generate_all_extended_data():
     print("=" * 80)
     print("GENERATING SYNTHETIC DATA FOR 104 EXTENDED TABLES IN BIGQUERY")
@@ -137,7 +231,7 @@ def generate_all_extended_data():
         for i in range(2500)
     ]
     data["stg_sap_erp_inventory_feed_raw"] = [
-        {"batch_id": f"SAP-BATCH-{i%5}", "material_number": f"MAT-{1000+i}", "plant_id": random.choice(["PLANT-PARIS-01", "PLANT-FRANKFURT-02"]), "unrestricted_stock_qty": random.randint(0, 1500), "synced_at": now_utc.strftime("%Y-%m-%dT%H:%M:%SZ")}
+        {"batch_id": f"SAP-BATCH-{i%5}", "material_number": f"MAT-{1000+i}", "plant_id": random.choice(["PLANT-PARIS-01", "PLANT-ROTTERDAM-02"]), "unrestricted_stock_qty": random.randint(0, 1500), "synced_at": now_utc.strftime("%Y-%m-%dT%H:%M:%SZ")}
         for i in range(1200)
     ]
     data["stg_sap_erp_purchase_orders_raw"] = [
@@ -295,8 +389,13 @@ def generate_all_extended_data():
     data["warehouse_zones"] = [
         {"zone_id": 1, "dc_id": 1, "zone_name": "Paris_Luxury_Skincare_TempControl", "temperature_celsius": 18.0},
         {"zone_id": 2, "dc_id": 1, "zone_name": "Paris_Electronics_HighSecurity", "temperature_celsius": 21.0},
-        {"zone_id": 3, "dc_id": 2, "zone_name": "Frankfurt_DACH_Ambient_Fashion", "temperature_celsius": 20.0},
-        {"zone_id": 4, "dc_id": 2, "zone_name": "Frankfurt_DACH_HomeDecor_Heavy", "temperature_celsius": 19.0}
+        # dc_id 2 is the Rotterdam Port Hub. These two zones used to be named
+        # "Frankfurt_*", a distribution centre that does not exist anywhere in
+        # this business - the five DCs are Paris Nord, Rotterdam Port Hub,
+        # Hamburg Sued, Milano Est and Barcelona Zona Franca. DACH is kept in
+        # the name because Rotterdam is the port serving the German hinterland.
+        {"zone_id": 3, "dc_id": 2, "zone_name": "Rotterdam_DACH_Ambient_Fashion", "temperature_celsius": 20.0},
+        {"zone_id": 4, "dc_id": 2, "zone_name": "Rotterdam_DACH_HomeDecor_Heavy", "temperature_celsius": 19.0}
     ]
     data["warehouse_aisles_and_racks"] = [
         {"bin_id": f"BIN-{zone}-{aisle:02d}-{shelf:02d}", "zone_id": zone, "aisle_number": aisle, "rack_level": shelf, "max_weight_kg": 500.0}
@@ -618,6 +717,8 @@ def generate_all_extended_data():
         for i in range(300)
     ]
 
+
+    _normalise_event_timestamps(data)
 
     print(f"\nGenerated total records in memory. Ingesting across {len(data)} tables in parallel...")
     from concurrent.futures import ThreadPoolExecutor

@@ -152,6 +152,41 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       padding: 12px;
     }}
 
+    img {{
+      max-width: 100% !important;
+      max-height: 185mm !important;
+      width: auto !important;
+      height: auto !important;
+      display: block;
+      margin: 12px auto !important;
+      object-fit: contain !important;
+      border-radius: 8px;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+    }}
+
+    details {{
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin: 12px 0;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+    }}
+
+    summary {{
+      font-weight: 600;
+      color: #3b82f6;
+      cursor: pointer;
+      font-size: 9pt;
+    }}
+
+    .mermaid, blockquote, table, pre {{
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+    }}
+
     hr {{
       border: none;
       border-top: 1px solid #e2e8f0;
@@ -232,24 +267,47 @@ def compile_markdown_to_html_and_pdf(md_path: str, html_path: str, pdf_path: str
         return False
 
 if __name__ == "__main__":
-    docs_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "docs")
-    md_files = [f for f in os.listdir(docs_dir) if f.endswith(".md")]
+    repo = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    docs_dir = os.path.join(repo, "docs")
+
+    # A path given on the command line is used AS GIVEN. Previously only the
+    # basename survived and was re-joined to docs/, so asking for
+    # export/internal_playbook/CMO_LIVE_DEMO_PLAYBOOK.md silently looked for
+    # docs/CMO_LIVE_DEMO_PLAYBOOK.md, failed, and still printed success.
+    if len(sys.argv) > 1:
+        targets = [os.path.abspath(a) for a in sys.argv[1:] if a.endswith(".md")]
+    else:
+        targets = [os.path.join(docs_dir, f)
+                   for f in os.listdir(docs_dir) if f.endswith(".md")]
 
     print("=" * 80)
-    print(f"Compiling {len(md_files)} Documentation Markdown Files to HTML and PDF...")
+    print(f"Compiling {len(targets)} Documentation Markdown Files to HTML and PDF...")
     print("=" * 80)
 
-    for md_file in sorted(md_files):
-        base_name = os.path.splitext(md_file)[0]
-        md_p = os.path.join(docs_dir, md_file)
-        html_p = os.path.join(docs_dir, f"{base_name}.html")
-        pdf_p = os.path.join(docs_dir, f"{base_name}.pdf")
+    ok = failed = 0
+    for md_p in sorted(targets):
+        out_dir = os.path.dirname(md_p)
+        base_name = os.path.splitext(os.path.basename(md_p))[0]
+        html_p = os.path.join(out_dir, f"{base_name}.html")
+        pdf_p = os.path.join(out_dir, f"{base_name}.pdf")
         doc_title = base_name.replace("_", " ").title()
 
-        print(f"\nProcessing: {md_file} -> {base_name}.html & {base_name}.pdf")
-        compile_markdown_to_html_and_pdf(md_p, html_p, pdf_p, title=f"LumièreShop — {doc_title}")
+        print(f"\nProcessing: {md_p} -> {base_name}.html & {base_name}.pdf")
+        if not os.path.exists(md_p):
+            print(f"❌ Missing: {md_p}")
+            failed += 1
+            continue
+        result = compile_markdown_to_html_and_pdf(
+            md_p, html_p, pdf_p, title=f"LumièreShop — {doc_title}")
+        if result is False:
+            failed += 1
+        else:
+            ok += 1
 
     print("\n" + "=" * 80)
-    print("🎉 All Documentation HTML & PDF Files Compiled Successfully!")
+    if failed:
+        print(f"⚠️  {ok} compiled, {failed} FAILED")
+        sys.exit(1)
+    print(f"🎉 {ok} Documentation HTML & PDF Files Compiled Successfully!")
     print("=" * 80)
 

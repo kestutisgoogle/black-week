@@ -51,6 +51,9 @@ from app.services.ca_service import (
     reset_session_conversation,
 )
 
+# Measured Black Week KPI figures (never hardcoded in the page)
+from app.services.kpi_service import get_kpi_summary
+
 # Semantic search & prompt evaluation services
 from app.services.discovery_service import KnowledgeDiscoveryService
 from app.services.prompt_evaluator import PromptEvaluatorService
@@ -59,10 +62,17 @@ from app.services.prompt_evaluator import PromptEvaluatorService
 discovery_service = KnowledgeDiscoveryService()
 prompt_evaluator = PromptEvaluatorService()
 
-# Default active prompt used for Knowledge Catalog semantic discovery & BigQuery Data Agent data preparation
-_current_active_prompt = (
-    "Prepare sales, marketing, ads, inventory, all connected business domains data"
-)
+# Default active prompt used for Knowledge Catalog semantic discovery and
+# BigQuery Data Agent preparation.
+#
+# 2026-09-13: this was a private copy of the old prompt,
+#   "Prepare sales, marketing, ads, inventory, all connected business domains data"
+# which grounds 50 tables - over the Conversational Analytics metadata cliff -
+# and scores 0 of 11 on the main story. It is now the shared prompt, so
+# /api/health reports what the demo actually uses.
+from app.services.discovery_core import DISCOVERY_PROMPT
+
+_current_active_prompt = DISCOVERY_PROMPT
 
 # Initialize FastAPI application instance
 app = FastAPI(
@@ -178,14 +188,39 @@ async def health_check():
     }
 
 
+@app.get("/api/kpi/summary")
+async def kpi_summary_endpoint(refresh: bool = False):
+    """
+    Headline Black Week figures, measured live from BigQuery.
+
+    The web interface renders every euro amount and percentage from this
+    response. Nothing is typed into the page, so the English and Dutch views
+    cannot disagree and the exported summary report cannot go stale.
+
+    Measured once per process and cached; pass ?refresh=true to re-measure.
+    """
+    try:
+        return await anyio.to_thread.run_sync(lambda: get_kpi_summary(refresh))
+    except Exception as exc:  # pragma: no cover - surfaced to the UI
+        raise HTTPException(
+            status_code=503,
+            detail=f"Unable to measure KPI summary from BigQuery: {exc}",
+        )
+
+
 @app.post("/api/prepare-data")
 async def prepare_data_endpoint(request: PrepareDataRequest):
     """
     Data Preparation & Dynamic Grounding Pipeline:
-    1. Evaluates incoming prompt against Google Cloud Knowledge Catalog (semanticSearch=True).
-    2. Dynamically discovers the exact 25 curated tables across commercial and operational domains.
-    3. Re-configures the BigQuery Data Agent (DATA_AGENT_ID) dataSources with these discovered tables.
-    4. Pre-warms the server-managed conversation resource on Google Cloud for the active session.
+    1. Sends the CMO's prompt to Google Cloud Knowledge Catalog (semanticSearch=True),
+       once for BigQuery tables and once for Business Glossary terms.
+    2. Re-configures the BigQuery Data Agent (DATA_AGENT_ID) with the discovered
+       tables AND the discovered glossary terms.
+    3. Pre-warms the server-managed conversation resource for the active session.
+
+    Both searches use the SAME prompt string, and the same shared module the
+    setup script uses, so the live demo and the initialised environment cannot
+    disagree about what the catalog found.
     """
     global _current_active_prompt
     user_prompt = request.prompt or _current_active_prompt
@@ -198,20 +233,23 @@ async def prepare_data_endpoint(request: PrepareDataRequest):
                 get_or_create_session_conversation, request.session_id
             )
 
-        # Step 1: Cloud-native Knowledge Catalog Discovery, Terms & EntryLinks Resolution
+        # Step 1: Knowledge Catalog discovery - tables and glossary terms
         discovery_result = await anyio.to_thread.run_sync(
             discovery_service.discover_knowledge_context, user_prompt
         )
         discovered_tables = discovery_result.get("tables", [])
+        glossary_terms = discovery_result.get("glossary_terms", [])
 
-        # Step 2: Update BigQuery Data Agent mapped table data sources
+        # Step 2: Ground the Data Agent on both. Passing the terms here is what
+        # makes this a live catalog demonstration rather than a replay of
+        # whatever `scripts/06_update_data_agent.py` happened to leave behind.
         agent_result = await anyio.to_thread.run_sync(
-            update_data_agent_sources, discovered_tables
+            update_data_agent_sources, discovered_tables, glossary_terms
         )
 
         return {
             "status": "success",
-            "prompt": user_prompt,
+            "prompt": discovery_result.get("prompt", user_prompt),
             "data_agent_id": DATA_AGENT_ID,
             "table_count": discovery_result.get("table_count", len(discovered_tables)),
             "term_count": discovery_result.get("term_count", 0),
@@ -220,7 +258,11 @@ async def prepare_data_endpoint(request: PrepareDataRequest):
             "terms": discovery_result.get("terms", []),
             "entry_links": discovery_result.get("entry_links", []),
             "agent_configured": True,
-            "message": f"Successfully discovered {discovery_result.get('table_count', len(discovered_tables))} tables, {discovery_result.get('term_count', 0)} glossary terms, and {discovery_result.get('entry_link_count', 0)} EntryLinks via Knowledge Catalog.",
+            "message": (
+                f"Discovered {discovery_result.get('table_count', len(discovered_tables))} tables "
+                f"and {discovery_result.get('term_count', 0)} business glossary terms "
+                f"via Knowledge Catalog."
+            ),
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -299,17 +341,25 @@ async def chat_endpoint(request: ChatRequest):
 @app.post("/api/multi-agents/prepare")
 async def multi_agents_prepare_endpoint(request: MultiAgentsPrepareRequest):
     """
-    Configures dedicated Google Cloud Data Agents for Agent A, Agent B, and Agent C
-    with their respective isolated datasets in parallel.
-    If a prompt is provided, discovers tables once via Knowledge Catalog semantic search
-    and maps the exact same tables across Agent A (ecommerce_dw), Agent B (ecommerce_dw_2nd),
-    and Agent C (ecommerce_dw_3rd).
+    Configures the three comparison Data Agents in parallel.
+
+    One prompt drives two Knowledge Catalog searches (tables, then glossary
+    terms). The SAME table names are mapped onto all three agents, each in its
+    own dataset - Agent A in ecommerce_dw, Agent B in ecommerce_dw_2nd, Agent C
+    in ecommerce_dw_3rd - so the three tiers differ ONLY in metadata quality,
+    never in the underlying rows.
+
+    Only Agent A receives the glossary terms. That is the experiment: the other
+    two datasets have no governed glossary, so there is genuinely nothing to
+    map. Their terms are actively cleared on every call so a stale projection
+    from an earlier run can never quietly flatter them.
     """
     try:
         discovered_tables = []
         term_count = 0
         entry_link_count = 0
         terms = []
+        glossary_terms = []
         entry_links = []
 
         if request.prompt:
@@ -320,6 +370,7 @@ async def multi_agents_prepare_endpoint(request: MultiAgentsPrepareRequest):
             term_count = discovery_result.get("term_count", 0)
             entry_link_count = discovery_result.get("entry_link_count", 0)
             terms = discovery_result.get("terms", [])
+            glossary_terms = discovery_result.get("glossary_terms", [])
             entry_links = discovery_result.get("entry_links", [])
 
             agents_to_update = [
@@ -334,8 +385,13 @@ async def multi_agents_prepare_endpoint(request: MultiAgentsPrepareRequest):
         else:
             raise HTTPException(status_code=400, detail="Either 'prompt' or 'agents' must be provided.")
 
+        # Agent A is the catalog tier. Everyone else gets None, which clears
+        # any glossary terms they are currently holding.
         async def _update_one(item: MultiAgentSetupItem):
-            await anyio.to_thread.run_sync(update_multi_agent_sources, item.name, item.tables)
+            terms_for_agent = glossary_terms if item.name == "Agent A" else None
+            await anyio.to_thread.run_sync(
+                update_multi_agent_sources, item.name, item.tables, terms_for_agent
+            )
 
         async with anyio.create_task_group() as tg:
             for item in agents_to_update:
@@ -350,7 +406,10 @@ async def multi_agents_prepare_endpoint(request: MultiAgentsPrepareRequest):
             "tables": discovered_tables,
             "terms": terms,
             "entry_links": entry_links,
-            "message": f"Successfully mapped {len(discovered_tables)} tables across 3 isolated agents in GCP.",
+            "message": (
+                f"Mapped {len(discovered_tables)} tables across 3 isolated agents; "
+                f"{term_count} Knowledge Catalog glossary terms attached to Agent A only."
+            ),
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

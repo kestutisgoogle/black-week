@@ -1,0 +1,849 @@
+# =============================================================================
+# CMO Question Sets — single source of truth
+# =============================================================================
+# Two DISTINCT sets, because they serve two different purposes:
+#
+#   demo_script  Guided questions for the live demo. Leading language is fine
+#                and desirable here: on stage you want narrative flow.
+#
+#   benchmark    Unleading questions for measuring Agent A vs B vs C. A question
+#                that names the hypothesis hands the metadata-poor agent the very
+#                semantics Knowledge Catalog was supposed to supply, which
+#                suppresses the differentiator being measured.
+#
+# Consumed by:  export/scripts/run_cmo_questions.py
+# Verified by:  scripts/test/measure_cmo_ground_truth.py --check
+#
+# -----------------------------------------------------------------------------
+# RULE: every `ground_truth` figure below was MEASURED against the warehouse.
+# None of it is copied from narrative documents.
+#
+# This rule exists because the previous Q2 asserted that Beauty conversion
+# "dropped to 2.1%". Measured daily CVR is 3.57-4.25% and never approaches 2.1%,
+# so an agent answering CORRECTLY would have been graded wrong. Four red-herring
+# figures in TECHNICAL_SPECIFICATION.md sec 3.4 failed the same check.
+# -----------------------------------------------------------------------------
+# SCORING FIELDS (read by the runner; see that script's docstring for semantics)
+#
+#   figures              numeric expectations. Keys ending `_pct` are matched
+#                        against percent-tagged numbers in the answer; all other
+#                        keys against non-percent numbers. Sign is ignored.
+#   context              extra measured values, printed in reports but NOT scored
+#                        (too small or too round to match without false positives).
+#   mechanism_any        list of groups. A group passes if ANY of its terms appears.
+#                        ALL groups must pass. Case-insensitive substring match.
+#   trap_forbidden       plain strings that must NOT appear.
+#   trap_forbidden_if_all  list of groups. Trap is hit only if EVERY term in a
+#                        group appears — for traps that need context to identify.
+#   trap_values          NUMERIC traps. Preferred over trap_forbidden for figures.
+#                        Matched at a TIGHT 1.5% tolerance against the agent's
+#                        CONCLUSION only, and FORGIVEN when the agent also states
+#                        a correct `figures` value there. This is what lets an
+#                        agent show EUR 2,003,060.60 as working and still pass:
+#                        the gross figure is a required step of the right answer.
+#                        Keys ending `_pct` match percent-tagged numbers only.
+#   trap_forgiven_by     maps a `trap_values` key to the ONE `figures` key that
+#                        excuses it. Without a pairing, ANY correct figure
+#                        excuses the trap - which is how a coincidental match
+#                        once disarmed two real traps at once. Always pair when
+#                        a question has more than one figure.
+#   trap_scope           `conclusion` (default) or `full`. Use `full` only when a
+#                        statement is disqualifying wherever it appears, e.g. a
+#                        false factual claim.
+#   trap_note            prose, printed in the report, never graded.
+#
+# Prefer `trap_values` to a bare string like "54.3%". A naked percentage is not
+# identifying: that exact string once fired on an Electronics figure while trying
+# to catch a Beauty one.
+#
+# The figure and trap axes are mechanical and reliable. The mechanism axis is
+# keyword matching and is approximate: the report prints every answer in full so
+# a wrong auto-grade can be overruled by eye.
+# =============================================================================
+
+meta:
+  measured_on: "2026-09-12"
+  cutoff: "2026-11-27 14:30:00 UTC"
+  window_start: "2026-11-23 00:00:00 UTC"
+  measurement_basis: >
+    All revenue-versus-target figures are period-to-date at the cutoff, compared
+    against the PRO-RATED plan for the elapsed part of Black Week (62.35% of the
+    window). Comparing to-date actuals against the full-period plan is the error
+    the `pacing_variance` glossary term warns about.
+  storewide:
+    plan_to_date: 6672788
+    actual_to_date: 5941358
+    variance: -731430
+    variance_pct: -10.96
+
+# =============================================================================
+# SET 1 - LIVE DEMO SCRIPT (guided; narrative flow intended)
+# =============================================================================
+demo_script:
+  - id: D-Q1
+    title: Category Variance Identification
+    beat: >-
+      Open on the symptom. Let the room see that the problem is real and that it
+      is concentrated in exactly one category.
+    prompt: >-
+      Which product categories missed their revenue targets during Black Week,
+      and what is the gap for each?
+    ground_truth:
+      summary: >-
+        All four categories are behind the pro-rated plan. Beauty is by far the
+        worst at -EUR 520,871 (-26.6%), roughly 71% of the storewide deficit.
+      figures:
+        # ⚠️ DEMO NOTE - measured 2026-09-14, two consecutive runs.
+        #
+        # Agent A names Beauty as the worst category EVERY time, and states
+        # that all four categories are behind plan EVERY time. The narrative is
+        # completely stable and that is what the playbook promises.
+        #
+        # The euro figure is NOT stable:
+        #     run 1   Beauty -EUR 542,617.86  (-27.61%)   within tolerance
+        #     run 2   Beauty -EUR 717,290.68  (-36.50%)   outside tolerance
+        #
+        # Both runs pro-rate the plan correctly and agree on the target to
+        # within 0.6%. They disagree on ACTUAL revenue - 1,435,811 vs
+        # 1,247,710 - because the revenue convention is not pinned down, so the
+        # agent picks a different treatment of returned and partially returned
+        # orders each time. See backlog B34.
+        #
+        # DO NOT put a euro figure for this question on a slide. The exact
+        # attribution is delivered by D-Q6, which was 4/4 on both runs.
+        beauty_variance: -520871
+        beauty_variance_pct: -26.62
+        electronics_variance_pct: -5.74
+        home_variance_pct: -4.59
+        fashion_variance_pct: -2.87
+    scoring:
+      mechanism_any:
+        - [beauty]
+        - [target, plan, forecast]
+      trap_note: >-
+        Comparing to-date actuals against the FULL-week plan roughly doubles every
+        deficit. Watch whether the agent pro-rates.
+    tolerance_pct: 5
+
+  - id: D-Q2
+    title: Funnel Decomposition (Traffic vs Conversion)
+    beat: >-
+      Split the funnel. This is the question that eliminates the obvious wrong
+      answer, and the one most likely to catch a metadata-poor agent out.
+    prompt: >-
+      For the Beauty category during Black Week, did sessions come in below
+      plan, or did the conversion rate come in below plan? Compare both against
+      the plan for the same period.
+    # PROMPT REWORDED 2026-09-14 after the question flipped its own conclusion
+    # between two consecutive runs:
+    #
+    #   run 1: "driven by lower website visitor traffic, NOT a drop in
+    #           conversion rate"                                    CORRECT
+    #   run 2: "primarily driven by a drop in conversion rate ...
+    #           traffic surged 5.5x from 114,482 baseline sessions" WRONG
+    #
+    # The old wording - "did we miss the revenue target because of lower
+    # traffic or a drop in conversion rate" - named no comparison basis, so the
+    # agent was free to choose one. In run 2 it chose the pre-promotional
+    # baseline WEEK rather than the plan, against which Black Week traffic
+    # naturally looks like a surge, and the whole conclusion inverted.
+    #
+    # Naming the basis is not making the question easier. Every other question
+    # in this set is anchored to plan, the ground truth is measured against
+    # plan, and no analyst would ask this without saying which comparison they
+    # mean. An unanchored question is simply ambiguous, and an ambiguous
+    # question cannot be demonstrated live.
+    # CORRECTED TWICE. Read this before editing.
+    #
+    # v1 asserted "conversion dropped from target 3.2% to 2.1%". False: no
+    # measured CVR is anywhere near 2.1%.
+    #
+    # v2 asserted "3.57-4.25% against a 3.2% target, above plan every day".
+    # ALSO FALSE, and wrong in the same way - the 3.2% was lifted from the
+    # spec's storewide CVR range instead of measured. Beauty's real daily
+    # target_conversion_rate is 3.98 / 3.94 / 3.90 / 3.78 / 3.68, so conversion
+    # was BELOW target on 23, 24 and 25 Nov and above it on 26 and 27.
+    #
+    # v3 (this one) is measured. Over the window, session-weighted:
+    #   sessions   636,119 vs plan 831,381        = -23.5%
+    #   CVR          3.887% vs weighted tgt 3.844% =  +1.1%
+    # The conclusion "traffic, not conversion" still holds - the traffic gap is
+    # ~21x the conversion gap - but conversion did NOT outperform every day.
+    ground_truth:
+      summary: >-
+        Traffic, not conversion. Beauty sessions ran 23.5% below plan across the
+        window and almost exactly 23.2% below on every complete day. Conversion
+        finished essentially ON plan at 3.89% against a session-weighted target
+        of 3.84% (+1.1%), running 6-10% below target on 23-25 Nov and 10-16%
+        above it on 26-27 Nov. The traffic gap is roughly 21x the conversion gap.
+      figures:
+        sessions_vs_plan_pct: -23.49
+      context:
+        cvr_actual_pct: 3.887
+        cvr_target_pct: 3.844
+        cvr_daily_range: "3.57 - 4.25"
+        cvr_target_daily_range: "3.68 - 3.98"
+        ad_spend_vs_plan_pct_range: "-22 to -38"
+    scoring:
+      mechanism_any:
+        - [traffic, sessions, visitors]
+        # WIDENED 2026-09-14. All three agents were failing this check while
+        # comparing against plan perfectly clearly. Agent A wrote "against a
+        # pro-rated target of 834,913" and "a 23.81% traffic deficit"; neither
+        # matched any of the six literal phrases previously accepted. The check
+        # is meant to establish that a comparison to plan was made at all, not
+        # to police how it is worded.
+        - [below plan, under plan, versus plan, vs plan, short of plan,
+           below target, under target, versus target, vs target,
+           against plan, against a plan, behind plan, behind target,
+           against target, against a target, against the target,
+           against a pro-rated target, against its pro-rated target,
+           compared to plan, compared to the plan,
+           compared to target, compared to the target,
+           versus a target, versus the target, deficit, shortfall]
+      trap_forbidden:
+        - "2.1%"
+      trap_forbidden_if_all:
+        - [conversion, collaps]
+        - ["was a conversion problem"]
+        - [conversion, "primary driver"]
+        - [conversion, "main driver"]
+        - [conversion, "root cause"]
+      trap_note: >-
+        The trap is attributing the shortfall to conversion. Noting that
+        conversion ran slightly below target early in the week is CORRECT and
+        must not be penalised - it did. What is wrong is calling conversion the
+        cause: it closed the window +1.1% against target while traffic was
+        -23.5%.
+    tolerance_pct: 10
+
+  - id: D-Q3
+    title: Hero SKU Stockout Demand Friction
+    beat: >-
+      First root cause. Also the best single moment to show the semantic trap on
+      stage: ask the room what SUM(pot_val) would have told them.
+    prompt: >-
+      Did we have out-of-stock events on bestselling Beauty products, and what
+      was the estimated lost sales impact?
+    ground_truth:
+      summary: >-
+        Yes. Hero SKUs 1001, 1002 and 1003 were unavailable from Mon 23 Nov to
+        Wed 25 Nov. The certified loss is EUR 62,386 (12.0% of the Beauty
+        deficit): gross attempted basket value of EUR 2,003,060.60 multiplied by
+        the paid conversion rate of 3.115%. Note this is NOT
+        SUM(oos_interactions.pot_val) on its own, which is the gross figure and
+        overstates the loss 32x.
+      figures:
+        attributed_loss: 62386
+        share_of_deficit_pct: 11.98
+    scoring:
+      mechanism_any:
+        - [out of stock, out-of-stock, stockout, stock-out, unavailab]
+      # Numeric rather than string, matching B-S1: the gross figure is a
+      # required step of the correct answer, so it must be forgiven when the
+      # agent also states EUR 62,386.
+      trap_values:
+        naive_gross: 2003060.60
+      trap_forgiven_by:
+        naive_gross: attributed_loss
+      trap_note: >-
+        SUM(oos_interactions.pot_val) = EUR 2,003,060.60 is gross attempted basket
+        value, 32.1x the true loss and larger than the entire storewide deficit.
+    tolerance_pct: 15
+
+  - id: D-Q4
+    title: Recommender Algorithm Cross-Sell Failure
+    beat: >-
+      Second root cause, and the one that needs the most semantics: `cat_mismatch_flg`
+      and `fb_rule_id` mean nothing without the glossary.
+    prompt: >-
+      When customers viewed out-of-stock Beauty items, did our product
+      recommendations suggest relevant alternatives, or was there an algorithm
+      issue?
+    ground_truth:
+      summary: >-
+        Fallback rule 99 fired and served cross-category items, flagged by
+        cat_mismatch_flg = 1 on 64,003 of 106,175 impressions. Of those, 22,065
+        were bounced; at the sitewide conversion rate of 3.887% and an average
+        order value of EUR 58.07 the certified loss is EUR 49,804 (9.6% of the
+        Beauty deficit). Note opp_cost_eur is a reserved column, always zero,
+        and must never be summed.
+      figures:
+        attributed_loss: 49804
+        share_of_deficit_pct: 9.56
+        mismatched_impressions: 64003
+        bounced_impressions: 22065
+    scoring:
+      mechanism_any:
+        - [recommend, cross-sell, cross sell, fallback]
+        - [mismatch, wrong category, cross-category, irrelevant, different category]
+    tolerance_pct: 15
+
+  - id: D-Q5
+    title: Paid Ad Spend Throttling & Creative Fatigue
+    beat: >-
+      The dominant cause, and the counter-intuitive one: the bidding system did
+      exactly what it was configured to do.
+    prompt: >-
+      Why did our paid marketing spend and traffic drop for Beauty campaigns on
+      Meta and Google Ads?
+    ground_truth:
+      summary: >-
+        Automated Target ROAS bidding breached its threshold and capped the
+        budget: 5 TARGET_ROAS_BREACH_THROTTLED / BUDGET_CAP_APPLIED events from
+        2026-11-23 11:30, driving budget_multiplier as low as 0.62. Top creatives
+        were separately flagged LEARNING_LIMITED on 2026-11-22. Largest single
+        driver at EUR 408,681 (78.5%) of the Beauty deficit.
+      figures:
+        # RESCOPED 2026-09-14. This question asks WHY SPEND AND TRAFFIC FELL.
+        # It was previously scored on `attributed_loss: 408681` and its share
+        # of the deficit - a revenue attribution the question never requests,
+        # and which D-Q6 asks for directly. The result was that all three
+        # agents explained the throttling correctly, passed both mechanism
+        # checks, and still scored 0/2 on figures. That is a defect in the
+        # question, not in the agents.
+        #
+        # Scored instead on what the question does ask, measured 2026-09-14
+        # from daily_ad_performance joined to daily_category_targets for
+        # target_category_id = 1, and from ad_bidding_log:
+        #
+        #   Nov 23  spend 25,734.45  target 32,992.89  -22.0%
+        #   Nov 24  spend 22,501.15  target 36,292.18  -38.0%
+        #   Nov 25  spend 24,546.71  target 39,591.47  -38.0%
+        #   Nov 26  spend 40,383.29  target 59,387.20  -32.0%
+        #   Nov 27  spend 28,654.29  target 79,182.93  -63.8%  (part day)
+        #
+        # Complete days only (23-26), to keep the partial final day out of it:
+        #   spend 113,165.60  target 168,263.74  = -32.7%
+        #
+        # The daily spend shortfall tracks the budget_multiplier in
+        # ad_bidding_log exactly, which is the point of the question.
+        beauty_ad_spend: 141820
+        min_budget_multiplier: 0.62
+        max_bid_reduction_pct: -38.0
+      context:
+        attributed_loss_see_D_Q6: 408681
+        share_of_deficit_pct_see_D_Q6: 78.46
+        spend_vs_target_pct_complete_days: -32.7
+        throttle_events: 5
+    scoring:
+      mechanism_any:
+        - [throttl, budget cap, capped, bid, roas]
+        - [automat, algorithm, rule, system]
+    tolerance_pct: 15
+
+  - id: D-Q6
+    title: Shortfall Attribution by Root Cause
+    beat: >-
+      Close the loop. All three components are now measured rather than
+      allocated: the two on-site frictions are derived from the data, and ad
+      throttling is the residual because the traffic collapse overlaps the
+      frictions that triggered it.
+    prompt: >-
+      Break down the Beauty revenue shortfall during Black Week. How much does
+      each root cause account for?
+    ground_truth:
+      summary: >-
+        Ad throttling EUR 408,681 (78.5%), stockouts EUR 62,386 (12.0%),
+        recommender mismatch EUR 49,804 (9.6%), summing exactly to the measured
+        EUR 520,871 Beauty deficit. The two on-site frictions are measured
+        directly from the data; ad throttling is the residual, because the
+        traffic collapse overlaps the frictions that triggered it.
+      figures:
+        total_deficit: 520871
+        ads: 408681
+        stockouts: 62386
+        recommender: 49804
+    scoring:
+      mechanism_any:
+        - [throttl, bid, ad spend, advertising]
+        - [stock, inventor, availab]
+        - [recommend, cross-sell, fallback, mismatch]
+    tolerance_pct: 10
+
+# =============================================================================
+# SET 2 - BENCHMARK (unleading; measures A vs B vs C)
+# =============================================================================
+# Scored on three independent axes rather than substring matching:
+#   figure     - is the number within tolerance of measured ground truth?
+#   mechanism  - did it name the right cause / table / flag?
+#   trap       - did it avoid the known plausible-but-wrong answer?
+# Axis `trap` is the one that produces a quotable result.
+# =============================================================================
+benchmark:
+
+  # --- Tier 1: open discovery, no hypothesis supplied ------------------------
+  - id: B-D1
+    tier: open_discovery
+    title: Unprompted problem discovery
+    prompt: >-
+      Black Week isn't going the way I expected. What's going on?
+    tests: Can the agent locate the problem with no hypothesis supplied at all?
+    ground_truth:
+      summary: >-
+        Storewide trading is EUR 731,430 (-11.0%) behind the pro-rated plan.
+        Beauty is the outlier at -26.6%; the other three categories are between
+        -2.9% and -5.7%.
+      figures:
+        storewide_variance_pct: -10.96
+        beauty_variance_pct: -26.62
+      context:
+        naive_storewide_variance: -4761213
+        naive_storewide_variance_pct: -44.49
+    scoring:
+      mechanism_any:
+        - [beauty]
+        - [behind, below, short, deficit, miss, gap, under]
+      trap_values:
+        naive_storewide: 4761213
+        naive_storewide_pct: 44.49
+      # Both are storewide errors, so only the correct storewide figure excuses
+      # them. Getting Beauty right does not make the storewide number right.
+      trap_forgiven_by:
+        naive_storewide: storewide_variance_pct
+        naive_storewide_pct: storewide_variance_pct
+      trap_note: >-
+        Comparing to-date actuals against the FULL 8-day plan reports the
+        storewide gap as EUR 4,761,213 (-44.5%) instead of EUR 731,430 (-11.0%) -
+        6.5x too large. Also watch for an agent that answers with a generic data
+        summary and never identifies that anything is wrong at all.
+    tolerance_pct: 10
+
+  - id: B-D2
+    tier: open_discovery
+    title: Pacing against plan
+    # DEFECT D1, FIXED HERE. The prompt used to say only "Which categories are
+    # behind plan, and by how much?" with no period. Agent A answered for
+    # 2026-11-27 intraday against 15-minute interval targets - arguably the best
+    # method any agent used - and was graded 1/4 against a week-to-date truth.
+    # The period is now pinned. Note this is a SCOPE statement, not a hint: it
+    # says over what window to measure, and says nothing about how to pro-rate.
+    # Pro-rating remains the whole test.
+    prompt: >-
+      Taking Black Week so far - from Monday 23 November up to now - which
+      categories are behind plan, and by how much?
+    tests: Pro-rating. The plan is stored for whole periods; we are 62.35% through.
+    ground_truth:
+      summary: >-
+        Against the PRO-RATED plan: Beauty -EUR 520,871 (-26.6%), Electronics
+        -EUR 96,168 (-5.7%), Home -EUR 72,692 (-4.6%), Fashion -EUR 41,699 (-2.9%).
+      figures:
+        beauty: -520871
+        electronics: -96168
+        home: -72692
+        fashion: -41699
+      context:
+        naive_beauty_fullweek: -1702537
+        naive_beauty_fullday: -917949.50
+        naive_beauty_fullweek_pct: -54.25
+        naive_electronics: -1108159
+        naive_home: -1030145
+        naive_fashion: -920373
+    scoring:
+      mechanism_any:
+        - [beauty]
+      # DEFECT D2, FIXED HERE. The old trap forbade EUR 1,702,537 - the full
+      # 8-day basis. Agents do not produce that. What they actually produce is
+      # EUR 917,949.50: Beauty's FULL-DAY Nov 23-27 target (2,353,760.92) minus
+      # actual (1,435,811.42), i.e. they pro-rate to whole days but not to the
+      # 14:30 cutoff. Three of nine answers in run 1 hit that exact number and
+      # the trap missed every one. Both bases are now trapped.
+      #
+      # DEFECT D3, FIXED HERE. The strings "54.25%" and "54.3%" are gone, and
+      # so is the numeric percentage trap that first replaced them. Replaying
+      # run 1 proved the numeric form did NOT fix the defect: Agent C's "54.3%"
+      # is its ELECTRONICS figure (-EUR 1,876,230.49) and still matched a trap
+      # named for Beauty. A percentage cannot be attributed to a category by a
+      # conclusion-level match, because every category is named in the same
+      # paragraph. Euro amounts are identifying; percentages are not.
+      #
+      # A naive answer whose values are not on this list is not let off - it
+      # simply fails on the FIGURE axis instead, which is the honest place for
+      # "got nothing right" as opposed to "hit a known trap". Agent C scores
+      # 0/4 figures for exactly that reason.
+      trap_values:
+        naive_beauty_fullweek: 1702537
+        # 917,949.50 and Fashion's 920,373 are 0.26% apart, inside the 1.5%
+        # trap tolerance, so they can be reported under each other's name. Both
+        # are traps, so the VERDICT is right either way; only the label may swap.
+        naive_beauty_fullday: 917949.50
+        naive_electronics: 1108159
+        naive_home: 1030145
+      # Per-category pairing. A correct Fashion figure must not excuse a naive
+      # Beauty one - the answer would then be half right and scored wholly so.
+      trap_forgiven_by:
+        naive_beauty_fullweek: beauty
+        naive_beauty_fullday: beauty
+        naive_electronics: electronics
+        naive_home: home
+      trap_note: >-
+        Using a plan that is not pro-rated to the 14:30 cutoff inflates every
+        deficit, and is the error the `pacing_variance` glossary term names
+        explicitly. Two wrong bases are seen in practice: the full 8-day plan
+        makes Beauty EUR 1,702,537 (-54.3%), and whole-days-only makes it
+        EUR 917,949.50. The correct figure is EUR 520,871 (-26.6%). Note the
+        trap also DESTROYS THE STORY: on the naive basis all four categories
+        look roughly equally bad, so Beauty no longer stands out as the outlier
+        and the investigation has nowhere to start.
+    tolerance_pct: 10
+
+  - id: B-D3
+    tier: open_discovery
+    title: Traffic or conversion
+    prompt: >-
+      Beauty is the worst performer. Across Black Week so far, was that a
+      traffic problem or a conversion problem?
+    tests: Funnel decomposition without being told which half broke.
+    ground_truth:
+      summary: >-
+        Traffic. Sessions ran 23.5% below plan across the window while conversion
+        finished essentially on plan - 3.89% against a session-weighted target of
+        3.84%. The traffic gap is roughly 21x the conversion gap.
+      figures:
+        sessions_vs_plan_pct: -23.49
+      context:
+        cvr_actual_pct: 3.887
+        cvr_target_pct: 3.844
+        cvr_daily_range: "3.57 - 4.25"
+        cvr_target_daily_range: "3.68 - 3.98"
+    scoring:
+      # DEFECT D4, PART 1. The second group is new. The question cannot be
+      # answered without comparing one side of the funnel to plan, and in run 1
+      # the only agent that got it wrong was the only agent that never did -
+      # it invented "revenue per interaction" and never looked at sessions at
+      # all. Requiring the comparison is a real requirement, not a phrasing
+      # patch, which is why it is on the mechanism axis rather than the trap.
+      # Term list VERIFIED by replaying the three recorded run-1 answers, not
+      # guessed. The first draft omitted "target of" and so failed both agents
+      # that were actually right - they write "versus A target of 1,000,095",
+      # with an article the shorter terms do not span. Agent A, which never
+      # compared anything to plan, matches none of these.
+      mechanism_any:
+        - [traffic, sessions, visitors]
+        - [below plan, under plan, versus plan, vs plan, against plan,
+           short of plan, below target, versus target, vs target, against target,
+           "target of", "targets of", "versus a target", "vs a target",
+           "against a target", "targets against", "against daily",
+           "compared to target", "compared to plan", "relative to target",
+           "relative to plan"]
+      trap_forbidden:
+        - "2.1%"
+      # DEFECT D4, PART 2. In run 1 Agent A concluded "primarily a
+      # conversion/efficiency problem, not a traffic problem" - the clearest
+      # failure in the whole set - and the trap passed it, because none of the
+      # groups matched that wording. The added groups below cover the ways an
+      # answer can NAME conversion as the cause.
+      #
+      # Checked against the opposite, CORRECT conclusion "a traffic problem,
+      # not a conversion problem": it matches none of these. The deliberately
+      # omitted group is [conversion, "not traffic"], which would fire on a
+      # correct answer containing a phrase like "not traffic quality but
+      # traffic volume".
+      trap_forbidden_if_all:
+        - [conversion, collaps]
+        - ["was a conversion problem"]
+        - [conversion, "primary driver"]
+        - [conversion, "main driver"]
+        - [conversion, "root cause"]
+        - ["primarily a conversion"]
+        - ["mainly a conversion"]
+        - ["largely a conversion"]
+        - ["chiefly a conversion"]
+        - [conversion, "not a traffic problem"]
+        - [conversion, "rather than a traffic"]
+        - [conversion, "rather than traffic"]
+        - [conversion, "efficiency problem"]
+      trap_note: >-
+        Two opposite traps. (1) Sessions GREW in absolute terms day over day
+        (102k -> 184k), so an agent comparing days instead of comparing to plan
+        concludes traffic was healthy. (2) Conversion did dip 6-10% below target
+        on 23-25 Nov, so an agent looking only at those days blames conversion -
+        but over the window conversion closed +1.1% against target while traffic
+        was -23.5%. Mentioning the early dip is correct; calling it the cause is
+        not.
+    tolerance_pct: 15
+
+  # --- Tier 2: semantic traps - metadata changes the ANSWER ------------------
+  - id: B-S1
+    tier: semantic_trap
+    title: Stockout loss (the 32x trap)
+    prompt: >-
+      How much revenue did we lose because items were out of stock?
+    tests: >-
+      `oos_interactions.pot_val` is GROSS attempted basket value, not net lost
+      revenue. The glossary states "Do NOT use SUM(oos_interactions.pot_val)".
+    ground_truth:
+      summary: >-
+        EUR 62,386, measured as the gross attempted basket value
+        SUM(oos_interactions.pot_val) = EUR 2,003,060.60 multiplied by the paid
+        conversion rate of 3.115%.
+      figures:
+        correct: 62386
+      context:
+        naive_wrong: 2003060.60
+        overstatement_factor: 32.1
+    scoring:
+      mechanism_any:
+        - [out of stock, out-of-stock, stockout, stock-out, unavailab]
+      # Numeric, not string, and this is the question the whole mechanism was
+      # built for. EUR 2,003,060.60 is a REQUIRED STEP of the correct answer
+      # (2,003,060.60 x 3.115% = 62,386), so an agent that shows it as working
+      # and then states EUR 62,386 has done everything right. The old string
+      # trap fired on exactly that answer. `trap_values` forgives the figure
+      # when a correct one is asserted alongside it in the conclusion.
+      #
+      # "2.0 million" and "2 million" are covered too: extract_numbers expands
+      # the suffix, and 2,000,000 is inside the 1.5% band around 2,003,060.60.
+      trap_values:
+        naive_gross: 2003060.60
+      trap_forgiven_by:
+        naive_gross: correct
+      trap_note: >-
+        Reporting EUR 2,003,060 overstates the loss 32x and exceeds the ENTIRE
+        storewide deficit of EUR 731,430. This is the single most valuable
+        discriminator in the warehouse. Showing the gross figure on the way to
+        EUR 62,386 is correct and is not scored as a trap; concluding with it is.
+    tolerance_pct: 25
+
+  - id: B-S2
+    tier: semantic_trap
+    title: ROAS convention collision
+    # DEFECT D6, FIXED HERE. The old prompt was "How is our advertising return on
+    # ad spend tracking against plan for Beauty?". All three agents answered it
+    # correctly and identically (10.1x vs 9.51x, ahead) because none of them ever
+    # attempted paid attribution - so the two-conventions trap never had a chance
+    # to bite and the question was free marks for every tier.
+    #
+    # The fix asks specifically about PAID campaigns and supplies the target as a
+    # premise, exactly as a CMO would. That is the same device the Tier 3
+    # questions use: a premise with a buried false assumption. The assumption
+    # here is that the 9.5x target applies to paid spend. It does not - it is a
+    # blended, all-channel figure - and an agent that does not know the
+    # convention will compute paid-attributed 4.12x, report a 57% collapse, and
+    # invert the true finding.
+    prompt: >-
+      Our Black Week ROAS target for Beauty is 9.5x. How are our paid Beauty
+      campaigns tracking against that target?
+    tests: >-
+      Two ROAS conventions coexist. `daily_category_targets.target_roas` is
+      BLENDED (all channels). Paid-attributed ROAS is a different measure. The
+      glossary states the two "must never be compared".
+    ground_truth:
+      summary: >-
+        The 9.5x target is a BLENDED figure covering all channels, so it cannot
+        be compared to paid-attributed performance. On its own blended
+        convention Beauty is AHEAD at 10.12x. Paid-attributed ROAS is 4.12x,
+        which is a different measure and not a shortfall against 9.51x.
+      figures:
+        # `blended_target` is deliberately NOT scored: the prompt now states it,
+        # so echoing 9.5 measures nothing. It is also excluded so that echoing it
+        # cannot earn the trap exemption, which would disarm the trap entirely.
+        # tolerance_pct is tightened to 3 for the same reason - at 10% the band
+        # around 10.12 would swallow 9.5.
+        blended_actual: 10.12
+      context:
+        blended_target: 9.51
+        paid_attributed: 4.12
+        ad_spend: 141820
+    scoring:
+      mechanism_any:
+        - [roas, return on ad spend]
+        # The convention distinction IS the answer, so it is required.
+        - [blended, all channels, all revenue, total revenue, different basis,
+           different convention, different measure, not comparable,
+           "not directly comparable", like-for-like, "like for like",
+           apples, convention]
+      trap_values:
+        paid_attributed: 4.12
+      trap_forgiven_by:
+        paid_attributed: blended_actual
+      trap_forbidden_if_all:
+        - ["4.12", below]
+        - ["4.12", short]
+        - ["4.12", miss]
+        - ["4.12", underperform]
+        - ["4.12", behind]
+        - ["4.1", shortfall]
+      trap_note: >-
+        Comparing paid-attributed 4.12x against the blended 9.51x target invents
+        a 57% ROAS collapse that did not happen, and inverts the finding: Beauty
+        is AHEAD of plan on ROAS, not behind. Mentioning 4.12x alongside the
+        blended 10.12x is fine and is not scored as a trap; concluding that paid
+        ROAS fell short of the 9.5x target is the trap.
+    tolerance_pct: 3
+
+  # --- RETIRED: B-S3 "Unpopulated field" ------------------------------
+  # Retired 2026-09-13. The question asked how much was given away in
+  # discounts; the honest answer is that order_items.discount_amount is
+  # uniformly 0.00 and therefore unpopulated, not that discounting was
+  # zero. It only separated the tiers when the agent held the glossary
+  # term "Known Unpopulated Columns".
+  #
+  # The unified discovery prompt (backend/app/services/discovery_core.py)
+  # does not retrieve that term, and it must not be reworded to chase it:
+  # adding "discounts" or "return on ad spend" to the prompt was measured
+  # to drop the orders and web_sessions tables, collapsing the main story
+  # from 11/11 answerable to 1/11. Fix the glossary, never the prompt.
+  #
+  # The definition is preserved verbatim as a local fixture in
+  # scripts/test/test_cmo_scorer.py so that the defect-D5 regression test
+  # (honest "the column contains EUR 0" vs the false "there were no
+  # discounts") keeps running against the scorer.
+
+  # --- Tier 3: red-herring resistance - wrong premise supplied on purpose ----
+  - id: B-R1
+    tier: red_herring
+    title: Payment outage premise
+    prompt: >-
+      I heard we had payment gateway problems during Black Week. Is that what
+      caused the revenue shortfall?
+    ground_truth:
+      summary: >-
+        Gateway timeouts are real but are steady background noise spread across
+        all three providers, not an event. HTTP 504 timeouts total 218 / 267 /
+        287 / 226 / 134 across Nov 23-27 - a mild Wednesday bump, no spike - and
+        they are storewide rather than Beauty-specific, so they cannot explain a
+        deficit concentrated in one category. Adyen is the largest single
+        provider but carries only 158 of the 287 peak-day timeouts; Stripe and
+        PayPal show the same flat pattern.
+      figures:
+        peak_count: 287
+        peak_value: 39747.87
+      context:
+        peak_day: "2026-11-25"
+        adyen_peak_count: 158
+    scoring:
+      mechanism_any:
+        - [steady, flat, consistent, background, all categories, storewide, not specific, "not the", unlikely, rule out, "no spike", cannot explain]
+      # DEFECT D7, FOUND BY REPLAYING RUN 1 AFTER FIXING D1-D6. The old scoring
+      # passed all three agents for rejecting the premise, and missed that all
+      # three rejected it by ASSERTING SOMETHING FALSE:
+      #   A  "no payment failures ... 0% failure rate for all transactions"
+      #   B  "100% of the recorded online orders ... have a status of Completed"
+      #   C  "zero failed, cancelled, or pending payment gateway transactions"
+      # `payment_gateway_logs` contains thousands of FAILED and TIMEOUT rows in
+      # this window. Rejecting a red herring for a reason that is not true is
+      # not a pass - it is the same wrong answer with a lucky conclusion.
+      #
+      # Scoped `full`: a false factual claim is not excused by being made early.
+      trap_scope: full
+      trap_forbidden:
+        - "no payment failures"
+        - "zero payment failures"
+        - "no failed payments"
+        - "0% failure rate"
+        - "zero failure rate"
+        - "zero failed"
+        - "no failed, cancelled"
+        - "all orders were successfully completed"
+        - "all transactions were successful"
+        - "every order was completed"
+        # The stockout figure bleeding into this answer. Unlike B-S1, EUR
+        # 2,003,060.60 is never a legitimate step here, so a literal string is
+        # the right instrument and no exemption should apply.
+        - "2,003,060"
+        - "2,003,061"
+      trap_forbidden_if_all:
+        - [payment, root cause]
+        - [gateway, caused the]
+        - [payment, primary cause]
+        # Agent B's variant of the false claim: "100% of the recorded online
+        # orders in the system have a status of Completed". Since the rebuild
+        # derives order_status from returns, all three statuses are present and
+        # that statement is plainly false. Deliberately stated without a
+        # percentage: the exact Completed share moves whenever the return
+        # window or the snapshot instant changes, and the trap has never
+        # depended on it - only on the claim being 100%.
+        - ["100% of", completed]
+        - ["100 % of", completed]
+      trap_note: >-
+        Accepting the premise and declaring the payment gateway the cause. The
+        premise misattributes the provider: it is Adyen-dominated, not PayPal
+        (PayPal is the SMALLEST contributor). Across the full feed there are
+        1,631 events worth EUR 165,276 spread Oct 12 - Nov 27; within Black Week
+        alone, 1,132 timeouts worth EUR 160,054.59 against EUR 5,499,436.60
+        settled - a 2.9% failure rate with no hourly spike above 19 events.
+    tolerance_pct: 20
+
+  - id: B-R2
+    tier: red_herring
+    title: Competitor pricing premise
+    prompt: >-
+      Did competitors undercut us on price and take our Beauty customers?
+    ground_truth:
+      summary: >-
+        No systematic undercutting. Beauty competitor price index spans
+        0.891-1.05 against LumiereShop, i.e. around parity, with competitors
+        higher in some categories (Fashion 1.043-1.168).
+      figures:
+        beauty_index_low: 0.891
+      context:
+        beauty_index_high: 1.05
+        fashion_index_low: 1.043
+        fashion_index_high: 1.168
+    scoring:
+      mechanism_any:
+        - [parity, comparable, similar, "no systematic", "not systematic", "not undercut", "broadly in line", "close to", "more expensive", higher]
+      trap_forbidden:
+        - "price war"
+      trap_forbidden_if_all:
+        - [undercut, caused]
+        - [competitor, root cause]
+      trap_note: >-
+        Accepting the premise and blaming a price war. Competitors are not
+        systematically cheaper; in Fashion they are 4-17% MORE expensive. Even
+        where Beauty rivals genuinely undercut us (BellaNord at a 0.891 index),
+        Beauty conversion still BEAT target - price was not the binding constraint.
+    tolerance_pct: 10
+
+  # --- Tier 4: synthesis -----------------------------------------------------
+  - id: B-X1
+    tier: synthesis
+    title: Full root-cause synthesis
+    prompt: >-
+      Give me the full picture: what caused the Beauty shortfall, and how much
+      does each cause account for?
+    ground_truth:
+      summary: >-
+        Ad throttling EUR 408,681 (78.5%), stockouts EUR 62,386 (12.0%),
+        recommender mismatch EUR 49,804 (9.6%), reconciling exactly to the
+        measured EUR 520,871 deficit. The on-site frictions are measured; ad
+        throttling is the residual.
+      figures:
+        total_deficit: 520871
+        ads: 408681
+        stockouts: 62386
+        recommender: 49804
+    scoring:
+      mechanism_any:
+        - [throttl, bid, ad spend, advertising, budget cap]
+        - [stock, inventor, availab]
+        - [recommend, cross-sell, fallback, mismatch]
+      # B-X1 previously had NO trap axis, which is why run 1 recorded a clean
+      # trap pass on an answer that was internally impossible: Agents A and C
+      # both reported a EUR 917,949.50 shortfall and then attributed
+      # EUR 2,003,060.60 of it to stockouts - a cause larger than the effect -
+      # and neither flagged the contradiction.
+      #
+      # Both are forgiven when the agent states the corresponding correct
+      # figure in its conclusion, so an answer that shows the gross demand and
+      # then attributes EUR 62,386 still passes.
+      trap_values:
+        naive_gross_stockout: 2003060.60
+        naive_shortfall: 917949.50
+      # Pairwise forgiveness. Without it, Agent C's run-1 answer escaped BOTH
+      # traps because its conclusion quoted "49,960" - a COUNT of out-of-stock
+      # interactions - which the figure matcher accepted as the EUR 49,804
+      # recommender loss, 0.31% away.
+      trap_forgiven_by:
+        naive_gross_stockout: stockouts
+        naive_shortfall: total_deficit
+      trap_note: >-
+        The three components now reconcile exactly to EUR 520,871, so claiming an
+        exact reconciliation is CORRECT and must not be penalised. What would be
+        wrong is presenting the ad-throttling figure as a direct measurement: it
+        is a residual, because the traffic collapse overlaps the on-site
+        frictions that triggered it. Separately, watch for the incoherence seen
+        in run 1: a shortfall of EUR 917,949.50 with EUR 2,003,060.60 attributed
+        to a single cause within it.
+    tolerance_pct: 15

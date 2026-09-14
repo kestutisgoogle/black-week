@@ -134,7 +134,14 @@ def main():
         test_plan.extend([
             ("Temporal Calendar Cutoff & Math Reconciliation", "scripts/test/05_validate_data_dates.py"),
             ("Knowledge Catalog Semantic Search & Aspects", "scripts/test/10_test_knowledge_search.py"),
-            ("Gemini Enterprise Data Agent Investigation Tree", "scripts/test/07_test_investigation_tree.py"),
+            # "Gemini Enterprise Data Agent Investigation Tree"
+            # (scripts/test/07_test_investigation_tree.py) was removed on
+            # 2026-09-14. Its pass rule was `is_valid = True if not err else False`,
+            # so it graded only whether the API returned without a transport
+            # error; `expected_clue` and `validation_metric` were never read by
+            # any comparison. It reported "10/10 (100%)" regardless of whether
+            # the answers were right, while costing 10 live agent calls on every
+            # bootstrap. See BACKLOG B62.
             ("3-Agent Parallel Conversational Cockpit", "scripts/test/test_multi_agent_chat.py"),
             ("Compare Chats & Multi-Agent Audit Logging", "scripts/test/17_test_compare_chats_logging.py"),
             ("Temporal Glossary Terms & Simulation Semantics", "scripts/test/18_test_temporal_glossary_terms.py")

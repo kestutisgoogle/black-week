@@ -539,7 +539,7 @@ EXTENDED_TABLE_SCHEMAS = {
         "fields": [
             bigquery.SchemaField("po_id", "INT64", mode="REQUIRED", description="Purchase order ID"),
             bigquery.SchemaField("supplier_id", "INT64", mode="REQUIRED", description="Foreign key to suppliers_master"),
-            bigquery.SchemaField("destination_dc_id", "INT64", mode="REQUIRED", description="Destination distribution center (1: Paris, 2: Frankfurt)"),
+            bigquery.SchemaField("destination_dc_id", "INT64", mode="REQUIRED", description="Destination distribution center (1: Paris Nord, 2: Rotterdam Port Hub)"),
             bigquery.SchemaField("status", "STRING", mode="REQUIRED", description="PO status (Draft, Issued, In_Transit, Received, Closed)"),
             bigquery.SchemaField("total_amount_eur", "FLOAT64", mode="REQUIRED", description="Total purchase order value in EUR"),
             bigquery.SchemaField("issued_date", "DATE", mode="REQUIRED", description="PO issue date"),
@@ -643,7 +643,7 @@ EXTENDED_TABLE_SCHEMAS = {
         ]
     },
     "cross_dock_transfer_orders": {
-        "description": "Inter-facility transfer shipments moving stock between Paris and Frankfurt fulfillment hubs.",
+        "description": "Inter-facility transfer shipments moving stock between the Paris Nord and Rotterdam Port fulfillment hubs.",
         "fields": [
             bigquery.SchemaField("transfer_id", "INT64", mode="REQUIRED", description="Transfer shipment ID"),
             bigquery.SchemaField("source_dc_id", "INT64", mode="REQUIRED", description="Origin DC"),

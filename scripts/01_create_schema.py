@@ -42,7 +42,7 @@ load_dotenv()
 
 PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "")
 DATASET_ID = os.environ.get("BQ_DATASET_ID", "ecommerce_dw")
-LOCATION = os.environ.get("BQ_LOCATION", "us-central1")
+LOCATION = os.environ.get("BQ_LOCATION", "europe-west4")
 
 # Schema definitions using BigQuery SchemaField API (bypasses bigquery.jobs.create)
 TABLE_SCHEMAS = {
@@ -98,7 +98,8 @@ TABLE_SCHEMAS = {
     "orders": [
         bigquery.SchemaField("order_id", "INT64", description="Transaction header identifier."),
         bigquery.SchemaField("user_id", "INT64", description="Link to buying profile in users."),
-        bigquery.SchemaField("order_status", "STRING", description="Operational status ('Completed', 'Processing', 'Cancelled')."),
+        bigquery.SchemaField("session_id", "STRING", description="Originating web session referencing web_sessions.session_id."),
+        bigquery.SchemaField("order_status", "STRING", description="Fulfilment outcome, derived from the order's line items: 'Completed' (nothing returned), 'Partially Returned' (some lines returned), 'Returned' (every line returned). All three are genuinely placed, paid orders."),
         bigquery.SchemaField("total_amount", "NUMERIC", description="Total gross transaction price."),
         bigquery.SchemaField("tax_amount", "NUMERIC", description="Tax portion of the purchase."),
         bigquery.SchemaField("shipping_fee", "NUMERIC", description="Shipping cost billed."),
@@ -163,9 +164,14 @@ TABLE_SCHEMAS = {
         bigquery.SchemaField("utm_source", "STRING", description="Campaign parameter."),
         bigquery.SchemaField("utm_medium", "STRING", description="Campaign parameter."),
         bigquery.SchemaField("utm_campaign", "STRING", description="Campaign parameter."),
+        bigquery.SchemaField("primary_category_id", "INT64", description="Category the session predominantly browsed, referencing categories.category_id."),
+        bigquery.SchemaField("converted_to_order", "BOOL", description="True when the session resulted in a completed order."),
         bigquery.SchemaField("device_os", "STRING", description="Client operating system ('iOS', 'Android', 'Windows')."),
         bigquery.SchemaField("browser", "STRING", description="Client web browser ('Safari', 'Chrome', 'Edge')."),
-        bigquery.SchemaField("session_started_at", "TIMESTAMP", description="Session init time.")
+        bigquery.SchemaField("country", "STRING", description="Visitor country from the IP lookup, so it is present even when the visitor is not signed in and user_id is NULL. Matches users.country for known customers."),
+        bigquery.SchemaField("session_started_at", "TIMESTAMP", description="Timestamp of the first interaction in the session."),
+        bigquery.SchemaField("session_ended_at", "TIMESTAMP", description="Timestamp of the last recorded interaction in the session. Equals session_started_at when the session produced no further events."),
+        bigquery.SchemaField("page_views_count", "INT64", description="Navigations to a new page during the session. This is a SUBSET of the rows in web_events: in-page interactions such as filter_applied, image_zoom, review_read, wishlist_add and cart_add are events but not page views.")
     ],
     "web_events": [
         bigquery.SchemaField("event_id", "INT64", description="Auto-incrementing identifier."),
@@ -217,7 +223,11 @@ TABLE_SCHEMAS = {
         bigquery.SchemaField("log_id", "INT64", description="Automation activity index."),
         bigquery.SchemaField("campaign_id", "INT64", description="Target campaign identifier."),
         bigquery.SchemaField("status_change", "STRING", description="Bidding platform feedback state."),
-        bigquery.SchemaField("trigger_details", "STRING", description="Underlying reason captured."),
+        bigquery.SchemaField("action_taken", "STRING", description="Machine-emitted action code applied by the bidding engine."),
+        bigquery.SchemaField("observed_cvr_7d", "FLOAT64", description="Trailing 7-day conversion rate observed by the bidding engine at evaluation time."),
+        bigquery.SchemaField("target_roas_multiplier", "FLOAT64", description="Ratio of observed return on ad spend to the configured target."),
+        bigquery.SchemaField("budget_multiplier", "FLOAT64", description="Fraction of the planned daily budget the engine permitted after evaluation."),
+        bigquery.SchemaField("bid_adjustment_pct", "FLOAT64", description="Percentage change applied to the bid ceiling at this evaluation."),
         bigquery.SchemaField("logged_at", "TIMESTAMP", description="Machine execution time.")
     ],
     "ad_creatives": [
@@ -227,7 +237,7 @@ TABLE_SCHEMAS = {
         bigquery.SchemaField("ad_format", "STRING", description="Visual medium or format."),
         bigquery.SchemaField("quality_score", "INT64", description="Ad quality and performance rating (1-10)."),
         bigquery.SchemaField("relevance_status", "STRING", description="Status of ad relevance."),
-        bigquery.SchemaField("ill", "BOOL", description="Boolean flag indicating algorithmic delivery bottleneck."),
+        bigquery.SchemaField("dlv_lrn_lmt_flg", "BOOL", description="Boolean flag indicating algorithmic delivery bottleneck."),
         bigquery.SchemaField("last_refreshed_at", "TIMESTAMP", description="Timestamp asset was last updated.")
     ],
     "payment_gateway_logs": [
@@ -266,7 +276,7 @@ TABLE_SCHEMAS = {
         bigquery.SchemaField("rec_sku", "INT64", description="Recommended product candidate suggested by ML engine (FK to products)."),
         bigquery.SchemaField("recommended_category_id", "INT64", description="Category ID of the recommended product."),
         bigquery.SchemaField("fb_rule_id", "INT64", description="Rule engine identifier: 99 = global category fallback, 0 = standard collaborative filter."),
-        bigquery.SchemaField("cat_mismatch_flg", "INT64", description="Cross-department mismatch flag: 1 = taxonomy parity error (e.g. Beauty displaying Electronics), 0 = normal."),
+        bigquery.SchemaField("cat_mismatch_flg", "INT64", description="Cross-department mismatch flag: 1 when the recommended item's category differs from the page's category, 0 otherwise."),
         bigquery.SchemaField("user_action", "STRING", description="User interaction ('CLICKED', 'BOUNCED', 'IGNORED')."),
         bigquery.SchemaField("opp_cost_eur", "NUMERIC", description="Estimated lost substitution revenue from failed recommendation cross-sell."),
         bigquery.SchemaField("recorded_at", "TIMESTAMP", description="Timestamp of recommender event.")

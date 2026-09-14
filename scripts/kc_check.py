@@ -40,7 +40,7 @@ load_dotenv()
 
 PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "").strip()
 DATASET_ID = os.environ.get("BQ_DATASET_ID", "ecommerce_dw").strip()
-BQ_LOCATION = os.environ.get("BQ_LOCATION", "us-central1").lower().strip()
+BQ_LOCATION = os.environ.get("BQ_LOCATION", "europe-west4").lower().strip()
 GLOSSARY_ID = "ecommerce-glossary"
 
 

@@ -297,8 +297,8 @@ output_data = {
 with open("config/business_glossary.yaml", "w") as f:
     yaml.dump(output_data, f, sort_keys=False, allow_unicode=True)
 
-# Write JSON
-with open("config/business_glossary.json", "w") as f:
-    json.dump(output_data, f, indent=2, ensure_ascii=False)
+# NOTE: config/business_glossary.yaml is now the single source of truth.
+# The JSON copy this script used to emit has been retired - it duplicated
+# the same content in a second format with nothing keeping the two in step.
 
 print(f"✅ Generated expanded business glossary: {len(categories)} categories, {len(terms)} terms.")

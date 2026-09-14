@@ -21,6 +21,7 @@ import os
 import sys
 import time
 import argparse
+import hashlib
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List, Dict, Any, Tuple
 from google.cloud import bigquery
@@ -85,16 +86,110 @@ def strip_field_descriptions(field: bigquery.SchemaField) -> bigquery.SchemaFiel
     )
 
 
+# ---------------------------------------------------------------------------
+# TIER B: THIN, SOURCE-SYSTEM-STYLE DESCRIPTIONS
+# ---------------------------------------------------------------------------
+#
+# Tier B represents a very common real-world situation: a warehouse where
+# somebody typed a short label into the column description field and stopped
+# there. The label expands the abbreviation. It does NOT explain what the
+# column means, which table it joins to, what its code values signify, or how
+# it should be aggregated.
+#
+# This matters because Tier B previously received a BYTE-IDENTICAL copy of
+# Tier A's curated descriptions - including "1 = taxonomy parity error (e.g.
+# Beauty displaying Electronics)", which states the root cause outright, and
+# "...referencing products.product_id", which hands over the join. That made
+# Tier B a warehouse whose catalogue merely lived in a different field, and is
+# why Agent B scored level with Agent A.
+#
+# The governing rule for Tier B text:
+#   ALLOWED     - expanding an abbreviation into words
+#   NOT ALLOWED - code-value semantics, join targets, governance tier/domain/
+#                 grain, aggregation rules, or anything about the incident
+#
+# Deliberately NOT hand-tuned per column: coverage is chosen by a stable hash
+# so that nobody can accuse us of picking which columns Tier B gets to see.
+
+TIER_B_COVERAGE = 0.60          # share of columns that carry any label at all
+TIER_B_COVERAGE_SALT = "lumiere-tier-b-v1"
+
+# Generic data-modelling abbreviations, expanded because any source-system
+# data dictionary would expand them.
+TOKEN_EXPANSIONS = {
+    "nr": "number", "num": "number", "ref": "reference", "flg": "flag",
+    "cd": "code", "amt": "amount", "qty": "quantity", "pct": "percent",
+    "ts": "timestamp", "hdr": "header", "art": "article", "mat": "material",
+    "avg": "average", "max": "maximum", "min": "minimum", "pos": "position",
+}
+
+# Left deliberately unexpanded, because a real source export would not expand
+# them either. They are shown as-is, capitalised.
+ACRONYMS = {
+    "id", "eur", "sku", "cvr", "roas", "cpc", "url", "os", "dc", "utm",
+    "oos", "cid", "http", "sql", "api", "json", "uuid", "ip", "ua",
+}
+
+
+def humanise_column(name: str) -> str:
+    """Turn `ord_hdr_num` into `Ord header number` - a label, not an explanation."""
+    words = []
+    for part in name.split("_"):
+        low = part.lower()
+        if low in TOKEN_EXPANSIONS:
+            words.append(TOKEN_EXPANSIONS[low])
+        elif low in ACRONYMS:
+            words.append(low.upper())
+        else:
+            words.append(low)
+    text = " ".join(words).strip()
+    return text[:1].upper() + text[1:] if text else text
+
+
+def _covered(table_id: str, column: str) -> bool:
+    """Stable, reproducible decision on whether this column gets a label."""
+    key = f"{TIER_B_COVERAGE_SALT}|{table_id}.{column}".encode("utf-8")
+    bucket = int(hashlib.md5(key).hexdigest()[:8], 16) % 1000
+    return bucket < int(TIER_B_COVERAGE * 1000)
+
+
+def thin_field_descriptions(field: bigquery.SchemaField, table_id: str) -> bigquery.SchemaField:
+    """Recursively replace curated descriptions with thin labels."""
+    subfields = ()
+    if field.fields:
+        subfields = tuple(thin_field_descriptions(sf, table_id) for sf in field.fields)
+
+    description = humanise_column(field.name) if _covered(table_id, field.name) else None
+
+    return bigquery.SchemaField(
+        name=field.name,
+        field_type=field.field_type,
+        mode=field.mode,
+        description=description,
+        fields=subfields,
+        policy_tags=field.policy_tags,
+        precision=field.precision,
+        scale=field.scale,
+        max_length=field.max_length,
+    )
+
+
+# Description handling per tier.
+DESC_FULL = "full"    # Tier A source: curated Knowledge Catalog text
+DESC_THIN = "thin"    # Tier B: short source-system labels, partial coverage
+DESC_NONE = "none"    # Tier C: raw schema, nothing at all
+
+
 def copy_single_table(
     client: bigquery.Client,
     src_dataset: str,
     dst_dataset: str,
     table_id: str,
-    strip_descriptions: bool = False,
+    description_mode: str = DESC_FULL,
 ) -> Tuple[str, bool, str]:
     """
     Copies a single table from src_dataset to dst_dataset using BigQuery table copy job.
-    Optionally strips table and column descriptions after copying.
+    Row data is always identical; only the description metadata differs by tier.
     """
     src_ref = bigquery.TableReference(bigquery.DatasetReference(PROJECT_ID, src_dataset), table_id)
     dst_ref = bigquery.TableReference(bigquery.DatasetReference(PROJECT_ID, dst_dataset), table_id)
@@ -102,12 +197,26 @@ def copy_single_table(
     try:
         job_config = bigquery.CopyJobConfig(write_disposition=bigquery.WriteDisposition.WRITE_TRUNCATE)
         copy_job = client.copy_table(src_ref, dst_ref, job_config=job_config)
-        copy_job.result(timeout=120)
+        # A copy job is a storage-level operation, so it does not scale with
+        # row count the way a query does - but `web_events` is now ~86M rows
+        # (Black Week plus the six weeks of history) and it is by far the
+        # largest table here. Timing out does NOT cancel the job, it only stops
+        # waiting, so too short a ceiling reports a failure for a copy that
+        # actually succeeded - and any non-zero exit aborts the whole rebuild.
+        copy_job.result(timeout=600)
 
-        if strip_descriptions:
+        if description_mode == DESC_NONE:
             table = client.get_table(dst_ref)
             table.description = None
             table.schema = [strip_field_descriptions(f) for f in table.schema]
+            client.update_table(table, ["schema", "description"])
+        elif description_mode == DESC_THIN:
+            table = client.get_table(dst_ref)
+            # The Tier A table description is a governance block
+            # ([PURPOSE][DOMAIN][GRAIN][TIER & REFRESH]). A raw replica would
+            # not carry that, so it goes.
+            table.description = None
+            table.schema = [thin_field_descriptions(f, table_id) for f in table.schema]
             client.update_table(table, ["schema", "description"])
 
         return table_id, True, "OK"
@@ -120,7 +229,7 @@ def replicate_dataset(
     src_dataset: str,
     dst_dataset: str,
     table_ids: List[str],
-    strip_descriptions: bool,
+    description_mode: str,
     tier_name: str,
 ):
     """Copies all tables in parallel to destination dataset."""
@@ -137,7 +246,7 @@ def replicate_dataset(
                 src_dataset,
                 dst_dataset,
                 tid,
-                strip_descriptions,
+                description_mode,
             ): tid
             for tid in table_ids
         }
@@ -229,7 +338,7 @@ def main():
     print("🚀 LUMIÈRESHOP BIGQUERY ISOLATION DATASETS SETUP & REPLICATION")
     print(f"Project  : {PROJECT_ID} | Region: {LOCATION}")
     print(f"Tier A   : {DATASET_1ST_ID} (Primary Dataset with Full Knowledge Catalog)")
-    print(f"Tier B   : {DATASET_2ND_ID} (Isolated: Descriptions Only, 0 Glossary/EntryLinks)")
+    print(f"Tier B   : {DATASET_2ND_ID} (Isolated: Thin Column Labels Only, 0 Glossary/EntryLinks)")
     print(f"Tier C   : {DATASET_3RD_ID} (Isolated: Raw Schema Only, 0 Descriptions)")
     print("=" * 80)
 
@@ -256,7 +365,7 @@ def main():
     ensure_dataset(
         client,
         DATASET_2ND_ID,
-        "LumièreShop Tier B Isolated Dataset (Exact table copy with column descriptions, zero Knowledge Catalog glossary/EntryLinks)."
+        "LumièreShop Tier B Isolated Dataset (Exact row copy; thin source-system column labels only, zero Knowledge Catalog glossary/EntryLinks)."
     )
     ensure_dataset(
         client,
@@ -270,8 +379,8 @@ def main():
         DATASET_1ST_ID,
         DATASET_2ND_ID,
         src_tables,
-        strip_descriptions=False,
-        tier_name="Tier B: Descriptions Preserved",
+        description_mode=DESC_THIN,
+        tier_name="Tier B: Thin Source-System Labels",
     )
 
     # 3. Replicate Tier C (ecommerce_dw_3rd) with descriptions stripped
@@ -280,7 +389,7 @@ def main():
         DATASET_1ST_ID,
         DATASET_3RD_ID,
         src_tables,
-        strip_descriptions=True,
+        description_mode=DESC_NONE,
         tier_name="Tier C: Raw Schema Only (Descriptions Stripped)",
     )
 

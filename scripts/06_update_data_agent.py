@@ -23,6 +23,7 @@ import sys
 import subprocess
 import requests
 import json
+import time
 from typing import List, Dict, Any
 
 
@@ -49,7 +50,50 @@ DATA_AGENT_A_ID = os.environ.get("DATA_AGENT_A_ID", "gda-blackweek-a")
 DATA_AGENT_B_ID = os.environ.get("DATA_AGENT_B_ID", "gda-blackweek-b")
 DATA_AGENT_C_ID = os.environ.get("DATA_AGENT_C_ID", "gda-blackweek-c")
 
-PROMPT = "Prepare sales, marketing, ads, inventory, all connected business domains data"
+# ---------------------------------------------------------------------------
+# The discovery prompt, the search logic and the grounding cap all live in ONE
+# place now: backend/app/services/discovery_core.py.
+#
+# WHY THE IMPORT GYMNASTICS: this script runs standalone, outside the web
+# application, but the shared module has to ship inside the container - the
+# Dockerfile only copies `backend/`. So the module lives under `backend/app/`
+# and this script puts `backend/` on its import path to reach it.
+#
+# `discovery_core` deliberately imports nothing from `app.config`, so importing
+# it here does NOT drag in the web application's environment loader or collide
+# with the .env parsing done above.
+#
+# WHAT WAS DELETED HERE, AND WHY
+#
+#   * `PROMPT` - a comma-separated list of business domains. It read like a
+#     database query, not like a question a Chief Marketing Officer would type,
+#     and it scored 6 of 11 on the main story. Replaced by the single
+#     human-written sentence in discovery_core.DISCOVERY_PROMPT (11 of 11).
+#
+#   * `GLOSSARY_PROBES` - four extra hand-tuned searches. They lifted the
+#     glossary term count from 17 to 30, but the demo's whole claim is that the
+#     CMO types ONE question. Five searches hiding behind one typed sentence is
+#     cheating, however good the numbers looked. One prompt now drives two
+#     calls: one for tables, one for glossary terms.
+#
+#   * `MAX_GROUNDED_TABLES = 40` - now 48, and enforced in the shared module,
+#     which also refuses outright above 50. See the CA_METADATA_CLIFF comment
+#     there: above 50 tables the Conversational Analytics service silently
+#     discards all Knowledge Catalog metadata.
+# ---------------------------------------------------------------------------
+sys.path.insert(
+    0,
+    os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "backend"
+    ),
+)
+from app.services.discovery_core import (  # noqa: E402
+    DISCOVERY_PROMPT,
+    MAX_GROUNDED_TABLES,
+    discover,
+)
+
+PROMPT = DISCOVERY_PROMPT
 
 AGENTS_CONFIG = {
     "primary": {
@@ -58,6 +102,7 @@ AGENTS_CONFIG = {
         "display_name": "LumiereShop Primary Data Agent",
         "dataset_id": DATASET_ID,
         "tier": "Primary Single-Agent Workspace (ecommerce_dw)",
+        "inject_glossary": True,
     },
     "agent_a": {
         "env_key": "DATA_AGENT_A_ID",
@@ -65,6 +110,7 @@ AGENTS_CONFIG = {
         "display_name": "LumiereShop Data Agent A (Full KC)",
         "dataset_id": DATASET_ID,
         "tier": "Tier A: Full Knowledge Catalog Grounding (ecommerce_dw)",
+        "inject_glossary": True,
     },
     "agent_b": {
         "env_key": "DATA_AGENT_B_ID",
@@ -72,6 +118,7 @@ AGENTS_CONFIG = {
         "display_name": "LumiereShop Data Agent B (Descriptions Only)",
         "dataset_id": DATASET_2ND_ID,
         "tier": "Tier B: Isolated - Descriptions Only (ecommerce_dw_2nd)",
+        "inject_glossary": False,
     },
     "agent_c": {
         "env_key": "DATA_AGENT_C_ID",
@@ -79,6 +126,7 @@ AGENTS_CONFIG = {
         "display_name": "LumiereShop Data Agent C (Raw Schema)",
         "dataset_id": DATASET_3RD_ID,
         "tier": "Tier C: Isolated - Raw Schema Only (ecommerce_dw_3rd)",
+        "inject_glossary": False,
     },
 }
 
@@ -98,60 +146,41 @@ def get_access_token():
     return token
 
 
-def search_knowledge_catalog_dynamic(prompt: str, token: str) -> List[str]:
-    """
-    Executes live semantic search against Google Cloud Knowledge Catalog to dynamically
-    discover relevant BigQuery tables from the 140-table dataset without static bias.
-    """
-    url = f"https://dataplex.googleapis.com/v1/projects/{PROJECT_ID}/locations/global:searchEntries"
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json",
-        "x-goog-user-project": PROJECT_ID
-    }
-    body = {
-        "query": prompt,
-        "scope": f"projects/{PROJECT_ID}",
-        "semanticSearch": True,
-        "pageSize": 100
-    }
-
-    try:
-        res = requests.post(url, headers=headers, json=body, timeout=15)
-        if res.status_code != 200:
-            print(f"  Notice: Knowledge Catalog search returned HTTP {res.status_code}")
-            return []
-
-        results = res.json().get("results", [])
-        discovered_tables = []
-        dataset_pattern = f"datasets/{DATASET_ID}/tables/"
-
-        for r in results:
-            lr = r.get("linkedResource", "")
-            dp = r.get("dataplexEntry", {})
-            name = dp.get("name", "")
-            resource = dp.get("entrySource", {}).get("resource", "")
-
-            if dataset_pattern in lr:
-                tbl = lr.split(dataset_pattern)[-1]
-                if tbl not in discovered_tables:
-                    discovered_tables.append(tbl)
-            elif dataset_pattern in name:
-                tbl = name.split(dataset_pattern)[-1]
-                if tbl not in discovered_tables:
-                    discovered_tables.append(tbl)
-            elif dataset_pattern in resource:
-                tbl = resource.split(dataset_pattern)[-1]
-                if tbl not in discovered_tables:
-                    discovered_tables.append(tbl)
-
-        return discovered_tables
-    except Exception as e:
-        print(f"  Notice: Knowledge Catalog search error: {e}")
-        return []
+# Knowledge Catalog search lives in backend/app/services/discovery_core.py.
+#
+# Two functions used to sit here - `search_knowledge_catalog_dynamic()` and
+# `search_glossary_terms_dynamic()` - and the web app had a third, different
+# implementation of the same idea. All three are gone. `discover()` from the
+# shared module is now the only way either caller reaches the catalog, so the
+# environment the setup script builds and the environment the live demo builds
+# are guaranteed identical.
 
 
-AGENT_SYSTEM_INSTRUCTION = "Today is Friday, November 27th, 2026"
+AGENT_SYSTEM_INSTRUCTION = (
+    "Today is Friday, 27 November 2026. The current time is 14:30:00 UTC.\n"
+    "This data warehouse is a point-in-time snapshot taken at that instant: "
+    "no operational record exists after 2026-11-27 14:30:00 UTC.\n"
+    "\n"
+    "Resolve every relative time expression - \"now\", \"today\", \"so far\", "
+    "\"the last hour\", \"this week\", \"yesterday\", \"week to date\" - against "
+    "2026-11-27 14:30:00 UTC, never against the real-world clock.\n"
+    "\n"
+    "Never use CURRENT_DATE(), CURRENT_TIMESTAMP(), CURRENT_DATETIME() or NOW() "
+    "in generated SQL. They resolve to the real-world date, which falls outside "
+    "this data\'s range, so they silently match either every row or no rows. "
+    "Always write explicit date and timestamp literals.\n"
+    "\n"
+    "When a question concerns one product category, every rate and ratio in your "
+    "answer must be computed for that same category. Do not pair a category-level "
+    "numerator with a site-level denominator, and do not substitute a sitewide "
+    "rate for a category rate - the two differ materially and the error is "
+    "silent.\n"
+    "\n"
+    "When a metric has more than one accepted convention - for example a rate "
+    "restricted to paid sessions versus one covering all sessions - state which "
+    "convention you used, and apply the same convention to both the figure and "
+    "anything you compare it against."
+)
 
 CORE_INVESTIGATION_TABLES = [
     "categories", "products", "distribution_centers", "inventory_items", "inventory_snapshots",
@@ -162,11 +191,55 @@ CORE_INVESTIGATION_TABLES = [
     "catalog_recommender_logs", "shipping_lead_times", "competitor_promotions"
 ]
 
+# ----------------------------------------------------------------------------
+# DELETED 2026-09-13: `BENCHMARK_REQUIRED_TABLES`, the force-include list.
+#
+# It injected four tables into every tier's grounding regardless of whether
+# semantic search had ranked them: `competitor_promotions`,
+# `inventory_snapshots`, `distribution_centers`, `users`.
+#
+# The honest objection is obvious - a demo whose claim is "the catalog finds
+# the right tables" should not be quietly topping up the catalog's answer with
+# a hand-written list. It survived because nobody had established what the
+# questions actually need.
+#
+# So that was measured. Mapping all 15 benchmark questions onto the certified
+# SQL that grades them shows only THIRTEEN tables are load-bearing:
+#
+#     order_items, orders, products, categories, daily_category_targets,
+#     web_sessions, oos_interactions, catalog_recommender_logs,
+#     ad_bidding_log, daily_ad_performance, marketing_campaigns,
+#     payment_gateway_logs, competitor_price_feed
+#
+# Against that list the force-include was pure theatre:
+#   * `competitor_promotions` and `inventory_snapshots` - discovered on merit
+#     since the cap was raised, so forcing them changed nothing.
+#   * `distribution_centers` and `users` - needed by NO question whatsoever.
+#     They were being forced in to satisfy a "curated 25" recall metric that
+#     measured nothing anybody cared about.
+#
+# Deleting the list therefore costs zero questions. `CORE_INVESTIGATION_TABLES`
+# above is retained, but ONLY as an advisory coverage report - it never alters
+# what gets grounded.
+# ----------------------------------------------------------------------------
+
 
 def discover_warehouse_tables_fallback() -> List[str]:
     """
-    Fallback: Discovers available tables directly from BigQuery dataset when
-    Knowledge Catalog semantic index is still warming up during cold start.
+    Fallback for when Knowledge Catalog returns nothing, e.g. because the
+    semantic index is still warming up after a cold start or a republish.
+
+    ⚠️ THIS PATH IS NOT DYNAMIC DISCOVERY. It lists the dataset straight from
+    BigQuery and filters against a hardcoded curated list. If it runs, the demo
+    is grounded on a static list while still describing itself as
+    catalog-driven, so the caller announces it loudly and records it in the
+    run summary.
+
+    The slice below was `[:25]`, a hardcoded number that predated
+    MAX_GROUNDED_TABLES and silently contradicted it. It is now the same cap
+    the main path uses. Note that this branch only runs when fewer than 15 of
+    the curated tables exist at all, which would itself indicate a broken
+    warehouse.
     """
     try:
         from google.cloud import bigquery
@@ -176,7 +249,7 @@ def discover_warehouse_tables_fallback() -> List[str]:
             core_present = [t for t in CORE_INVESTIGATION_TABLES if t in tables]
             if len(core_present) >= 15:
                 return core_present
-            return tables[:25]
+            return tables[:MAX_GROUNDED_TABLES]
     except Exception as e:
         print(f"  Notice: BigQuery warehouse table listing: {e}")
     return CORE_INVESTIGATION_TABLES
@@ -189,6 +262,7 @@ def provision_or_update_data_agent(
     tables: List[str],
     headers: Dict[str, str],
     target_dataset: str = DATASET_ID,
+    glossary_terms: List[Dict[str, str]] = None,
 ) -> tuple:
     """
     Idempotently creates or updates a BigQuery Data Agent in Google Cloud with dynamically discovered tables.
@@ -200,7 +274,16 @@ def provision_or_update_data_agent(
     ]
 
     agent_url = f"https://geminidataanalytics.googleapis.com/v1beta/projects/{PROJECT_ID}/locations/global/dataAgents/{agent_id}"
-    patch_url = f"{agent_url}?updateMask=displayName,description,dataAnalyticsAgent.publishedContext.datasourceReferences,dataAnalyticsAgent.publishedContext.systemInstruction"
+    # glossaryTerms is ALWAYS in the update mask, even for the agents that do
+    # not receive any. Including it means an agent that was previously given
+    # terms has them cleared when the field is absent from the payload, so
+    # Tiers B and C can never silently retain a stale catalog projection.
+    patch_url = (
+        f"{agent_url}?updateMask=displayName,description"
+        ",dataAnalyticsAgent.publishedContext.datasourceReferences"
+        ",dataAnalyticsAgent.publishedContext.systemInstruction"
+        ",dataAnalyticsAgent.publishedContext.glossaryTerms"
+    )
 
     payload = {
         "displayName": display_name,
@@ -217,7 +300,11 @@ def provision_or_update_data_agent(
         }
     }
 
-    print(f"\nGrounding Agent '{agent_id}' with {len(table_refs)} dynamically discovered tables...")
+    if glossary_terms:
+        payload["dataAnalyticsAgent"]["publishedContext"]["glossaryTerms"] = glossary_terms
+
+    gloss_note = (f", {len(glossary_terms)} catalog glossary terms" if glossary_terms else "")
+    print(f"\nGrounding Agent '{agent_id}' with {len(table_refs)} dynamically discovered tables{gloss_note}...")
     
     # 1. Try PATCH (if agent already exists and is active)
     try:
@@ -268,20 +355,113 @@ def main():
         "x-goog-user-project": PROJECT_ID
     }
 
-    # Discover tables once via Knowledge Catalog semantic search
-    print(f"\n[Dynamic Discovery] Querying Knowledge Catalog with unified prompt:")
-    print(f"  Prompt: '{PROMPT}'")
-    discovered_tables = search_knowledge_catalog_dynamic(PROMPT, token)
-    
-    if not discovered_tables:
-        print("  ℹ️ Knowledge Catalog returned 0 tables (indexing in progress). Using resilient warehouse fallback...")
-        discovered_tables = discover_warehouse_tables_fallback()
+    # ------------------------------------------------------------------
+    # ONE prompt. TWO searches. Both run inside discovery_core.discover(),
+    # which the web app calls too, so the environment this script builds is
+    # the same environment the live demo builds.
+    # ------------------------------------------------------------------
+    print("\n[Dynamic Discovery] Querying Knowledge Catalog with the unified prompt:")
+    print(f"  \"{PROMPT}\"")
+    discovery_started = time.perf_counter()
+    result = discover(PROJECT_ID, DATASET_ID, token)
+    discovery_elapsed_ms = (time.perf_counter() - discovery_started) * 1000.0
 
-    print(f"  Discovered {len(discovered_tables)} tables for all agents:")
+    discovered_tables = result["tables"]
+    glossary_terms = result["terms"]
+
+    used_fallback = False
+    if not discovered_tables:
+        print("")
+        print("  " + "!" * 70)
+        print("  \U0001F534 KNOWLEDGE CATALOG RETURNED 0 TABLES.")
+        print("  \U0001F534 Falling back to a STATIC, HARDCODED table list.")
+        print("  \U0001F534 This run is NOT dynamically discovered. Do NOT present it")
+        print("  \U0001F534 as catalog-driven discovery, and do NOT trust a benchmark")
+        print("  \U0001F534 executed against it. Re-run once catalog indexing settles.")
+        print("  " + "!" * 70)
+        print("")
+        discovered_tables = discover_warehouse_tables_fallback()
+        used_fallback = True
+
+    # ------------------------------------------------------------------
+    # Advisory coverage report.
+    #
+    # This does NOT alter the table list, and since the force-include list was
+    # deleted nothing else does either. The agents are grounded on exactly what
+    # semantic search ranked, decoys included.
+    #
+    # CORE_INVESTIGATION_TABLES is a historical curation of 25 tables, and the
+    # recall figure below is measured against it only so that a catastrophic
+    # regression is visible. Do NOT read it as a quality score: twelve of those
+    # 25 are needed by no benchmark question at all. The number that matters is
+    # the load-bearing set of 13, reported separately underneath.
+    # ------------------------------------------------------------------
+    missing = [t for t in CORE_INVESTIGATION_TABLES if t not in discovered_tables]
+    print(f"  Grounding agents on {len(discovered_tables)} tables:")
     print(f"  Tables: {discovered_tables}")
+    if missing:
+        print(f"  \u26A0\uFE0F Not surfaced by discovery ({len(missing)}): {missing}")
+    else:
+        print("  \u2705 Every curated investigation table was surfaced by discovery.")
+
+    # The 13 tables that benchmark questions are actually graded against.
+    # Derived by mapping config/cmo_questions.yaml onto the certified SQL in
+    # scripts/test/measure_cmo_ground_truth.py. If any of these is missing, a
+    # question is unanswerable no matter how good the agent is - and the
+    # failure will look like bad reasoning rather than missing plumbing.
+    load_bearing = [
+        "order_items", "orders", "products", "categories",
+        "daily_category_targets", "web_sessions", "oos_interactions",
+        "catalog_recommender_logs", "ad_bidding_log", "daily_ad_performance",
+        "marketing_campaigns", "payment_gateway_logs", "competitor_price_feed",
+    ]
+    lb_missing = [t for t in load_bearing if t not in discovered_tables]
+    print(f"\n  [Load-bearing tables - these decide whether questions are answerable]")
+    print(f"    Present : {len(load_bearing) - len(lb_missing)}/{len(load_bearing)}")
+    if lb_missing:
+        print(f"    \U0001F534 MISSING : {lb_missing}")
+        print( "       Questions depending on these CANNOT be answered by any tier.")
+    else:
+        print( "    \u2705 All present.")
+
+    found_core = [t for t in CORE_INVESTIGATION_TABLES if t in discovered_tables]
+    recall = 100.0 * len(found_core) / len(CORE_INVESTIGATION_TABLES)
+    precision = 100.0 * len(found_core) / len(discovered_tables) if discovered_tables else 0.0
+    print("\n  [Discovery quality - measured, quote these figures]")
+    print(f"    Latency          : {discovery_elapsed_ms:.0f} ms"
+          + ("  (FALLBACK PATH - not a semantic search timing)" if used_fallback else ""))
+    print(f"    Returned         : {len(discovered_tables)} tables")
+    print(f"    Curated target   : {len(CORE_INVESTIGATION_TABLES)} tables (advisory only)")
+    print(f"    Recall           : {len(found_core)}/{len(CORE_INVESTIGATION_TABLES)} = {recall:.1f}%")
+    print(f"    Precision        : {len(found_core)}/{len(discovered_tables)} = {precision:.1f}%")
+
+    # ------------------------------------------------------------------
+    # The glossary terms found by the SECOND search of the same prompt.
+    #
+    # Only Tier A (and the primary agent) receive these. That asymmetry is the
+    # point of the experiment and it is honest: ecommerce_dw_2nd and
+    # ecommerce_dw_3rd have no governed glossary, so there is nothing to map.
+    #
+    # MEASURED, 2026-09-12, 102 live agent calls across 13 runs per cell:
+    #   * stockout trap, 37 tables, no glossary : 13/13 agents trapped
+    #   * stockout trap, 37 tables, glossary    :  4/13 trapped  (p = 0.007)
+    #   * metric-convention ambiguity surfaced  :  6/7 with glossary,
+    #                                              0/7 without  (p = 0.005)
+    # ------------------------------------------------------------------
+    if glossary_terms:
+        payload_bytes = len(json.dumps(glossary_terms).encode("utf-8"))
+        print(f"\n  [Business glossary - same prompt, second search]")
+        print(f"    Discovered {len(glossary_terms)} terms ({payload_bytes:,d} bytes):")
+        for t in glossary_terms:
+            print(f"      - {t['displayName']}")
+    else:
+        print("\n  \u26A0\uFE0F Knowledge Catalog returned 0 glossary terms. Tier A will be "
+              "grounded on BigQuery descriptions alone; the catalog advantage "
+              "will not be demonstrable in this deployment.")
 
     success_count = 0
     configured_agents = {}
+    failed_agents = []
     for key, cfg in AGENTS_CONFIG.items():
         env_key = cfg["env_key"]
         agent_id = cfg["agent_id"]
@@ -289,20 +469,49 @@ def main():
         target_dataset = cfg["dataset_id"]
         tier_info = cfg["tier"]
 
+        inject = cfg.get("inject_glossary", False)
+        terms_for_agent = glossary_terms if inject else None
+
         print(f"\n[Grounding] {tier_info}")
         desc = f"Grounded with {len(discovered_tables)} tables ({target_dataset}). {tier_info}."
+        if inject:
+            desc += f" Mapped to {len(glossary_terms)} Knowledge Catalog glossary terms."
         ok, active_id = provision_or_update_data_agent(
-            agent_id, display_name, desc, discovered_tables, headers, target_dataset=target_dataset
+            agent_id, display_name, desc, discovered_tables, headers,
+            target_dataset=target_dataset, glossary_terms=terms_for_agent
         )
         if ok:
             success_count += 1
             configured_agents[env_key] = f"{active_id} -> {target_dataset}"
+        else:
+            failed_agents.append(f"{env_key} ({agent_id} -> {target_dataset})")
 
     print("\n" + "=" * 80)
     print(f"DYNAMIC GROUNDING COMPLETE: {success_count}/{len(AGENTS_CONFIG)} agents dynamically configured.")
     for k, v in configured_agents.items():
         print(f"  • {k:<18} : {v}")
+    if glossary_terms:
+        injected = [c["agent_id"] for c in AGENTS_CONFIG.values() if c.get("inject_glossary")]
+        print(f"  • Knowledge Catalog glossary mapped to: {', '.join(injected)}")
     print("=" * 80)
+
+    # A PARTIAL provisioning must fail the pipeline.
+    #
+    # This previously printed "3/4 agents dynamically configured" and exited 0.
+    # On the 2026-09-12 rebuild the access token expired part-way through and
+    # Tier B was the one that missed out, so the run continued with agent B
+    # still grounded on the PREVIOUS generation of data while A and C moved to
+    # the new one. An A/B/C comparison in which one tier is answering from
+    # different rows is not a weaker experiment, it is a misleading one - and
+    # nothing downstream would have revealed it, because each agent answers
+    # perfectly well on its own.
+    if failed_agents:
+        print("\n❌ The following agents were NOT provisioned:", file=sys.stderr)
+        for f in failed_agents:
+            print(f"     - {f}", file=sys.stderr)
+        print("   Tiers are now inconsistent with each other. Re-run this stage "
+              "before trusting any comparison.", file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":

@@ -260,28 +260,7 @@ Open your browser at `http://localhost:8000/`.
 
 ---
 
-### Step 4.6: Export Knowledge Catalog Business Glossary to CSV
-
-To export the 85 business terms and 17 categories from the Google Cloud Knowledge Catalog global glossary (`ecommerce-glossary`) into RFC4180-compliant CSV files in the `export/` directory:
-
-```bash
-# Standard export to export/business-glossary.csv and export/categories.csv
-python3 scripts/export_business_glossary_to_csv.py
-
-# Custom output paths and flags
-python3 scripts/export_business_glossary_to_csv.py \
-  --output export/business-glossary.csv \
-  --categories-csv export/categories.csv \
-  --include-header
-```
-
-Generated files:
-- `export/business-glossary.csv`: 7-column RFC4180 terms schema (`term_display_name,description,steward,tagged_assets,synonyms,related_terms,belongs_to_category`).
-- `export/categories.csv`: 4-column RFC4180 categories schema (`category_display_name,description,steward,belongs_to_category`).
-
----
-
-### Step 4.7: Deploy to Google Cloud Run (Production)
+### Step 4.6: Deploy to Google Cloud Run (Production)
 
 ### Turnkey Single-Command Cloud Run Deployment (Recommended)
 
@@ -396,7 +375,7 @@ Clicking the **"Summary & Exit"** button in the top navigation bar opens the com
 ---
 
 ### Optional Feature: Prompt Comparison Studio
-Clicking *"Compare prompts"* 3 times rapidly under Apps in the left sidebar opens the **Prompt Comparison Studio**:
+Clicking *"Compare prompts"* under Apps in the left sidebar opens the **Prompt Comparison Studio**:
 
 ![Prompt Comparison Studio Modal](docs/images/prompt_comparison_studio.png)
 
@@ -454,8 +433,7 @@ lumiere-shop/
 │   │   └── index.html                      # Material Design 3 Single Page Application (Screens 1, 2, 3)
 │   └── requirements.txt                    # Lean Cloud Run production container dependencies
 ├── config/
-│   ├── business_glossary.yaml              # Master human-readable business taxonomy
-│   └── business_glossary.json              # Knowledge Catalog glossary import manifest
+│   └── business_glossary.yaml              # SINGLE SOURCE OF TRUTH: business taxonomy + Knowledge Catalog import manifest
 ├── docs/
 │   ├── images/                             # High-resolution documentation images & diagrams
 │   │   ├── architecture_diagram.png        # System & data architecture diagram
@@ -498,7 +476,6 @@ lumiere-shop/
 │   ├── 03_verify_agent.py                 # Conversational Analytics API REST verification
 │   ├── 04b_verify_extended_logs.py         # Audit log verification script
 │   ├── 05_validate_data_dates.py           # Temporal boundary & math reconciliation assertions
-│   ├── 07_test_investigation_tree.py       # 10-branch Gemini Data Agent verification
 │   ├── 10_test_knowledge_search.py         # Knowledge Catalog semantic search precision
 │   ├── 16_test_user_name_flow.py           # Screen 0 & user_name audit logging test suite
 │   ├── 17_test_compare_chats_logging.py    # 3-Agent compare chats audit logging test suite

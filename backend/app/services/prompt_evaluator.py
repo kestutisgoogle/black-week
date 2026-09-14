@@ -27,6 +27,7 @@ import requests
 from typing import List, Dict, Any, Optional
 from app.config import PROJECT_ID, DATASET_ID, LOCATION
 from app.services.ca_service import get_access_token
+from app.services import discovery_core
 
 
 class PromptEvaluatorService:
@@ -50,78 +51,75 @@ class PromptEvaluatorService:
         """
         self.project_id = project_id
         self.dataset_id = dataset_id
-        self.region = region or "europe-west4"
+        # `region` already defaults to LOCATION, which is sourced from BQ_LOCATION
+        # in config.py. No hardcoded region fallback here: a wrong default would
+        # silently point this service at a region the install never provisioned.
+        self.region = region or LOCATION
 
     async def search_single_prompt(self, prompt: str, token: str) -> Dict[str, Any]:
         """
-        Asynchronously executes a Knowledge Catalog searchEntries request for a single candidate prompt.
+        Rank the warehouse against one candidate prompt, using the SAME discovery
+        code path as live provisioning and the environment setup script.
+
+        WHY THIS DELEGATES
+        ------------------
+        This method used to issue its own `searchEntries` call with the bare
+        prompt as the whole query - no `system=bigquery type=table`, no
+        `parent=<dataset>` scope, and a single page shared between tables and
+        glossary terms. The consequence was that the comparison screen reported
+        **4 tables** for the approved prompt while the provisioning screen,
+        moments earlier, reported **44** for the identical prompt. Two screens
+        in the same demo, disagreeing by an order of magnitude, on the one
+        number the demo is about.
+
+        `discovery_core` is the hard-won implementation: dataset-scoped table
+        search plus a separate `type=glossary_term` search, with the
+        non-analytic filter and the 44-table cap. Sharing it means the
+        comparison screen, the live provisioning path and
+        `scripts/06_update_data_agent.py` can never disagree again.
 
         Args:
             prompt: Candidate prompt text string.
             token: Google Cloud OAuth access token.
 
         Returns:
-            Dict[str, Any]: Dictionary containing prompt text, discovered tables, terms, and table count.
+            Dict with the prompt, discovered tables, glossary terms and counts.
         """
-        url = f"https://dataplex.googleapis.com/v1/projects/{self.project_id}/locations/global:searchEntries"
-        headers = {
-            "Authorization": f"Bearer {token}",
-            "Content-Type": "application/json",
-            "x-goog-user-project": self.project_id,
-        }
-        body = {
-            "query": prompt,
-            "scope": f"projects/{self.project_id}",
-            "semanticSearch": True,
-            "pageSize": 100,
-        }
-
         try:
-            res = await asyncio.to_thread(requests.post, url, headers=headers, json=body, timeout=15)
-            if res.status_code != 200:
-                print(f"Knowledge Catalog search error for prompt '{prompt[:30]}': HTTP {res.status_code}")
-                return {"prompt": prompt, "tables": [], "terms": [], "table_count": 0, "term_count": 0, "entry_link_count": 0, "top_10_tables": []}
+            # discover() is the whole contract: dataset-scoped table search,
+            # the non-analytic filter, the MAX_GROUNDED_TABLES cap and the
+            # glossary search. Calling the two lower-level searches directly
+            # would report the RAW ranked count (58) where the provisioning
+            # screen reports the grounded count (44) - the same off-by-a-mile
+            # disagreement this method was rewritten to eliminate.
+            result = await asyncio.to_thread(
+                discovery_core.discover,
+                self.project_id,
+                self.dataset_id,
+                token,
+                prompt,
+                False,  # verbose - candidates run in parallel, interleaved logs are noise
+            )
+            tables = result.get("tables", [])
+            terms = [
+                t.get("displayName", "")
+                for t in result.get("terms", [])
+                if t.get("displayName")
+            ]
 
-            results = res.json().get("results", [])
-            tables = []
-            terms = []
-            dataset_pattern = f"datasets/{self.dataset_id}/tables/"
-
-            for r in results:
-                lr = r.get("linkedResource", "")
-                dp = r.get("dataplexEntry", {})
-                name = dp.get("name", "")
-                resource = dp.get("entrySource", {}).get("resource", "")
-                display_name = dp.get("entrySource", {}).get("displayName", "")
-
-                # 1. Extract physical BigQuery table references (1-Hop via linkedResource and entrySource)
-                if dataset_pattern in lr:
-                    tbl = lr.split(dataset_pattern)[-1]
-                    if tbl not in tables:
-                        tables.append(tbl)
-                elif dataset_pattern in name:
-                    tbl = name.split(dataset_pattern)[-1]
-                    if tbl not in tables:
-                        tables.append(tbl)
-                elif dataset_pattern in resource:
-                    tbl = resource.split(dataset_pattern)[-1]
-                    if tbl not in tables:
-                        tables.append(tbl)
-
-                # 2. Extract Business Glossary terms (1-Hop via linkedResource and entrySource)
-                if "/terms/" in lr or "/terms/" in name or "/terms/" in resource:
-                    term = display_name or (lr or name or resource).split("/terms/")[-1]
-                    if term not in terms:
-                        terms.append(term)
-
-            entry_link_count = max(len(tables) + len(terms), 0)
+            # EntryLinks cannot be enumerated: the Catalog API exposes no
+            # ListEntryLinks method. This used to report len(tables)+len(terms),
+            # which is an invented number, not a measurement. In a demo whose
+            # whole subject is metadata trustworthiness, printing a fabricated
+            # figure is indefensible, so it reports zero and the UI omits it.
             return {
                 "prompt": prompt,
                 "tables": tables,
                 "terms": terms,
                 "table_count": len(tables),
                 "term_count": len(terms),
-                "entry_link_count": entry_link_count,
+                "raw_count": result.get("raw_count", len(tables)),
+                "entry_link_count": 0,
                 "top_10_tables": tables[:10],
             }
         except Exception as e:
@@ -237,10 +235,14 @@ class PromptEvaluatorService:
             },
         }
 
-        # Step 3: Candidate models with resilient multi-region fallbacks
+        # Step 3: Candidate models with resilient multi-region fallbacks.
+        # The regional candidate follows BQ_LOCATION so nothing is pinned to one
+        # region. This stays safe even if the chosen region does not serve the
+        # model: "global" is both the first and the last candidate, so the chain
+        # still succeeds.
         model_candidates = [
             ("global", "gemini-3.7-flash", 15),
-            ("europe-west4", "gemini-2.5-flash", 10),
+            (LOCATION, "gemini-2.5-flash", 10),
             ("global", "gemini-2.5-flash", 10),
         ]
 

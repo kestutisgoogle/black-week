@@ -78,7 +78,7 @@ TABLE_METADATA = {
         "labels": {"data_tier": "gold_curated", "domain": "domain_b_transactions", "diagnostic_role": "sales_revenue_actuals", "grain": "order_header", "update_frequency": "streaming", "environment": "production"}
     },
     "order_items": {
-        "description": "[PURPOSE]: Discrete purchase line items recording product SKU references, realized sale prices, promotional discounts, and basket-level revenue realization. [DOMAIN]: Domain B: Transactions & Target Curves. [GRAIN]: One row per purchased item line (order_item_id). [TIER & REFRESH]: GOLD_CURATED | Real-Time Streaming. [ANALYTICAL ROLE]: Line Item Sales - SKU-Level Contribution, Basket Margins & Volume Breakdown.",
+        "description": "[PURPOSE]: Discrete purchase line items recording product SKU references, realized sale prices, return status, and basket-level revenue realization. [DOMAIN]: Domain B: Transactions & Target Curves. [GRAIN]: One row per purchased item line (order_item_id). [TIER & REFRESH]: GOLD_CURATED | Real-Time Streaming. [ANALYTICAL ROLE]: Line Item Sales - SKU-Level Contribution, Basket Margins & Volume Breakdown.",
         "labels": {"data_tier": "gold_curated", "domain": "domain_b_transactions", "diagnostic_role": "sales_revenue_actuals", "grain": "order_item", "update_frequency": "streaming", "environment": "production"}
     },
     "sales_event_stream": {
@@ -110,7 +110,7 @@ TABLE_METADATA = {
         "labels": {"data_tier": "gold_curated", "domain": "domain_c_clickstream", "diagnostic_role": "funnel_clickstream", "grain": "click_event", "update_frequency": "streaming", "environment": "production"}
     },
     "oos_interactions": {
-        "description": "[PURPOSE]: Customer browsing and cart interactions on out-of-stock items, capturing unfulfilled demand and estimated lost revenue in EUR due to inventory stockouts. [DOMAIN]: Domain C: Out-of-Stock Telemetry. [GRAIN]: One row per out-of-stock user click interaction (interaction_id). [TIER & REFRESH]: GOLD_CURATED | Real-Time Event Feed. [ANALYTICAL ROLE]: Lost Demand Telemetry - Stockout Click Tracking & Unfulfilled Demand Estimation.",
+        "description": "[PURPOSE]: Customer browsing and cart interactions on out-of-stock items, capturing GROSS unfulfilled demand at list price. This table records demand that could not be served; it does NOT record a net revenue loss, which additionally requires the substitution rate and category conversion propensity. [DOMAIN]: Domain C: Out-of-Stock Telemetry. [GRAIN]: One row per out-of-stock user click interaction (interaction_id). [TIER & REFRESH]: GOLD_CURATED | Real-Time Event Feed. [ANALYTICAL ROLE]: Lost Demand Telemetry - Stockout Click Tracking & Unfulfilled Demand Estimation.",
         "labels": {"data_tier": "gold_curated", "domain": "domain_c_clickstream", "diagnostic_role": "inventory_stockouts", "grain": "oos_click", "update_frequency": "streaming", "environment": "production"}
     },
 
@@ -694,7 +694,7 @@ COLUMN_DESCRIPTIONS = {
     },
     "distribution_centers": {
         "dc_id": "Unique identifier for the logistics hub (Primary Key)",
-        "name": "Logistics hub name (Paris Hub, Frankfurt Hub)",
+        "name": "Logistics hub name (e.g. Paris Nord Fulfilment Centre, Rotterdam Port Hub)",
         "latitude": "Hub geolocation latitude",
         "longitude": "Hub geolocation longitude"
     },
@@ -728,8 +728,9 @@ COLUMN_DESCRIPTIONS = {
     "orders": {
         "order_id": "Transaction header identifier (Primary Key)",
         "user_id": "Foreign key to users table",
-        "order_status": "Operational status (Completed, Processing, Cancelled)",
-        "total_amount": "Total gross purchase price in EUR",
+        "session_id": "Originating web session referencing web_sessions.session_id. Join on this to attribute an order to its acquisition channel",
+        "order_status": "Fulfilment outcome, derived from the order's line items: 'Completed' (nothing returned), 'Partially Returned' (some lines returned), 'Returned' (every line returned). All three are genuinely placed, paid orders. A failed payment attempt never becomes an order and appears only in payment_gateway_logs with a NULL order_id",
+        "total_amount": "Merchandise value of the order in EUR, equal to the sum of sale_price x quantity across its order_items. Excludes VAT (see tax_amount) and delivery charges (see shipping_fee), which are held separately and are not revenue. Not reduced for items subsequently returned",
         "tax_amount": "VAT tax portion of transaction in EUR",
         "shipping_fee": "Shipping delivery fee billed in EUR",
         "num_of_items": "Total physical items count in order",
@@ -743,11 +744,11 @@ COLUMN_DESCRIPTIONS = {
         "inventory_item_id": "Foreign key to inventory_items table",
         "quantity": "Quantity of product units purchased",
         "sale_price": "Captured unit selling price at checkout in EUR",
-        "discount_amount": "Promotional discount applied in EUR",
+        "discount_amount": "Reserved field for per-line promotional discount in EUR. NOT POPULATED by any source system and always 0.00; the promotions feed is not connected. A sum of zero indicates an absent feed, not an absence of discounting",
         "created_at": "Line item creation timestamp",
         "shipped_at": "Logistics carrier dispatch timestamp",
         "delivered_at": "Customer delivery confirmation timestamp",
-        "returned_at": "Customer return receipt timestamp"
+        "returned_at": "Timestamp the returned item was received back. NULL for items that were not returned, so this column is the basis for distinguishing gross from net merchandise revenue"
     },
     "sales_event_stream": {
         "event_id": "Streaming event UUID identifier (Primary Key)",
@@ -756,7 +757,7 @@ COLUMN_DESCRIPTIONS = {
         "category_id": "Foreign key to categories table",
         "quantity": "Count of units sold",
         "sale_price": "Captured base unit price in EUR",
-        "discount_amount": "Promotional discount deducted in EUR",
+        "discount_amount": "Reserved field for per-event promotional discount in EUR. NOT POPULATED by any source system and always 0.00; mirrors order_items.discount_amount",
         "timestamp": "Real-time streaming ingestion timestamp"
     },
     "weekly_commercial_targets": {
@@ -764,17 +765,14 @@ COLUMN_DESCRIPTIONS = {
         "category_id": "Foreign key to categories table",
         "week_start_date": "Target week start date (2026-11-23)",
         "target_revenue": "Total planned commercial revenue target in EUR",
-        "expected_orders_count": "Planned order intake target count",
         "target_sessions": "Expected web traffic sessions",
-        "target_conversion_rate": "Target e-commerce conversion rate (CVR)",
-        "target_aov": "Target average order value in EUR"
+        "target_conversion_rate": "Target e-commerce conversion rate (CVR)"
     },
     "daily_category_targets": {
         "target_id": "Daily target identifier (Primary Key)",
         "category_id": "Foreign key to categories table",
         "date": "Target calendar date (2026-11-23 to 2026-11-30)",
         "target_revenue": "Daily planned category revenue in EUR",
-        "target_orders_count": "Daily planned order count target",
         "target_sessions": "Daily planned web session traffic target",
         "target_conversion_rate": "Expected conversion rate benchmark",
         "target_aov": "Expected average order value in EUR",
@@ -784,28 +782,25 @@ COLUMN_DESCRIPTIONS = {
     "category_15min_targets": {
         "target_id": "15-minute pacing target identifier (Primary Key)",
         "category_id": "Foreign key to categories table",
-        "interval_timestamp": "Timestamp of the 15-minute interval",
         "day_of_week": "Day of week integer (1=Sunday..7=Saturday)",
         "time_bucket": "15-minute time bucket",
         "target_revenue": "Planned revenue target for the 15-minute interval in EUR",
-        "target_orders_count": "Planned order intake count for the interval",
         "target_sessions": "Planned web sessions traffic for the interval"
     },
     "web_sessions": {
         "session_id": "Unique browser session UUID (Primary Key)",
         "user_id": "Customer profile identifier (nullable)",
         "traffic_source": "Origin channel (Paid Search, Paid Social, Direct, Email, Organic)",
-        "campaign_id": "Foreign key to marketing_campaigns table",
         "utm_source": "UTM campaign source tag (google, meta, criteo, newsletter)",
         "utm_medium": "UTM medium tag (cpc, social, email, referral)",
         "utm_campaign": "UTM campaign tag",
-        "device_category": "Device category (mobile, desktop, tablet)",
-        "device_os": "Client operating system (iOS, Android, Windows, macOS)",
+        "primary_category_id": "Category the session predominantly browsed, referencing categories.category_id",
+        "device_os": "Client operating system (iOS, Android, Windows, macOS). This is the device dimension for this table; there is no separate device_category column",
         "browser": "Client web browser (Safari, Chrome, Firefox, Edge)",
-        "country": "Visitor country localization",
-        "session_started_at": "Session start timestamp",
-        "session_ended_at": "Session end timestamp",
-        "page_views_count": "Total page views during session",
+        "country": "Visitor country from the IP lookup. Present even when the visitor is not signed in and user_id is NULL, so it is the correct basis for geographic session analysis. Matches users.country for known customers",
+        "session_started_at": "Timestamp of the first interaction in the session",
+        "session_ended_at": "Timestamp of the last recorded interaction. Session duration is session_ended_at minus session_started_at, and is zero when the session produced no further events",
+        "page_views_count": "Navigations to a new page during the session. A SUBSET of the rows in web_events, not a copy of them: in-page interactions such as filter_applied, image_zoom, review_read, wishlist_add and cart_add are recorded as events but are not page views",
         "converted_to_order": "Boolean flag indicating if session converted to a purchase"
     },
     "web_events": {
@@ -822,14 +817,14 @@ COLUMN_DESCRIPTIONS = {
         "session_id": "Foreign key to web_sessions table",
         "art_code": "Catalog article SKU code referencing products.product_id",
         "clicked_at": "Interaction timestamp",
-        "pot_val": "Estimated unrealized sales value from out-of-stock user friction"
+        "pot_val": "Potential order value of the unavailable item at list price (unit retail price x requested quantity). GROSS unrealised demand only - this is NOT a net revenue loss, because a share of these visitors buy a substitute instead. Summing this column overstates lost revenue by more than an order of magnitude; use the certified stockout_lost_revenue methodology."
     },
     "competitor_price_feed": {
-        "feed_id": "Scraped pricing feed identifier (Primary Key)",
+        "scrape_id": "Scraped pricing feed identifier (Primary Key)",
         "product_id": "Foreign key to products table",
         "competitor_name": "Competitor retail brand (e.g. SephoraEU, DouglasDE, LookFantastic)",
         "competitor_price": "Competitor retail selling price in EUR",
-        "price_index_ratio": "Lumiere price divided by competitor price parity ratio",
+        "is_in_stock": "Whether the competitor had the item available at the moment of the scrape",
         "scraped_at": "Feed scraping timestamp"
     },
     "competitor_promotions": {
@@ -837,23 +832,22 @@ COLUMN_DESCRIPTIONS = {
         "competitor_name": "Competitor brand name",
         "category_id": "Foreign key to categories table",
         "discount_pct": "Promotional discount percentage (e.g. 20.0%)",
-        "promotion_mechanic": "Promotion mechanic description (e.g. Sitewide Flash 20% Off)",
-        "valid_from": "Promotion validity start date",
-        "valid_to": "Promotion validity end date"
+        "promotion_title": "Promotion as the competitor advertised it (e.g. Sitewide Flash 20% Off)",
+        "start_date": "Promotion validity start date",
+        "end_date": "Promotion validity end date",
+        "price_index_vs_lumiere": "Competitor price divided by the LumiereShop price for the same category. Above 1.0 means the competitor is the more expensive of the two",
+        "scraped_at": "Timestamp the promotion was scraped from the competitor site"
     },
     "marketing_campaigns": {
         "campaign_id": "Marketing campaign identifier (Primary Key)",
-        "category_id": "Foreign key to categories table",
+        "target_category_id": "Category this campaign promotes, referencing categories.category_id",
         "name": "Campaign display name",
         "platform": "Advertising platform (Meta Ads, Google Ads, TikTok)",
         "bidding_strategy": "Automated bidding algorithm (Target ROAS, Maximize Conversions, Manual CPC)",
-        "daily_budget": "Configured daily advertising budget in EUR",
-        "status": "Operational campaign status (ACTIVE, THROTTLED, PAUSED)",
-        "start_date": "Campaign start date",
-        "end_date": "Campaign end date"
+        "is_active": "Whether the campaign is live. This is the only state this table records; it carries no budget, no date range and no throttling state"
     },
     "daily_ad_performance": {
-        "perf_id": "Ad performance record identifier (Primary Key)",
+        "performance_id": "Ad performance record identifier (Primary Key)",
         "cid_ref": "External marketing campaign identifier referencing marketing_campaigns.campaign_id",
         "date": "Calendar tracking date (2026-11-23 to 2026-11-27)",
         "impressions": "Total ad impressions served",
@@ -865,12 +859,13 @@ COLUMN_DESCRIPTIONS = {
     "ad_bidding_log": {
         "log_id": "Bidding telemetry log identifier (Primary Key)",
         "campaign_id": "Foreign key to marketing_campaigns table",
-        "timestamp": "Bidding engine adjustment timestamp",
-        "observed_cvr_7d": "7-day moving average conversion rate observed by ad algorithm",
-        "target_roas_multiplier": "Target ROAS multiplier setting (e.g. 4.5x)",
-        "budget_multiplier": "Automated budget throttle multiplier applied (e.g. 0.69x)",
-        "action_taken": "Automated action executed by ad platform (BUDGET_THROTTLED, LEARNING_LIMITED)",
-        "reason": "Algorithmic explanation for bidding engine action"
+        "status_change": "Bidding platform state reported at this evaluation",
+        "action_taken": "Machine-emitted action code applied by the bidding engine",
+        "observed_cvr_7d": "Trailing 7-day conversion rate observed by the bidding engine at evaluation time",
+        "target_roas_multiplier": "Ratio of observed return on ad spend to the configured target. Below 1.0 means the campaign is underperforming its ROAS target",
+        "budget_multiplier": "Fraction of the planned daily budget the engine permitted after evaluation. Below 1.0 means spend was capped",
+        "bid_adjustment_pct": "Percentage change applied to the bid ceiling at this evaluation",
+        "logged_at": "Machine execution timestamp"
     },
     "ad_creatives": {
         "creative_id": "Creative asset identifier (Primary Key)",
@@ -878,39 +873,49 @@ COLUMN_DESCRIPTIONS = {
         "name": "Creative asset name",
         "ad_format": "Creative format (Video, Carousel, Static Image)",
         "quality_score": "Ad platform quality score (1 to 10 scale)",
-        "ill": "Boolean flag indicating algorithmic delivery bottleneck",
+        "dlv_lrn_lmt_flg": "Delivery learning-limited flag: TRUE when the ad platform reports the creative is not receiving enough conversion signal to exit the learning phase, which constrains delivery and raises effective cost per click",
         "relevance_status": "Relevance status (ACTIVE, FATIGUED, LOW_QUALITY)",
         "last_refreshed_at": "Timestamp when creative asset was last updated"
     },
     "payment_gateway_logs": {
-        "log_id": "PSP authorization log identifier (Primary Key)",
+        "gateway_log_id": "PSP authorization log identifier (Primary Key)",
         "order_id": "Foreign key to orders table",
-        "payment_gateway": "Payment gateway provider (Stripe, PayPal, Adyen)",
+        "session_id": "Foreign key to web_sessions table",
+        "payment_provider": "Payment service provider (Stripe, PayPal, Adyen)",
+        "payment_method": "Instrument the customer paid with (card, wallet, bank transfer)",
         "status": "Transaction status (SUCCESS, FAILED, TIMEOUT)",
         "error_code": "Gateway error code (e.g. HTTP_504_GATEWAY_TIMEOUT, CARD_DECLINED)",
+        "http_status_code": "HTTP status the gateway returned for the authorization call",
         "latency_ms": "Authorization latency in milliseconds",
-        "amount": "Transaction amount in EUR",
+        "total_amount": "Transaction amount in EUR",
+        "country": "Country the payment was initiated from",
         "created_at": "Gateway transaction timestamp"
     },
     "influencer_campaigns": {
-        "campaign_id": "Creator campaign identifier (Primary Key)",
-        "influencer_handle": "Social media creator handle (e.g. @GlowWithElena, @BeautyByChloe)",
+        "influencer_id": "Creator campaign identifier (Primary Key)",
+        "campaign_name": "Creator campaign display name",
+        "creator_name": "Social media creator handle (e.g. @elena.glowroutine, @marc.techdaily)",
         "platform": "Creator platform (Instagram, TikTok, YouTube)",
-        "category_id": "Foreign key to categories table",
+        "promo_code": "Discount code issued to the creator. This is what attributes an order back to the campaign; there is no category column on this table",
         "target_revenue": "Contractual commercial target revenue in EUR",
-        "attributed_orders_count": "Total promo code attributed orders count",
-        "attributed_revenue": "Total verified sales revenue in EUR",
-        "status": "Campaign delivery status (UNDERPERFORMING, ON_TRACK, COMPLETED)"
+        "actual_revenue": "Revenue attributed to this creator's promo code in EUR",
+        "orders_count": "Orders attributed to this creator's promo code",
+        "views_count": "Impressions the creator's content received on the platform",
+        "fee_amount": "Flat fee paid to the creator in EUR",
+        "is_active": "Whether the creator campaign is still running",
+        "created_at": "Timestamp the campaign record was created"
     },
     "catalog_recommender_logs": {
         "log_id": "Recommendation impression log identifier (Primary Key)",
         "session_id": "Foreign key to web_sessions table",
         "src_sku": "Source product item viewed on active page (FK to products)",
         "rec_sku": "Recommended product candidate suggested by ML engine (FK to products)",
+        "page_category_id": "Category of the product on the page being viewed, referencing categories.category_id",
+        "recommended_category_id": "Category of the recommended product, referencing categories.category_id",
         "fb_rule_id": "Rule engine identifier: 99 = global category fallback, 0 = standard collaborative filter",
-        "cat_mismatch_flg": "Cross-department mismatch flag: 1 = taxonomy parity error (e.g. Beauty displaying Electronics), 0 = normal",
+        "cat_mismatch_flg": "Cross-department mismatch flag: 1 when the recommended item's category differs from the page's category, 0 otherwise",
         "user_action": "Visitor action (BOUNCED, CLICKED, IGNORED)",
-        "opp_cost_eur": "Estimated lost substitution revenue from failed recommendation cross-sell",
+        "opp_cost_eur": "Reserved field for per-impression opportunity cost. NOT POPULATED by the recommender service; opportunity cost must be derived from bounced impressions and category conversion propensity",
         "recorded_at": "Impression timestamp"
     },
     "shipping_lead_times": {
@@ -931,14 +936,26 @@ COLUMN_DESCRIPTIONS = {
         "user_name": "User identifier or display name submitting the analytics inquiry",
         "user_account": "User email or account identity executing prompt",
         "user_prompt": "Natural language user prompt",
-        "agent_response_text": "Markdown response text generated by agent",
+        "response_text": "Markdown response text generated by the agent",
         "generated_sql": "Dynamic BigQuery SQL query generated by Gemini Data Agent",
-        "bigquery_job_id": "Google BigQuery execution job identifier",
-        "execution_duration_ms": "Total query and agent latency in milliseconds",
-        "total_bytes_billed": "BigQuery query bytes billed",
-        "total_slot_ms": "BigQuery slot milliseconds consumed",
-        "cache_hit": "BigQuery query cache hit boolean flag",
-        "status": "Execution status (SUCCESS, ERROR)",
+        "job_id": "BigQuery execution job identifier for the generated query",
+        "execution_time_ms": "Total query and agent latency in milliseconds",
+        "bytes_billed": "BigQuery bytes billed for the generated query",
+        "bytes_scanned": "BigQuery bytes scanned before billing rounding",
+        "slot_milliseconds": "BigQuery slot milliseconds consumed",
+        "http_status_code": "HTTP status returned by the Conversational Analytics API call",
+        "ca_api_endpoint": "Conversational Analytics API endpoint invoked",
+        "data_agent_id": "Data agent that produced the answer, which identifies the metadata tier it was configured with",
+        "referenced_tables": "Tables the generated SQL actually read",
+        "result_row_count": "Rows returned by the generated query",
+        "step_count": "Number of reasoning steps returned in the agent response",
+        "has_chart": "Whether the answer carried a chart specification",
+        "chart_type": "Chart type produced with the answer, when there was one",
+        "followup_questions": "Follow-up questions the agent proposed",
+        "thinking_process": "Agent reasoning trace captured from the API response",
+        "thinking_mode": "Reasoning verbosity the agent ran in for this interaction",
+        "raw_ca_api_response": "Unparsed Conversational Analytics API payload, retained for audit",
+        "created_at": "Timestamp the interaction was recorded",
         "menu_item": "Interface menu context initiating the interaction ('chat' vs 'compare chats')",
         "agent_no": "Agent identifier in comparative multi-agent mode ('agentA', 'agentB', 'agentC', or NULL for single agent)"
     }
@@ -986,6 +1003,8 @@ def apply_descriptions():
 
     updated_count = 0
     total_tables = len(TABLE_METADATA)
+    stale_keys = []          # documented here, absent from the live table
+    undocumented = []        # present in the live table, no curated description
 
     for table_name, meta in TABLE_METADATA.items():
         desc = meta["description"]
@@ -999,9 +1018,15 @@ def apply_descriptions():
             # Update column descriptions if defined
             if table_name in COLUMN_DESCRIPTIONS:
                 col_map = COLUMN_DESCRIPTIONS[table_name]
+                live_names = {f.name for f in table.schema}
+                for key in col_map:
+                    if key not in live_names:
+                        stale_keys.append(f"{table_name}.{key}")
                 new_fields = []
                 for field in table.schema:
                     new_desc = col_map.get(field.name, field.description)
+                    if not new_desc:
+                        undocumented.append(f"{table_name}.{field.name}")
                     new_field = bigquery.SchemaField(
                         name=field.name,
                         field_type=field.field_type,
@@ -1022,6 +1047,34 @@ def apply_descriptions():
             print(f"Notice updating table `{table_name}`: {e}", file=sys.stderr)
 
     print(f"\nCompleted metadata synchronization across {updated_count}/{total_tables} warehouse tables in BigQuery.")
+
+    # ---------------------------------------------------------------
+    # Schema drift report.
+    #
+    # `col_map.get(field.name, field.description)` silently ignores keys that
+    # no longer exist, which is exactly how this file fell out of sync with
+    # 01_create_schema.py. Tier A is the tier whose whole value proposition is
+    # rich metadata, so an undocumented column here is a real defect.
+    # ---------------------------------------------------------------
+    print("\n" + "=" * 78)
+    print("SCHEMA DRIFT REPORT")
+    print("=" * 78)
+    if stale_keys:
+        print(f"\n⚠️  {len(stale_keys)} documented column(s) do NOT exist in BigQuery "
+              f"(dead entries, silently ignored):")
+        for key in sorted(stale_keys):
+            print(f"     • {key}")
+    else:
+        print("\n✅ No stale column entries.")
+
+    if undocumented:
+        print(f"\n⚠️  {len(undocumented)} live column(s) have NO description at all "
+              f"(Tier A quality gap):")
+        for key in sorted(undocumented):
+            print(f"     • {key}")
+    else:
+        print("✅ Every live column carries a description.")
+    print("=" * 78)
 
 if __name__ == "__main__":
     apply_descriptions()

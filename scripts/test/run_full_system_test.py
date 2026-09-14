@@ -19,8 +19,8 @@ from google.cloud import bigquery
 LOCAL_URL = "http://localhost:8000"
 PROD_URL = "http://localhost:8000"
 PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "")
-DATASET_ID = "ecommerce_dw"
-LOCATION = "europe-west4"
+DATASET_ID = os.environ.get("BQ_DATASET_ID", "ecommerce_dw")
+LOCATION = os.environ.get("BQ_LOCATION", "europe-west4")
 
 results_summary = {}
 

@@ -39,7 +39,7 @@ PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "")
 DATASET_ID = os.environ.get("BQ_DATASET_ID", "ecommerce_dw")
 DATASET_2ND_ID = os.environ.get("BQ_DATASET_2ND_ID", f"{DATASET_ID}_2nd")
 DATASET_3RD_ID = os.environ.get("BQ_DATASET_3RD_ID", f"{DATASET_ID}_3rd")
-REGION = os.environ.get("BQ_LOCATION", "us-central1").lower()
+REGION = os.environ.get("BQ_LOCATION", "europe-west4").lower()
 DATA_AGENT_ID = os.environ.get("DATA_AGENT_ID") or os.environ.get("CA_DATA_AGENT_ID", "gda-blackweek-primary")
 DATA_AGENT_A_ID = os.environ.get("DATA_AGENT_A_ID", "gda-blackweek-a")
 DATA_AGENT_B_ID = os.environ.get("DATA_AGENT_B_ID", "gda-blackweek-b")
@@ -163,8 +163,10 @@ def main():
         capture_output=True,
         text=True
     )
-    if repo_check.returncode != 0:
-        run_cmd(
+    if repo_check.returncode == 0:
+        print("\n▶️  1. Artifact Registry repository `lumiere-shop-repo` already exists.")
+    else:
+        create_res = subprocess.run(
             [
                 GCLOUD, "artifacts", "repositories", "create", "lumiere-shop-repo",
                 "--repository-format=docker",
@@ -172,10 +174,15 @@ def main():
                 "--description=Docker repository for LumièreShop",
                 f"--project={project_id}"
             ],
-            desc="1. Creating Docker repository in Artifact Registry"
+            cwd=PROJECT_ROOT,
+            capture_output=True,
+            text=True
         )
-    else:
-        print("\n▶️  1. Artifact Registry repository `lumiere-shop-repo` already exists (skipping creation).")
+        if create_res.returncode == 0 or "already exists" in create_res.stderr.lower():
+            print("\n▶️  1. Artifact Registry repository `lumiere-shop-repo` ready.")
+        else:
+            print(f"❌ Failed to create Artifact Registry repo: {create_res.stderr}", file=sys.stderr)
+            sys.exit(1)
 
     # 2. IAM Policy Bindings
     print(f"\n▶️  2. Configuring IAM roles for Service Accounts ({project_number})...")

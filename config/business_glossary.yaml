@@ -69,9 +69,8 @@ glossary:
   - id: roas
     display_name: ROAS (Return on Ad Spend)
     category_id: marketing
-    definition: Marketing efficiency metric calculated as total attributed sales revenue
-      divided by advertising expenditure across paid acquisition channels.
-    formula: SUM(orders.total_amount) / SUM(daily_ad_performance.spend)
+    definition: "Ambiguous on its own. LumiereShop maintains two certified and materially different return-on-ad-spend conventions. Use the paid-attributed convention when assessing campaign or automated bidding performance, and the blended convention when assessing performance against the commercial plan. The blended figure is roughly twice the paid figure, so a report that does not state which convention it uses cannot be interpreted."
+    formula: "Not defined without a qualifier; state the paid or blended convention explicitly."
     synonyms:
     - ad efficiency
     - marketing ROI
@@ -83,6 +82,8 @@ glossary:
       column: spend
     - table: daily_category_targets
       column: target_roas
+    - table: orders
+      column: total_amount
   - id: cpc
     display_name: CPC (Cost Per Click)
     category_id: marketing
@@ -99,9 +100,8 @@ glossary:
   - id: cvr
     display_name: CVR (E-Commerce Conversion Rate)
     category_id: marketing
-    definition: The percentage of web sessions or product page visitors that successfully
-      finalize a completed transaction.
-    formula: (Total Completed Orders / Total Web Sessions) * 100
+    definition: "Ambiguous on its own. LumiereShop certifies two conversion-rate conventions: the paid-only figure used to assess campaigns, and the sitewide figure used to assess overall trading. They differ because paid traffic converts differently from returning organic and email traffic. State which convention is in use."
+    formula: "Not defined without a qualifier; state the paid or sitewide convention explicitly."
     synonyms:
     - conversion rate
     - checkout conversion
@@ -115,7 +115,7 @@ glossary:
     definition: Algorithmic state in Meta Ads/Google Ads where an ad set fails to
       exit the initial machine learning phase or becomes restricted due to creative
       fatigue or low conversion volume.
-    formula: ill = TRUE
+    formula: "ad_creatives.dlv_lrn_lmt_flg = TRUE, corroborated by ad_bidding_log.status_change = 'LEARNING_LIMITED'"
     synonyms:
     - ad fatigue
     - algorithm lockout
@@ -123,16 +123,24 @@ glossary:
     - stuck campaign
     bindings:
     - table: ad_creatives
-      column: ill
+      column: dlv_lrn_lmt_flg
     - table: ad_bidding_log
       column: action_taken
   - id: target_roas_throttling
     display_name: Target ROAS Budget Throttling
     category_id: marketing
-    definition: Automated bidding reaction where the ad platform slashes daily budget
-      allocations when observed conversion rate drops below the required threshold
-      to maintain efficiency.
-    formula: action_taken = 'BUDGET_THROTTLED'
+    # The convention warning lives at the FRONT of this definition on purpose.
+    # Knowledge Catalog truncates term descriptions at 1000 characters from the
+    # tail, so anything important has to come first.
+    #
+    # WHY IT IS HERE AND NOT IN `paid_roas` / `blended_roas`: the single CMO
+    # prompt the app and the setup script both use does not surface those two
+    # terms - measured 2026-09-13 - but it does surface this one. Rather than
+    # reword a prompt that is a sharp local optimum, the warning was moved to
+    # the term that is actually delivered to the agent. This is what keeps
+    # benchmark question B-S2 (the ROAS convention collision) alive.
+    definition: "CONVENTION WARNING: two ROAS conventions exist; never compare them. Paid ROAS counts only paid-channel revenue and is what the bidding algorithm optimises against and throttles on. Blended ROAS counts all revenue regardless of channel and is the plan convention, stored in daily_category_targets.target_roas. Blended runs roughly twice paid, so judging paid ROAS against the blended plan target makes a throttled campaign look healthy. Throttling is the automated cut to a campaign's daily budget once its PAID return on ad spend falls below target; the trailing window means the cap can persist after efficiency recovers."
+    formula: "ad_bidding_log.budget_multiplier < 1.0 means a throttle is in force. Onset: status_change = 'TARGET_ROAS_BREACH_THROTTLED' with action_taken = 'BUDGET_CAP_APPLIED'. Cap held after recovery: status_change = 'BUDGET_CONSTRAINED'. State which convention any ROAS figure uses."
     synonyms:
     - budget throttling
     - spend cut
@@ -143,6 +151,25 @@ glossary:
       column: action_taken
     - table: daily_ad_performance
       column: spend
+  - id: throttling_lost_revenue
+    display_name: Ad Throttling Lost Revenue
+    category_id: marketing
+    definition: "Revenue not realised because automated budget throttling starved the category of paid traffic. Certified as a residual, not a direct measurement: the traffic collapse overlaps the on-site frictions that triggered it, so measuring every cause independently would double count. Subtract the certified Stockout and Recommender Mismatch losses from the category revenue deficit; the remainder is attributable to the traffic collapse. A direct estimate from the session shortfall (missing sessions x conversion rate x average order value) should be produced as a cross-check: it brackets the residual rather than replacing it."
+    formula: "category revenue deficit - Stockout Estimated Lost Revenue - Recommender Mismatch Lost Revenue. Scope the deficit and both certified losses to the same category and the same reporting window."
+    synonyms:
+    - throttling loss
+    - paid traffic deficit loss
+    - budget cap loss
+    - ad spend throttling impact
+    bindings:
+    - table: ad_bidding_log
+      column: budget_multiplier
+    - table: ad_bidding_log
+      column: status_change
+    - table: category_15min_targets
+      column: target_sessions
+    - table: web_sessions
+      column: session_id
   - id: influencer_revenue
     display_name: Influencer Attributed Revenue
     category_id: marketing
@@ -155,9 +182,9 @@ glossary:
     - promo code sales
     bindings:
     - table: influencer_campaigns
-      column: attributed_revenue
+      column: actual_revenue
     - table: influencer_campaigns
-      column: influencer_handle
+      column: creator_name
   - id: oos
     display_name: Out of Stock (OOS / Stockout)
     category_id: supply_chain
@@ -178,9 +205,8 @@ glossary:
   - id: stockout_lost_revenue
     display_name: Stockout Estimated Lost Revenue
     category_id: supply_chain
-    definition: Calculated monetary loss incurred when high-intent shoppers attempt
-      to purchase an out-of-stock SKU.
-    formula: SUM(pot_val) from oos_interactions
+    definition: "Revenue not realised when a shopper hit an out-of-stock SKU. NEVER report SUM(oos_interactions.pot_val) as lost revenue: it overstates the loss by more than an order of magnitude. pot_val is the GROSS basket value attempted at the moment of the click, and most is not lost: shoppers substitute, return later, or would not have checked out anyway. The method keeps only the fraction that would realistically have converted."
+    formula: "SUM(oos_interactions.pot_val) * Paid Conversion Rate of the affected category, restricted to the unavailability window. Resolve the category by joining oos_interactions.art_code to products.product_id and reading products.category_id, then compute the rate over sessions of that SAME category via web_sessions.primary_category_id. A sitewide paid rate gives a materially wrong answer. Use the Paid Conversion Rate, never the Sitewide Conversion Rate."
     synonyms:
     - OOS lost revenue
     - stockout loss
@@ -189,6 +215,16 @@ glossary:
     bindings:
     - table: oos_interactions
       column: pot_val
+    - table: oos_interactions
+      column: art_code
+    - table: web_sessions
+      column: traffic_source
+    - table: web_sessions
+      column: primary_category_id
+    - table: products
+      column: product_id
+    - table: products
+      column: category_id
   - id: safety_stock
     display_name: Safety Stock Level
     category_id: supply_chain
@@ -206,8 +242,11 @@ glossary:
     display_name: DACH Region
     category_id: logistics
     definition: Central European commercial zone comprising Germany (DE), Austria
-      (AT), and Switzerland (CH), primarily fulfilled by the Frankfurt Hub (DC 2).
-    formula: destination_region = 'DACH' OR country IN ('Germany', 'Austria', 'Switzerland')
+      (AT), and Switzerland (CH). It is served from all five distribution centres,
+      not a single hub, so DACH performance must never be read as one warehouse's
+      performance. In shipping_lead_times the region is always spelled 'DACH';
+      in users it is expressed as the individual country.
+    formula: destination_region = 'DACH'
     synonyms:
     - DACH
     - German market
@@ -250,7 +289,7 @@ glossary:
     category_id: pricing_merchandising
     definition: "Ratio of competitor retail prices compared to Lumi\xE8reShop prices\
       \ for identical SKUs. 1.00x denotes exact price parity."
-    formula: competitor_price / retail_price
+    formula: "competitor_price_feed.competitor_price / products.retail_price"
     synonyms:
     - price parity
     - price index
@@ -261,11 +300,12 @@ glossary:
       column: competitor_price
     - table: competitor_promotions
       column: discount_pct
+    - table: products
+      column: retail_price
   - id: recommender_mismatch
     display_name: Catalog Recommender Category Mismatch
     category_id: pricing_merchandising
-    definition: Algorithmic failure mode where the product recommendation engine displays
-      unrelated categories (e.g. Electronics on Beauty pages) upon fallback.
+    definition: "Algorithmic failure mode in which the product recommendation engine serves items from a different merchandising category than the page the shopper is viewing. It occurs when the personalised ranking model has no eligible in-category candidate and the global fallback rule is applied instead."
     formula: cat_mismatch_flg = 1 AND fb_rule_id = 99
     synonyms:
     - recommender bug
@@ -277,6 +317,25 @@ glossary:
       column: cat_mismatch_flg
     - table: catalog_recommender_logs
       column: opp_cost_eur
+  - id: recommender_lost_revenue
+    display_name: Recommender Mismatch Lost Revenue
+    category_id: pricing_merchandising
+    definition: "Revenue not realised because the recommendation widget served an out-of-category product and the shopper abandoned the session. catalog_recommender_logs.opp_cost_eur is a reserved field that is never populated and always reads zero, so it must never be summed. The certified method counts the mismatched impressions the shopper actually bounced on, then applies the Sitewide Conversion Rate for that category and its average order value, because a shopper who reaches a recommendation widget is already on site regardless of the channel that brought them."
+    formula: "COUNT(catalog_recommender_logs WHERE cat_mismatch_flg = 1 AND user_action = 'BOUNCED') * Sitewide Conversion Rate for the affected category (all channels, not paid-only) * average order value for that category. Do NOT use SUM(catalog_recommender_logs.opp_cost_eur), which is always zero."
+    synonyms:
+    - recommender lost revenue
+    - substitution loss
+    - fallback bug loss
+    - recommendation opportunity cost
+    bindings:
+    - table: catalog_recommender_logs
+      column: user_action
+    - table: catalog_recommender_logs
+      column: cat_mismatch_flg
+    - table: catalog_recommender_logs
+      column: opp_cost_eur
+    - table: orders
+      column: total_amount
   - id: psp_gateway_error
     display_name: Payment Service Provider (PSP) Error
     category_id: technical_checkout
@@ -343,13 +402,8 @@ glossary:
   - id: black_week_promotional_period
     display_name: Black Week Peak Commercial Period
     category_id: finance
-    definition: "The annual Q4 retail peak promotional sales period from Monday November\
-      \ 23, 2026 00:00:00 to Sunday November 29, 2026 23:59:59 UTC, encompassing Black\
-      \ Friday and Cyber Monday. Evaluated against executive weekly_commercial_targets\
-      \ and daily_category_targets with an executive sales benchmark of \u20AC6,650,000\
-      \ across categories."
-    formula: orders.created_at >= '2026-11-23 00:00:00' AND orders.created_at < '2026-11-30
-      00:00:00'
+    definition: "The annual Q4 retail peak promotional sales period, running 8 days from Monday November 23, 2026 00:00:00 UTC to Monday November 30, 2026 23:59:59 UTC inclusive, and encompassing both Black Friday (November 27) and Cyber Monday (November 30). Evaluated against executive weekly_commercial_targets and daily_category_targets. The executive benchmark for the full 8-day period is EUR 10,700,000; the corresponding benchmark for the portion elapsed at the reporting cutoff of November 27 14:30 UTC is EUR 6,670,000. Comparing period-to-date actuals against the full-period benchmark understates performance and is incorrect."
+    formula: "orders.created_at >= '2026-11-23 00:00:00' AND orders.created_at < '2026-12-01 00:00:00'"
     synonyms:
     - Black Week
     - Black Friday
@@ -600,7 +654,7 @@ glossary:
     category_id: loyalty_retention
     definition: The proportion of accumulated member loyalty points converted into
       commercial reward redemptions and discounts.
-    formula: (SUM(points_spent) / SUM(points_earned)) * 100
+    formula: "(SUM(loyalty_reward_redemptions.points_spent) / SUM(loyalty_points_ledger.points_delta)) * 100"
     synonyms:
     - reward redemption rate
     - loyalty burn rate
@@ -714,14 +768,13 @@ glossary:
     category_id: returns_rma
     definition: Ratio of returned items classified as defective or damaged upon warehouse
       triage inspection.
-    formula: COUNTIF(return_inspections.condition_grade = 'DEFECTIVE') / COUNT(return_inspections.inspection_id)
+    formula: "COUNTIF(return_inspections.item_condition = 'DEFECTIVE') / COUNT(return_inspections.inspection_id)"
     synonyms:
     - damaged return rate
     - inspection defect ratio
     - faulty goods percentage
     bindings:
     - table: return_inspections
-      column: condition_grade
     - table: return_shipping_labels
       column: tracking_number
   - id: refund_processing_latency
@@ -729,22 +782,21 @@ glossary:
     category_id: returns_rma
     definition: Average duration in hours from customer return receipt to financial
       refund disbursement.
-    formula: AVG(TIMESTAMP_DIFF(customer_refunds.created_at, product_returns.created_at,
-      HOUR))
+    formula: "AVG(TIMESTAMP_DIFF(customer_refunds.processed_at, product_returns.created_at, HOUR))"
     synonyms:
     - refund turnaround time
     - refund payout speed
     - customer refund delay
     bindings:
     - table: customer_refunds
-      column: amount_eur
+    - table: product_returns
+      column: created_at
   - id: first_contact_resolution_rate
     display_name: First Contact Resolution (FCR) Rate
     category_id: customer_service
     definition: Percentage of incoming support tickets resolved in a single interaction
       without follow-up escalation.
-    formula: COUNTIF(support_tickets.reopened_count = 0 AND support_tickets.status
-      = 'RESOLVED') / COUNT(support_tickets.ticket_id)
+    formula: "COUNTIF(support_tickets.status = 'RESOLVED' AND support_tickets.resolution_time_sec = support_tickets.first_response_time_sec) / COUNT(support_tickets.ticket_id)"
     synonyms:
     - FCR
     - one-touch resolution
@@ -753,7 +805,6 @@ glossary:
     - table: support_tickets
       column: status
     - table: ticket_categories
-      column: category_name
   - id: ticket_backlog_volume
     display_name: Customer Support Ticket Backlog
     category_id: customer_service
@@ -775,7 +826,7 @@ glossary:
     category_id: customer_service
     definition: Average customer satisfaction rating recorded on post-ticket resolution
       surveys on a 1-5 scale.
-    formula: AVG(csat_surveys.csat_score)
+    formula: "AVG(csat_surveys.score)"
     synonyms:
     - customer satisfaction
     - CSAT rating
@@ -783,9 +834,7 @@ glossary:
     - customer happiness index
     bindings:
     - table: csat_surveys
-      column: csat_score
     - table: support_agents
-      column: tier_level
   - id: customer_escalation_rate
     display_name: Customer Escalation Rate
     category_id: customer_service
@@ -800,9 +849,7 @@ glossary:
     - table: customer_escalations
       column: escalation_reason
     - table: agent_worklog_shifts
-      column: shift_type
     - table: call_center_recordings_metadata
-      column: call_duration_seconds
   - id: purchase_order_fill_rate
     display_name: Purchase Order (PO) Fill Rate
     category_id: supply_chain
@@ -815,7 +862,6 @@ glossary:
     - procurement receipt ratio
     bindings:
     - table: purchase_orders
-      column: po_status
     - table: purchase_order_line_items
       column: ordered_quantity
   - id: supplier_on_time_delivery_rate
@@ -823,8 +869,7 @@ glossary:
     category_id: supply_chain
     definition: Percentage of supplier purchase orders delivered to fulfillment hubs
       on or before the agreed contractual SLA date.
-    formula: COUNTIF(purchase_orders.actual_delivery_date <= purchase_orders.expected_delivery_date)
-      / COUNT(purchase_orders.po_id)
+    formula: "COUNTIF(supplier_lead_time_history.actual_lead_days <= supplier_lead_time_history.promised_lead_days) / COUNT(supplier_lead_time_history.history_id)"
     synonyms:
     - supplier OTD
     - inbound delivery timeliness
@@ -833,7 +878,6 @@ glossary:
     - table: suppliers_master
       column: country_code
     - table: supplier_lead_time_history
-      column: actual_lead_time_days
     - table: supplier_quality_scorecards
       column: overall_score
   - id: warehouse_aisle_cube_utilization
@@ -841,7 +885,7 @@ glossary:
     category_id: supply_chain
     definition: Percentage of total volumetric storage capacity currently occupied
       across warehouse aisles and storage racks.
-    formula: SUM(warehouse_aisles_and_racks.occupied_cube_meters) / SUM(warehouse_aisles_and_racks.total_cube_meters)
+    formula: "COUNT(DISTINCT pallet_inventory_locations.bin_id) / COUNT(DISTINCT warehouse_aisles_and_racks.bin_id)"
     synonyms:
     - storage rack density
     - cube utilization
@@ -849,40 +893,32 @@ glossary:
     - aisle occupancy
     bindings:
     - table: warehouse_aisles_and_racks
-      column: utilization_pct
     - table: warehouse_zones
-      column: zone_type
     - table: warehouse_labor_shifts
-      column: hours_worked
+    - table: pallet_inventory_locations
+      column: bin_id
   - id: inbound_dock_turnaround_time
     display_name: Inbound Dock Appointment Turnaround Time
     category_id: supply_chain
     definition: Average elapsed time from carrier truck arrival at the inbound dock
       to container unload and putaway completion.
-    formula: AVG(TIMESTAMP_DIFF(inbound_dock_appointments.unload_end_time, inbound_dock_appointments.arrival_time,
-      MINUTE))
+    formula: "AVG(TIMESTAMP_DIFF(inbound_dock_appointments.unloaded_time, inbound_dock_appointments.scheduled_time, MINUTE))"
     synonyms:
     - dock dwell time
     - cross dock turnaround
     - freight unloading latency
     bindings:
     - table: inbound_dock_appointments
-      column: status
     - table: cross_dock_transfer_orders
-      column: transfer_status
     - table: forklift_telemetry_logs
-      column: battery_level_pct
     - table: freight_carrier_contracts
-      column: base_rate_eur
     - table: warehouse_refurbishments
-      column: refurbishment_cost_eur
   - id: accounts_payable_aging_days
     display_name: Accounts Payable (AP) Days Outstanding (DPO)
     category_id: finance
     definition: Average number of days taken to settle vendor and supplier invoices
       from invoice receipt date.
-    formula: (SUM(accounts_payable_invoices.invoice_amount_eur) / SUM(purchase_order_line_items.unit_cost_eur
-      * purchase_order_line_items.received_quantity)) * 365
+    formula: "AVG(TIMESTAMP_DIFF(accounts_payable_disbursements.paid_at, accounts_payable_invoices.received_date, DAY))"
     synonyms:
     - DPO
     - days payable outstanding
@@ -892,7 +928,6 @@ glossary:
     - table: accounts_payable_invoices
       column: invoice_amount_eur
     - table: accounts_payable_disbursements
-      column: disbursement_amount_eur
   - id: gl_journal_entry_balance
     display_name: General Ledger (GL) Debit-Credit Balance
     category_id: finance
@@ -916,18 +951,15 @@ glossary:
     category_id: finance
     definition: Unreconciled financial variance between bank statement settlement
       cash flows and internal general ledger cash accounts.
-    formula: SUM(bank_account_reconciliation.statement_balance_eur) - SUM(bank_account_reconciliation.ledger_balance_eur)
+    formula: "SUM(bank_account_reconciliation.variance_eur)"
     synonyms:
     - bank variance
     - cash book reconciliation
     - unsettled bank items
     bindings:
     - table: bank_account_reconciliation
-      column: discrepancy_amount_eur
     - table: accounts_receivable_invoices
-      column: invoice_amount_eur
     - table: currency_exchange_rates_daily
-      column: exchange_rate_to_eur
     - table: customs_and_duties_declarations
       column: duty_amount_eur
   - id: points_burn_earn_ratio
@@ -945,9 +977,7 @@ glossary:
     - table: loyalty_points_ledger
       column: points_delta
     - table: loyalty_members
-      column: current_points_balance
     - table: loyalty_reward_redemptions
-      column: reward_id
     - table: loyalty_tier_definitions
       column: tier_name
   - id: gift_card_breakage_rate
@@ -964,15 +994,13 @@ glossary:
     - table: gift_card_master
       column: current_balance_eur
     - table: gift_card_transactions
-      column: transaction_amount_eur
     - table: store_credit_issuances
-      column: credit_amount_eur
   - id: email_campaign_deliverability_rate
     display_name: Email Campaign Deliverability Rate
     category_id: lifecycle_marketing
     definition: Percentage of dispatched promotional and lifecycle emails successfully
       accepted by recipient mail servers without hard or soft bounces.
-    formula: COUNTIF(email_send_queue_logs.status = 'DELIVERED') / COUNT(email_send_queue_logs.queue_id)
+    formula: "COUNTIF(email_send_queue_logs.status = 'DELIVERED') / COUNT(email_send_queue_logs.send_id)"
     synonyms:
     - email delivery rate
     - inbox placement rate
@@ -981,7 +1009,6 @@ glossary:
     - table: email_send_queue_logs
       column: status
     - table: email_campaign_templates
-      column: subject_line
     - table: email_bounces_and_complaints
       column: bounce_type
   - id: affiliate_commission_yield
@@ -989,18 +1016,16 @@ glossary:
     category_id: lifecycle_marketing
     definition: Total partner commission payout generated per unit of net revenue
       driven by external affiliate publisher networks.
-    formula: SUM(affiliate_commission_payouts.commission_amount_eur) / SUM(affiliate_commission_payouts.attributed_revenue_eur)
+    formula: "SUM(affiliate_commission_payouts.commission_earned_eur) / SUM(affiliate_commission_payouts.attributed_sales_eur)"
     synonyms:
     - affiliate payout rate
     - partner publisher commission
     - affiliate ROI
     bindings:
     - table: affiliate_commission_payouts
-      column: commission_amount_eur
     - table: affiliate_publishers_directory
       column: publisher_name
     - table: discount_coupons_master
-      column: discount_percentage
     - table: coupon_redemption_audit
       column: discount_applied_eur
   - id: catalog_attribute_completeness_rate
@@ -1017,13 +1042,9 @@ glossary:
     - SKU enrichment score
     bindings:
     - table: product_attribute_definitions
-      column: attribute_name
     - table: product_attribute_values
-      column: attribute_value_text
     - table: product_multilingual_translations
-      column: locale_code
     - table: product_size_charts
-      column: fit_type
     - table: product_media_gallery
       column: media_type
     - table: product_brand_guidelines
@@ -1033,8 +1054,7 @@ glossary:
     category_id: omnichannel_pos
     definition: Percentage of online click-and-collect orders picked, packed, and
       marked ready in physical store branches within the 2-hour customer promise SLA.
-    formula: COUNTIF(click_and_collect_orders.fulfillment_duration_minutes <= 120)
-      / COUNT(click_and_collect_orders.order_id)
+    formula: "COUNTIF(click_and_collect_orders.status = 'COLLECTED') / COUNT(click_and_collect_orders.bopis_id)"
     synonyms:
     - BOPIS SLA
     - click and collect readiness
@@ -1042,7 +1062,6 @@ glossary:
     - store pickup SLA
     bindings:
     - table: click_and_collect_orders
-      column: pickup_status
     - table: physical_store_locations
       column: city
     - table: pos_store_transactions
@@ -1050,11 +1069,8 @@ glossary:
     - table: pos_transaction_items
       column: quantity
     - table: pos_terminal_registers
-      column: register_number
     - table: store_inventory_levels
-      column: quantity_in_store
     - table: store_cash_drawer_counts
-      column: variance_eur
     - table: store_employee_rosters
       column: shift_role
   - id: staging_pipeline_sync_latency
@@ -1062,8 +1078,7 @@ glossary:
     category_id: staging_ingestion
     definition: Average time delay in minutes between upstream source API transaction
       timestamps and raw BigQuery staging table ingestion.
-    formula: AVG(TIMESTAMP_DIFF(stg_shopify_orders_raw._ingestion_timestamp, stg_shopify_orders_raw.created_at,
-      MINUTE))
+    formula: "AVG(TIMESTAMP_DIFF(CURRENT_TIMESTAMP(), stg_shopify_orders_raw.ingested_at, MINUTE))"
     synonyms:
     - staging latency
     - API ingestion delay
@@ -1071,45 +1086,29 @@ glossary:
     - raw feed latency
     bindings:
     - table: stg_shopify_orders_raw
-      column: raw_payload
     - table: stg_shopify_customers_raw
-      column: raw_payload
     - table: stg_shopify_products_raw
-      column: raw_payload
     - table: stg_meta_ad_insights_raw
-      column: raw_payload
     - table: stg_google_ads_campaigns_raw
-      column: raw_payload
     - table: stg_google_ads_search_terms_raw
-      column: raw_payload
     - table: stg_klaviyo_email_events_raw
       column: raw_payload
     - table: stg_klaviyo_campaigns_raw
-      column: raw_payload
     - table: stg_stripe_payment_intents_raw
       column: raw_payload
     - table: stg_stripe_disputes_raw
-      column: raw_payload
     - table: stg_adyen_settlements_raw
-      column: raw_payload
     - table: stg_zendesk_tickets_raw
-      column: raw_payload
     - table: stg_zendesk_satisfaction_raw
-      column: raw_payload
     - table: stg_sap_erp_inventory_feed_raw
-      column: raw_payload
     - table: stg_sap_erp_purchase_orders_raw
       column: raw_payload
     - table: stg_criteo_retargeting_raw
-      column: raw_payload
     - table: stg_ga4_clickstream_raw
       column: raw_payload
     - table: stg_ga4_traffic_sources_raw
-      column: raw_payload
     - table: stg_wms_shipments_raw
-      column: raw_payload
     - table: stg_trustpilot_reviews_raw
-      column: raw_payload
   - id: agent_query_slot_utilization
     display_name: Conversational Agent Query Slot-Millisecond Efficiency
     category_id: data_governance
@@ -1124,15 +1123,13 @@ glossary:
     - table: agent_interaction_logs
       column: slot_milliseconds
     - table: dev_customer_churn_feature_store
-      column: feature_timestamp
     - table: dev_product_embedding_vectors
-      column: embedding_version
   - id: commercial_sales_velocity
     display_name: Commercial Intake Sales Velocity
     category_id: finance
     definition: Real-time intake revenue rate partitioned by 15-minute intervals and
       category hierarchy paths against baseline pacing.
-    formula: SUM(sales_event_stream.event_amount_eur) / 15
+    formula: "SUM(sales_event_stream.sale_price * sales_event_stream.quantity) / 15"
     synonyms:
     - sales velocity
     - 15min run rate
@@ -1140,13 +1137,12 @@ glossary:
     - intake pacing
     bindings:
     - table: sales_event_stream
-      column: event_amount_eur
+      column: sale_price
     - table: category_15min_targets
-      column: target_sales_eur
+      column: target_revenue
     - table: categories
-      column: category_name
+      column: name
     - table: category_hierarchy_paths
-      column: hierarchy_path
     - table: distribution_centers
       column: name
   - id: live_chat_support_resolution
@@ -1154,7 +1150,7 @@ glossary:
     category_id: customer_service
     definition: Real-time live chat session metrics, agent messaging throughput, and
       knowledge base self-service deflection rate.
-    formula: COUNT(DISTINCT live_chat_sessions.session_id) / COUNT(DISTINCT support_tickets.ticket_id)
+    formula: "COUNT(DISTINCT live_chat_sessions.chat_session_id) / COUNT(DISTINCT support_tickets.ticket_id)"
     synonyms:
     - live chat volume
     - chat response time
@@ -1162,17 +1158,17 @@ glossary:
     - help center reads
     bindings:
     - table: live_chat_sessions
-      column: session_id
     - table: live_chat_messages
-      column: message_text
     - table: knowledge_base_articles
       column: view_count
+    - table: support_tickets
+      column: ticket_id
   - id: replacement_order_and_warranty_rate
     display_name: Replacement Order & Warranty Claim Rate
     category_id: returns_rma
     definition: Incidence rate of zero-cost replacement orders dispatched and manufacturer
       warranty claims filed due to transit damages or product defects.
-    formula: COUNT(warranty_claims.claim_id) / COUNT(orders.order_id)
+    formula: "COUNT(warranty_claims.claim_id) / COUNT(DISTINCT replacement_orders.original_order_id)"
     synonyms:
     - warranty claim rate
     - replacement order cost
@@ -1181,7 +1177,6 @@ glossary:
     - table: warranty_claims
       column: claim_id
     - table: replacement_orders
-      column: replacement_order_id
     - table: restocking_fee_logs
       column: fee_amount_eur
   - id: omnichannel_sms_and_push_engagement
@@ -1189,24 +1184,20 @@ glossary:
     category_id: lifecycle_marketing
     definition: Delivery success and interaction CTR for automated SMS alerts and
       mobile application push broadcasts.
-    formula: COUNTIF(push_notification_receipts.status = OPENED) / COUNT(mobile_app_push_campaigns.campaign_id)
+    formula: "COUNTIF(push_notification_receipts.was_clicked = TRUE) / COUNT(mobile_app_push_campaigns.push_campaign_id)"
     synonyms:
     - push notification CTR
     - SMS broadcast delivery
     - mobile push engagement
     bindings:
     - table: sms_marketing_broadcasts
-      column: broadcast_id
     - table: sms_delivery_receipts
       column: delivery_status
     - table: mobile_app_push_campaigns
-      column: campaign_id
     - table: push_notification_receipts
-      column: status
     - table: marketing_campaigns
-      column: campaign_name
+      column: name
     - table: user_subscription_preferences
-      column: opt_in_sms
   - id: customer_referral_acquisition_yield
     display_name: Customer Referral Program Acquisition Yield
     category_id: loyalty_retention
@@ -1221,30 +1212,26 @@ glossary:
     - table: referral_program_invites
       column: invite_id
     - table: referral_reward_claims
-      column: reward_amount_eur
   - id: pallet_and_intercompany_logistics
     display_name: Pallet Inventory & Intercompany Transfer Pricing
     category_id: supply_chain
     definition: Warehouse pallet-level location tracking and cross-border intercompany
       transfer pricing allocations.
-    formula: SUM(intercompany_transfer_pricing.transfer_price_eur)
+    formula: "AVG(intercompany_transfer_pricing.markup_percentage)"
     synonyms:
     - pallet tracking
     - intercompany transfer
     - cross-border entity pricing
     bindings:
     - table: pallet_inventory_locations
-      column: pallet_id
     - table: intercompany_transfer_pricing
-      column: transfer_price_eur
     - table: payment_gateway_fee_schedules
-      column: fee_percentage
   - id: catalog_seo_and_legacy_lifecycle
     display_name: Catalog SEO Metadata & Legacy Product Lifecycle
     category_id: product_pim
     definition: Organic search engine meta tag coverage and archival tracking for
       deprecated catalog products and historical order logs.
-    formula: COUNT(seo_meta_tags_registry.tag_id) / COUNT(products.product_id)
+    formula: "COUNT(seo_meta_tags_registry.seo_id) / COUNT(legacy_products_deprecated.legacy_product_id)"
     synonyms:
     - SEO meta tags
     - deprecated products archive
@@ -1253,15 +1240,13 @@ glossary:
     - table: seo_meta_tags_registry
       column: meta_title
     - table: legacy_products_deprecated
-      column: deprecation_date
     - table: legacy_orders_2023_archive
-      column: order_id
   - id: sandbox_and_test_simulation_governance
     display_name: Sandbox Test Simulators & Synthetic Validation Harness
     category_id: data_governance
     definition: Non-production sandbox environments for synthetic load testing, fraud
       simulation, pricing experimentation, and web event telemetry.
-    formula: COUNT(qa_checkout_synthetic_fuzz_tests.test_id)
+    formula: "COUNT(qa_checkout_synthetic_fuzz_tests.fuzz_id)"
     synonyms:
     - sandbox pricing simulation
     - QA load test
@@ -1271,15 +1256,10 @@ glossary:
     - table: sandbox_dynamic_pricing_sim_v1
       column: sim_id
     - table: sandbox_search_ranking_ab_test
-      column: variant
     - table: qa_checkout_synthetic_fuzz_tests
-      column: test_id
     - table: qa_load_test_sessions_backup
-      column: session_id
     - table: test_carrier_webhook_payloads
-      column: payload_id
     - table: test_fraud_mock_transactions
-      column: transaction_id
     - table: web_events
       column: event_type
   - id: this_week
@@ -1347,7 +1327,7 @@ glossary:
     - table: order_items
       column: created_at
     - table: category_15min_targets
-      column: date
+      column: day_of_week
     - table: daily_category_targets
       column: date
     - table: daily_ad_performance
@@ -1512,11 +1492,11 @@ glossary:
     - table: orders
       column: created_at
     - table: category_15min_targets
-      column: time_interval
+      column: time_bucket
     - table: sales_event_stream
       column: timestamp
     - table: agent_interaction_logs
-      column: timestamp
+      column: created_at
   - id: cyber_monday
     display_name: Cyber Monday (2026-11-30)
     category_id: temporal_context
@@ -1535,7 +1515,7 @@ glossary:
     - table: daily_category_targets
       column: date
     - table: category_15min_targets
-      column: date
+      column: day_of_week
     - table: weekly_commercial_targets
       column: week_start_date
   - id: black_week_monday
@@ -1628,7 +1608,7 @@ glossary:
     - table: order_items
       column: created_at
     - table: ad_bidding_log
-      column: timestamp
+      column: logged_at
     - table: daily_ad_performance
       column: date
     - table: daily_category_targets
@@ -1691,7 +1671,7 @@ glossary:
     definition: 15-minute granular pacing intervals on Black Friday (96 intervals
       per day), from 00:00 UTC up to 14:30 UTC for actuals, and full day for planned
       targets.
-    formula: date = '2026-11-27' AND time_interval <= '14:30'
+    formula: "category_15min_targets.time_bucket <= '14:30' AND sales_event_stream.timestamp < TIMESTAMP('2026-11-27 14:30:00 UTC')"
     synonyms:
     - 15-minute pacing
     - hourly pacing
@@ -1703,6 +1683,235 @@ glossary:
     - hourly sales
     bindings:
     - table: category_15min_targets
-      column: time_interval
+      column: time_bucket
     - table: sales_event_stream
       column: timestamp
+  - id: paid_roas
+    display_name: "Paid ROAS (Paid-Attributed Return on Ad Spend)"
+    category_id: marketing
+    definition: "Return on ad spend counted using only revenue from sessions whose traffic source is a paid channel. This is the figure the advertising platform's automated bidding strategy optimises against, and therefore the figure that determines whether a campaign is judged to have breached its ROAS target and had its budget capped. It is materially lower than the blended figure because it excludes organic, direct, email and affiliate revenue."
+    formula: "SUM(orders.total_amount) for orders joined to web_sessions on orders.session_id where web_sessions.traffic_source is a paid channel, divided by SUM(daily_ad_performance.spend)"
+    synonyms:
+    - "paid return on ad spend"
+    - "campaign ROAS"
+    - "ad-attributed ROAS"
+    - "platform ROAS"
+    - "bidding ROAS"
+    bindings:
+    - table: orders
+      column: total_amount
+    - table: orders
+      column: session_id
+    - table: web_sessions
+      column: traffic_source
+    - table: daily_ad_performance
+      column: spend
+    - table: ad_bidding_log
+      column: target_roas_multiplier
+  - id: blended_roas
+    display_name: "Blended ROAS (Total Revenue Return on Ad Spend)"
+    category_id: marketing
+    definition: "Return on ad spend counted using all revenue for the category regardless of acquisition channel, divided by advertising spend. This is the convention used in the commercial plan, where the planned value is stored as daily_category_targets.target_roas. Because it credits advertising with organic, direct, email and affiliate revenue it is roughly twice the paid-attributed figure. The two conventions must never be compared with one another."
+    formula: "SUM(orders.total_amount) across all channels divided by SUM(daily_ad_performance.spend). The planned equivalent is daily_category_targets.target_roas."
+    synonyms:
+    - "blended return on ad spend"
+    - "total ROAS"
+    - "commercial ROAS"
+    - "plan ROAS"
+    - "all-channel ROAS"
+    bindings:
+    - table: daily_category_targets
+      column: target_roas
+    - table: daily_ad_performance
+      column: spend
+    - table: orders
+      column: total_amount
+  - id: paid_cvr
+    display_name: "Paid Conversion Rate (Paid Sessions Only)"
+    category_id: marketing
+    definition: "Conversion rate measured only over sessions arriving from paid channels: completed orders from paid sessions divided by paid sessions. This is the convention used in campaign performance review and in any comparison of realised conversion against the planned conversion rate for acquisition. It is not the same as the sitewide rate and the two are frequently confused. When this rate qualifies a metric belonging to one product category, compute it over the paid sessions of that category alone, via web_sessions.primary_category_id. The all-category paid rate and a single category paid rate differ materially, and substituting one for the other is a silent error."
+    formula: "COUNT(DISTINCT orders.order_id) for orders whose session is paid, divided by COUNT(DISTINCT web_sessions.session_id) where web_sessions.traffic_source is a paid channel"
+    synonyms:
+    - "paid conversion rate"
+    - "campaign conversion rate"
+    - "acquisition CVR"
+    - "paid traffic conversion"
+    bindings:
+    - table: web_sessions
+      column: traffic_source
+    - table: web_sessions
+      column: session_id
+    - table: orders
+      column: session_id
+    - table: orders
+      column: order_id
+    - table: daily_category_targets
+      column: target_conversion_rate
+  - id: sitewide_cvr
+    display_name: "Sitewide Conversion Rate (All Sessions)"
+    category_id: marketing
+    definition: "Conversion rate measured over every session regardless of channel: all completed orders divided by all sessions. This is the convention used for overall trading performance. Reporting the sitewide figure where a paid-only figure is required, or the reverse, produces a materially wrong conclusion about campaign health."
+    formula: "COUNT(DISTINCT orders.order_id) / COUNT(DISTINCT web_sessions.session_id)"
+    synonyms:
+    - "sitewide conversion rate"
+    - "overall conversion rate"
+    - "total CVR"
+    - "site conversion"
+    bindings:
+    - table: orders
+      column: order_id
+    - table: web_sessions
+      column: session_id
+    - table: web_sessions
+      column: converted_to_order
+  - id: placed_order
+    display_name: "Placed Order (order_status Convention)"
+    category_id: finance
+    definition: "NEVER filter to order_status = 'Completed' when counting orders or revenue. It is not a validity filter and silently discards 5.86 percent of real orders - 7,554 of the 128,997 in the warehouse. Every row in orders is a genuinely placed, paid-for order; order_status only records what happened AFTERWARDS - 'Completed' (nothing sent back), 'Partially Returned' (some lines returned), 'Returned' (all lines returned). All three count. For revenue after returns use order_items.returned_at, which is per line and is the only exact basis. Failed payment attempts never become orders; they appear only in payment_gateway_logs with a NULL order_id."
+    formula: "COUNT or SUM across all three order_status values. Never filter to 'Completed' alone; use order_items.returned_at for any returns adjustment."
+    synonyms:
+    - "placed order"
+    - "valid order"
+    - "order status"
+    - "fulfilment status"
+    bindings:
+    - table: orders
+      column: order_status
+    - table: order_items
+      column: returned_at
+    - table: payment_gateway_logs
+      column: order_id
+  - id: gross_revenue
+    display_name: "Gross Merchandise Revenue"
+    category_id: finance
+    definition: "Merchandise revenue before any deduction for returned items. Equals the sum of line value across order items, and is the value carried on orders.total_amount. It excludes value added tax, held separately in orders.tax_amount, and delivery charges, held separately in orders.shipping_fee. Neither tax nor delivery is part of revenue at LumiereShop."
+    formula: "SUM(order_items.sale_price * order_items.quantity), equivalently SUM(orders.total_amount). Excludes orders.tax_amount and orders.shipping_fee."
+    synonyms:
+    - "gross revenue"
+    - "gross merchandise value"
+    - "GMV"
+    - "gross sales"
+    - "merchandise revenue"
+    bindings:
+    - table: orders
+      column: total_amount
+    - table: orders
+      column: tax_amount
+    - table: orders
+      column: shipping_fee
+    - table: order_items
+      column: sale_price
+    - table: order_items
+      column: quantity
+  - id: net_revenue
+    display_name: "Net Merchandise Revenue (After Returns)"
+    category_id: finance
+    definition: "Merchandise revenue after deducting the value of items that were subsequently returned. An order item counts as returned when order_items.returned_at is populated. Net revenue is the correct basis for margin and commercial performance reporting. Gross revenue overstates trading by the return rate, which runs at roughly five percent of items, so the two figures will never agree and the difference is not an error."
+    formula: "SUM(order_items.sale_price * order_items.quantity) excluding rows where order_items.returned_at IS NOT NULL"
+    synonyms:
+    - "net revenue"
+    - "net sales"
+    - "revenue after returns"
+    - "returns-adjusted revenue"
+    bindings:
+    - table: order_items
+      column: sale_price
+    - table: order_items
+      column: quantity
+    - table: order_items
+      column: returned_at
+    - table: orders
+      column: total_amount
+  - id: target_to_date
+    display_name: "Target To Date (Pro-Rated Plan)"
+    category_id: finance
+    definition: "The share of a period's commercial plan that should have been achieved by a given moment. Plans are stored for whole periods, so a period-to-date actual must always be compared against a pro-rated plan and never against the whole-period figure. At the reporting cutoff of November 27, 2026 at 14:30 UTC, 62.35 percent of the Black Week plan window has elapsed, giving a to-date benchmark of EUR 6,670,000 against a full-period plan of EUR 10,700,000. Quarter-hour planned weights are held in category_15min_targets, which is the authoritative source for pro-rating; the plan is not spread evenly across the period."
+    formula: "SUM(category_15min_targets.target_revenue) over the quarter-hour buckets that have elapsed at the reporting cutoff"
+    synonyms:
+    - "target to date"
+    - "pro-rated target"
+    - "plan to date"
+    - "expected to date"
+    - "phased target"
+    - "pacing target"
+    bindings:
+    - table: category_15min_targets
+      column: target_revenue
+    - table: category_15min_targets
+      column: time_bucket
+    - table: daily_category_targets
+      column: target_revenue
+    - table: weekly_commercial_targets
+      column: target_revenue
+  - id: pacing_variance
+    display_name: "Pacing Variance (Actual vs Pro-Rated Plan)"
+    category_id: finance
+    definition: "Performance to date expressed as a variance against the pro-rated plan to date. A negative variance means trading is behind plan. Measuring actuals to date against the full-period plan rather than the pro-rated plan is the single most common reporting error during a promotional period, and it always makes trading look far worse than it is."
+    formula: "(SUM(orders.total_amount) to date - SUM(category_15min_targets.target_revenue) to date) / SUM(category_15min_targets.target_revenue) to date"
+    synonyms:
+    - "pacing variance"
+    - "plan variance"
+    - "pacing gap"
+    - "variance to plan"
+    - "performance vs plan"
+    bindings:
+    - table: orders
+      column: total_amount
+    - table: orders
+      column: created_at
+    - table: category_15min_targets
+      column: target_revenue
+  - id: product_key_equivalence
+    display_name: "Product Key Equivalence Across Source Systems"
+    category_id: data_governance
+    definition: "Four source systems name the product identifier differently, but all of them hold the same integer value as products.product_id, so they join directly with no mapping table and no transformation. The enterprise resource planning extract calls it order_items.mat_nr, the material number. The webshop calls it oos_interactions.art_code, the article code. The recommendation engine calls it catalog_recommender_logs.src_sku for the item being viewed and catalog_recommender_logs.rec_sku for the item being recommended."
+    formula: "products.product_id = order_items.mat_nr = oos_interactions.art_code = catalog_recommender_logs.src_sku = catalog_recommender_logs.rec_sku"
+    synonyms:
+    - "product key"
+    - "material number"
+    - "article code"
+    - "SKU equivalence"
+    - "product identifier mapping"
+    - "cross-system product key"
+    bindings:
+    - table: products
+      column: product_id
+    - table: order_items
+      column: mat_nr
+    - table: oos_interactions
+      column: art_code
+    - table: catalog_recommender_logs
+      column: src_sku
+    - table: catalog_recommender_logs
+      column: rec_sku
+  - id: order_key_equivalence
+    display_name: "Order Header Key Equivalence"
+    category_id: data_governance
+    definition: "The order header identifier appears under two names. orders.order_id is the canonical key. order_items.ord_hdr_num carries the same value as emitted by the order management system. Join order items to order headers on these two columns."
+    formula: "orders.order_id = order_items.ord_hdr_num"
+    synonyms:
+    - "order key"
+    - "order header number"
+    - "order id mapping"
+    bindings:
+    - table: orders
+      column: order_id
+    - table: order_items
+      column: ord_hdr_num
+  - id: unpopulated_columns
+    display_name: "Known Unpopulated Columns (Reserved Fields)"
+    category_id: data_governance
+    definition: "Some numeric columns exist in the physical schema but are not populated by any source system and always read zero. order_items.discount_amount and sales_event_stream.discount_amount are reserved for a promotions feed that is not yet connected. catalog_recommender_logs.opp_cost_eur is a reserved estimate field. Do not aggregate these columns and do not report them as business facts. A total of zero reflects an absent feed, not an absence of discounting."
+    formula: "order_items.discount_amount, sales_event_stream.discount_amount and catalog_recommender_logs.opp_cost_eur are reserved and always zero"
+    synonyms:
+    - "reserved columns"
+    - "unpopulated fields"
+    - "not populated"
+    - "empty columns"
+    bindings:
+    - table: order_items
+      column: discount_amount
+    - table: sales_event_stream
+      column: discount_amount
+    - table: catalog_recommender_logs
+      column: opp_cost_eur

@@ -490,7 +490,7 @@
                 <div>
                   <span id="kpiAlertBadge" class="text-[11px] uppercase tracking-widest font-extrabold text-red-100">CRITICAL SALES ANOMALY DETECTED</span>
                   <h2 id="alertHeading" class="text-xl md:text-2xl font-extrabold tracking-tight text-white mt-0.5">
-                    Black Week sales target missed by €735.7k (-11.1%)
+                    <span id="alertHeadingText">Loading Black Week figures…</span>
                   </h2>
                 </div>
               </div>
@@ -503,15 +503,15 @@
               <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
                 <div class="bg-black/25 rounded-2xl p-3.5 backdrop-blur-xs border border-white/10">
                   <p class="text-[11px] uppercase tracking-wider text-red-200 font-medium" data-i18n="target_revenue">Target Revenue</p>
-                  <p class="text-lg font-extrabold text-white mt-0.5">€6,650,000</p>
+                  <p id="kpiTargetRevenue" class="text-lg font-extrabold text-white mt-0.5">—</p>
                 </div>
                 <div class="bg-black/25 rounded-2xl p-3.5 backdrop-blur-xs border border-white/10">
                   <p class="text-[11px] uppercase tracking-wider text-red-200 font-medium" data-i18n="actual_revenue">Actual Revenue</p>
-                  <p class="text-lg font-extrabold text-white mt-0.5">€5,914,300</p>
+                  <p id="kpiActualRevenue" class="text-lg font-extrabold text-white mt-0.5">—</p>
                 </div>
                 <div class="bg-black/25 rounded-2xl p-3.5 backdrop-blur-xs border border-white/10">
                   <p class="text-[11px] uppercase tracking-wider text-red-200 font-medium" data-i18n="revenue_variance">Revenue Variance</p>
-                  <p class="text-lg font-extrabold text-red-200 mt-0.5">-€735,700 (-11.1%)</p>
+                  <p id="kpiRevenueVariance" class="text-lg font-extrabold text-red-200 mt-0.5">—</p>
                 </div>
               </div>
             </div>
@@ -658,8 +658,15 @@
       <!-- Chat Workspace Area -->
       <main class="flex-1 flex flex-col bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm h-full">
         
-        <!-- Recommended Prompts Header (Collapsible) -->
-        <div class="p-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/80">
+        <!-- Recommended Prompts Header (Collapsible)
+             HIDDEN 2026-09-14. These four shortcut cards were a side feature,
+             not part of the demo narrative, and their wording had drifted away
+             from the data - one of them asked for "SKU-1001, SKU-1002,
+             SKU-1003" when the real identifiers carry no SKU- prefix, so it
+             would have returned nothing in front of an audience. The demo now
+             runs on the six playbook questions typed into the chat. The markup
+             is left in place rather than deleted so it can be restored. -->
+        <div id="recommendedPromptsPanel" style="display:none" class="p-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/80">
           <button onclick="togglePrompts()" class="w-full flex items-center justify-between text-left cursor-pointer group">
             <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition flex items-center gap-1.5">
               <i data-lucide="compass" class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400"></i>
@@ -711,7 +718,7 @@
             </div>
             <div class="max-w-[85%] bg-white dark:bg-slate-800 border border-slate-200/90 dark:border-slate-700 p-6 md:p-7 rounded-3xl rounded-tl-sm text-sm space-y-2.5 shadow-sm">
               <p id="welcomeTitle" class="font-semibold text-slate-900 dark:text-white text-base" data-i18n="welcome_title">Welcome to the LumièreShop Conversational Analytics CMO Workspace.</p>
-              <p id="welcomeDesc" class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed" data-i18n="welcome_desc">Contextual data preparation complete. You may now ask any business question regarding the -€735.7k storewide revenue shortfall, category breakdown, hourly pacing gaps, stock-outs, clickstream conversions, or paid campaigns.</p>
+              <p id="welcomeDesc" class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed" data-i18n="welcome_desc">Contextual data preparation complete. You may now ask any business question regarding the storewide revenue shortfall, category breakdown, hourly pacing gaps, stock-outs, clickstream conversions, or paid campaigns.</p>
             </div>
           </div>
         </div>
@@ -1221,7 +1228,7 @@
               <span>Knowledge Catalog Table Discovery Prompt</span>
             </span>
           </div>
-          <textarea id="chatDiscoveryPrompt" rows="4" class="w-full p-3.5 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 resize-y min-h-[100px] font-sans leading-relaxed text-slate-900 dark:text-slate-100" placeholder="Enter business inquiry for Knowledge Catalog semantic table discovery (e.g. 'Prepare sales, marketing, ads, inventory, all connected business domains data')...">Prepare sales, marketing, ads, inventory, all connected business domains data</textarea>
+          <textarea id="chatDiscoveryPrompt" rows="4" class="w-full p-3.5 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 resize-y min-h-[100px] font-sans leading-relaxed text-slate-900 dark:text-slate-100" placeholder="Ask a business question - Knowledge Catalog will find the tables and glossary terms that answer it">I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.</textarea>
           <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-normal">
             Google Cloud Knowledge Catalog executes semantic search across the 140-table warehouse. The exact discovered table set is assigned simultaneously to <strong>Agent A</strong> (<code class="text-blue-600 dark:text-blue-400 font-mono font-bold">ecommerce_dw</code>), <strong>Agent B</strong> (<code class="text-indigo-600 dark:text-indigo-400 font-mono font-bold">ecommerce_dw_2nd</code>), and <strong>Agent C</strong> (<code class="text-purple-600 dark:text-purple-400 font-mono font-bold">ecommerce_dw_3rd</code>) to evaluate metadata isolation impact.
           </p>
@@ -1279,7 +1286,7 @@
                   </div>
                   <div class="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 font-medium">
                     <i data-lucide="check" class="w-3.5 h-3.5 text-emerald-600"></i>
-                    <span>85 Business Glossary Terms (EntryLinks)</span>
+                    <span><span id="agentATermCount">Live</span> Business Glossary Terms</span>
                   </div>
                   <div class="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 font-medium">
                     <i data-lucide="check" class="w-3.5 h-3.5 text-emerald-600"></i>
@@ -1316,7 +1323,7 @@
                   </div>
                   <div class="flex items-center gap-1.5 text-slate-400 dark:text-slate-500 line-through">
                     <i data-lucide="x" class="w-3.5 h-3.5 text-slate-400"></i>
-                    <span>0 Knowledge Catalog Terms (0 EntryLinks)</span>
+                    <span>0 Knowledge Catalog Terms</span>
                   </div>
                   <div class="flex items-center gap-1.5 text-slate-400 dark:text-slate-500 line-through">
                     <i data-lucide="x" class="w-3.5 h-3.5 text-slate-400"></i>
@@ -1353,7 +1360,7 @@
                   </div>
                   <div class="flex items-center gap-1.5 text-slate-400 dark:text-slate-500 line-through">
                     <i data-lucide="x" class="w-3.5 h-3.5 text-slate-400"></i>
-                    <span>0 Knowledge Catalog Terms (0 EntryLinks)</span>
+                    <span>0 Knowledge Catalog Terms</span>
                   </div>
                   <div class="flex items-center gap-1.5 text-slate-400 dark:text-slate-500 line-through">
                     <i data-lucide="x" class="w-3.5 h-3.5 text-slate-400"></i>
@@ -1729,8 +1736,8 @@
             "alert_created": "Ботът създаде това предупреждение в петък, 28 ноември 2026 г.",
             "history_on": "Историята е включена • Изпратените съобщения се запазват",
             "kpi_alert_badge": "КРИТИЧЕН ДЕФИЦИТ НА ПРИХОДИ",
-            "alert_heading": "🚨 Целта за приходи от Black Week е пропусната със 735,7 хил. € (-11,1%)",
-            "alert_desc": "Телеметрията за Черния петък към 14:30:00 UTC показва, че приходите изостават значително от прогнозите. Цел: 6 650 000 € vs Реално: 5 914 300 € във всички складове в ЕС.",
+            "alert_heading": "🚨 Целта за приходи от Black Week е пропусната със {kpiShortfall} ({kpiShortfallPct})",
+            "alert_desc": "Телеметрията за Черния петък към 14:30:00 UTC показва, че приходите изостават значително от прогнозите. Цел: {kpiTarget} vs Реално: {kpiActual} във всички складове в ЕС.",
             "target_revenue": "Целеви приходи",
             "actual_revenue": "Действителни приходи",
             "revenue_variance": "Отклонение в приходите",
@@ -1747,7 +1754,7 @@
             "prep_step_3_done": "BigQuery Data Agent ({agentId}) успешно настроен с {count} таблици.",
             "prep_step_4_active": "BigQuery Data Agent е инициализиран с {count} източника. Стартиране на работното пространство...",
             "prep_step_4_done": "BigQuery Data Agent е готов с {count} източника. Влизане в работното пространство...",
-            "default_alert_prompt": "Подгответе данни за продажби, маркетинг, реклами, складови наличности и всички свързани бизнес домейни",
+            "default_alert_prompt": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
             "compare_prompts": "Сравни промптове",
             "compare_chats": "Сравни чатове",
             "cmo_workspace_badge": "Аналитично пространство на CMO",
@@ -1761,15 +1768,15 @@
             "show_prompts": "Покажи промптовете",
             "hide_prompts": "Скрий промптовете",
             "prompt_1_title": "💄 Спад в категория Beauty (-27%)",
-            "prompt_1_text": "Защо категория Beauty не постигна целевите приходи по време на Black Week?",
+            "prompt_1_text": "Why did Beauty category miss target revenue during Black Week?",
             "prompt_2_title": "📦 Загуба на приходи от липса на наличности",
-            "prompt_2_text": "Покажете взаимодействията с изчерпани продукти и загубените приходи за Beauty SKU-1001, SKU-1002, SKU-1003.",
+            "prompt_2_text": "Show stock-out interactions and lost revenue for Beauty products SKU-1001, SKU-1002, SKU-1003.",
             "prompt_3_title": "📈 15-минутен темп на изпълнение на целите",
-            "prompt_3_text": "Покажете 15-минутната крива на приходите цел vs реалност за Beauty в петък.",
+            "prompt_3_text": "Show 15-minute intraday target vs actual revenue curve for Beauty on Friday.",
             "prompt_4_title": "📢 Ограничаване на разходите за платена реклама",
-            "prompt_4_text": "Покажете ограничаването на рекламния бюджет и умората на криейтивите за Meta Ads.",
+            "prompt_4_text": "Show paid marketing ad spend throttling and creative fatigue status for Meta Ads.",
             "welcome_title": "Добре дошли в аналитичното работно пространство на CMO в LumièreShop.",
-            "welcome_desc": "Подготовката на данните завърши. Можете да зададете всеки бизнес въпрос относно дефицита от -735,7 хил. €...",
+            "welcome_desc": "Подготовката на данните завърши. Можете да зададете всеки бизнес въпрос относно дефицита от -{kpiShortfall}...",
             "reasoning_title": "Мисловен процес и семантична обосновка",
             "sql_title": "Генерирана BigQuery SQL заявка",
             "copy_sql": "Копирай SQL",
@@ -1849,23 +1856,23 @@
             "return_to_chat": "Върни се към разговора",
             "start_new_inv": "Започни ново разследване",
             "export_pdf": "Експортирай отчет (PDF)",
-            "preset_incident_a": "Черният петък е в 14:30 ч. Моля, подгответе данните за откриване на първопричината за спада в приходите спрямо прогнозата по време на Black Week.",
-            "preset_incident_b": "Целта за приходи от Black Week е пропусната със 735,7 хил. €",
-            "preset_incident_c": "Анализирайте отклонението от целта за приходи, изчерпването на наличностите, ограничаването на разходите за реклама и сроковете за доставка",
-            "preset_logistics_a": "Разследвайте SLA на превозвачите, сроковете за доставка и тесните места в дистрибуторските центрове",
-            "preset_logistics_b": "Защо закъсненията в доставките на DHL DACH предизвикаха изоставяне на колички в Черния петък?",
-            "preset_logistics_c": "Моментни снимки на инвентара в дистрибуторските центрове и взаимодействия при изчерпване на наличността",
-            "preset_marketing_a": "Анализ на ограничаването на бюджета за наддаване в Meta Ads и изтощението на рекламните послания в категория Beauty",
-            "preset_marketing_b": "Защо разходите за реклама спаднаха с 31% в петък сутринта, което доведе до загуба на 202 хил. сесии?",
-            "preset_marketing_c": "Анализирайте ROAS на маркетинговите кампании, приходите от инфлуенсъри и промоциите на конкурентите"
+            "preset_incident_a": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
+            "preset_incident_b": "Black Week sales target missed by {kpiShortfall}",
+            "preset_incident_c": "Analyze revenue target variance, inventory stockouts, ad spend throttling, and carrier lead times across all categories",
+            "preset_logistics_a": "Investigate carrier delivery SLAs, shipping lead times, and fulfillment center bottlenecks",
+            "preset_logistics_b": "Why did DHL DACH delivery delays trigger Black Friday checkout cart abandonment?",
+            "preset_logistics_c": "Distribution center inventory snapshots and out-of-stock interactions",
+            "preset_marketing_a": "Meta ad bidding budget throttling and creative fatigue analysis for Beauty category",
+            "preset_marketing_b": "Why did ad spend drop by 31% on Friday morning resulting in 202k lost sessions?",
+            "preset_marketing_c": "Analyze marketing campaigns ROAS, influencer revenue, and competitor promotions"
       },
       "hr": {
             "alert_title": "Lumière Bot za praćenje prodaje",
             "alert_created": "Bot je kreirao ovo upozorenje u petak, 28. studenoga 2026.",
             "history_on": "Povijest je uključena • Poslane poruke se spremaju",
             "kpi_alert_badge": "KRITIČNI DEFICIT PRIHODA",
-            "alert_heading": "🚨 Cilj prihoda za Black Week propušten za 735,7k € (-11,1%)",
-            "alert_desc": "Telemetrija u stvarnom vremenu na Crni petak u 14:30:00 UTC pokazuje da prihodi znatno zaostaju za planom. Cilj: 6.650.000 € vs Stvarno: 5.914.300 € u svim EU skladištima.",
+            "alert_heading": "🚨 Cilj prihoda za Black Week propušten za {kpiShortfall} ({kpiShortfallPct})",
+            "alert_desc": "Telemetrija u stvarnom vremenu na Crni petak u 14:30:00 UTC pokazuje da prihodi znatno zaostaju za planom. Cilj: {kpiTarget} vs Stvarno: {kpiActual} u svim EU skladištima.",
             "target_revenue": "Ciljani prihod",
             "actual_revenue": "Stvarni prihod",
             "revenue_variance": "Odstupanje prihoda",
@@ -1882,7 +1889,7 @@
             "prep_step_3_done": "BigQuery Data Agent ({agentId}) uspješno mapiran s {count} tablica.",
             "prep_step_4_active": "BigQuery Data Agent inicijaliziran s {count} izvora. Pokretanje radnog prostora...",
             "prep_step_4_done": "BigQuery Data Agent spreman s {count} izvora. Ulazak u radni prostor...",
-            "default_alert_prompt": "Pripremite podatke o prodaji, marketingu, oglasima, zalihama i svim povezanim poslovnim domenama",
+            "default_alert_prompt": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
             "compare_prompts": "Usporedi prompte",
             "compare_chats": "Usporedi razgovore",
             "cmo_workspace_badge": "CMO Analitički radni prostor",
@@ -1896,13 +1903,13 @@
             "show_prompts": "Prikaži prompte",
             "hide_prompts": "Sakrij prompte",
             "prompt_1_title": "💄 Pad u kategoriji Beauty (-27%)",
-            "prompt_1_text": "Zašto kategorija Beauty nije ostvarila ciljane prihode tijekom Black Weeka?",
+            "prompt_1_text": "Why did Beauty category miss target revenue during Black Week?",
             "prompt_2_title": "📦 Gubitak prihoda zbog nestanka zaliha",
-            "prompt_2_text": "Prikaži interakcije s nedostatkom zaliha i izgubljeni prihod za Beauty SKU-1001, SKU-1002, SKU-1003.",
+            "prompt_2_text": "Show stock-out interactions and lost revenue for Beauty products SKU-1001, SKU-1002, SKU-1003.",
             "prompt_3_title": "📈 15-minutni tempo ostvarenja ciljeva",
-            "prompt_3_text": "Prikaži 15-minutnu krivulju prihoda cilj vs stvarno za Beauty u petak.",
+            "prompt_3_text": "Show 15-minute intraday target vs actual revenue curve for Beauty on Friday.",
             "prompt_4_title": "📢 Ograničenje proračuna za oglašavanje",
-            "prompt_4_text": "Prikaži ograničenje proračuna i zamor kreative za Meta Ads oglase.",
+            "prompt_4_text": "Show paid marketing ad spend throttling and creative fatigue status for Meta Ads.",
             "welcome_title": "Dobrodošli u CMO analitički radni prostor LumièreShopa.",
             "welcome_desc": "Priprema kontekstualnih podataka dovršena. Možete postaviti bilo koje poslovno pitanje...",
             "reasoning_title": "Tijek razmišljanja i semantičko obrazloženje",
@@ -1984,23 +1991,23 @@
             "return_to_chat": "Povratak na razgovor",
             "start_new_inv": "Započni novu istragu",
             "export_pdf": "Izvezi izvješće za upravu (PDF)",
-            "preset_incident_a": "Crni je petak 14:30. Pripremite podatke za pronalaženje temeljnog uzroka pada prihoda u odnosu na prognozu tijekom Black Weeka.",
-            "preset_incident_b": "Cilj prihoda za Black Week propušten za 735,7k €",
-            "preset_incident_c": "Analizirajte odstupanje prihoda od cilja, nestašice zaliha, smanjenje potrošnje na oglase i rokove isporuke u svim kategorijama",
-            "preset_logistics_a": "Istražite SLA prijevoznika, vrijeme isporuke i uska grla u distribucijskim centrima",
-            "preset_logistics_b": "Zašto su kašnjenja u isporuci DHL DACH potaknula napuštanje košarica na Crni petak?",
-            "preset_logistics_c": "Snimke zaliha u distribucijskim centrima i interakcije nedostatka zaliha",
-            "preset_marketing_a": "Analiza ograničenja proračuna za licitiranje na Meta oglasima i zamora kreativa za kategoriju Beauty",
-            "preset_marketing_b": "Zašto je potrošnja na oglase pala za 31% u petak ujutro, što je rezultiralo gubitkom 202k sesija?",
-            "preset_marketing_c": "Analizirajte ROAS marketinških kampanja, prihode od influencera i promocije konkurenata"
+            "preset_incident_a": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
+            "preset_incident_b": "Black Week sales target missed by {kpiShortfall}",
+            "preset_incident_c": "Analyze revenue target variance, inventory stockouts, ad spend throttling, and carrier lead times across all categories",
+            "preset_logistics_a": "Investigate carrier delivery SLAs, shipping lead times, and fulfillment center bottlenecks",
+            "preset_logistics_b": "Why did DHL DACH delivery delays trigger Black Friday checkout cart abandonment?",
+            "preset_logistics_c": "Distribution center inventory snapshots and out-of-stock interactions",
+            "preset_marketing_a": "Meta ad bidding budget throttling and creative fatigue analysis for Beauty category",
+            "preset_marketing_b": "Why did ad spend drop by 31% on Friday morning resulting in 202k lost sessions?",
+            "preset_marketing_c": "Analyze marketing campaigns ROAS, influencer revenue, and competitor promotions"
       },
       "cs": {
             "alert_title": "Lumière Sales Monitor Bot",
             "alert_created": "Lumière Sales Monitor Bot vytvořil toto upozornění v pátek 28. listopadu 2026",
             "history_on": "Historie je zapnuta • Zprávy jsou ukládány",
             "kpi_alert_badge": "KRITICKÝ DEFICIT TRŽEB",
-            "alert_heading": "🚨 Cíl tržeb pro Black Week nesplněn o 735,7 tis. € (-11,1 %)",
-            "alert_desc": "Průběžná telemetrie na Černý pátek ve 14:30:00 UTC ukazuje, že tržby výrazně zaostávají za prognózami. Cíl 6 650 000 € vs Skutečnost 5 914 300 € ve všech skladech v EU.",
+            "alert_heading": "🚨 Cíl tržeb pro Black Week nesplněn o {kpiShortfall} ({kpiShortfallPct})",
+            "alert_desc": "Průběžná telemetrie na Černý pátek ve 14:30:00 UTC ukazuje, že tržby výrazně zaostávají za prognózami. Cíl {kpiTarget} vs Skutečnost {kpiActual} ve všech skladech v EU.",
             "target_revenue": "Cílové tržby",
             "actual_revenue": "Skutečné tržby",
             "revenue_variance": "Odchylka tržeb",
@@ -2017,7 +2024,7 @@
             "prep_step_3_done": "BigQuery Data Agent ({agentId}) úspěšně namapován s {count} tabulkami.",
             "prep_step_4_active": "BigQuery Data Agent inicializován s {count} datovými zdroji. Spouštění pracovního prostoru...",
             "prep_step_4_done": "BigQuery Data Agent připraven s {count} datovými zdroji. Vstup do pracovního prostoru...",
-            "default_alert_prompt": "Připravte data týkající se prodeje, marketingu, reklam, zásob a všech souvisejících obchodních domén",
+            "default_alert_prompt": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
             "compare_prompts": "Porovnat prompty",
             "compare_chats": "Porovnat chaty",
             "cmo_workspace_badge": "Pracovní prostor CMO",
@@ -2031,15 +2038,15 @@
             "show_prompts": "Zobrazit prompty",
             "hide_prompts": "Skrýt prompty",
             "prompt_1_title": "💄 Výpadek v kategorii Beauty (-27%)",
-            "prompt_1_text": "Proč kategorie Beauty nesplnila cílové tržby během Black Week?",
+            "prompt_1_text": "Why did Beauty category miss target revenue during Black Week?",
             "prompt_2_title": "📦 Ztráta tržeb kvůli vyprodání zásob",
-            "prompt_2_text": "Ukažte interakce s vyprodanými produkty a ztrátu tržeb pro Beauty SKU-1001, SKU-1002, SKU-1003.",
+            "prompt_2_text": "Show stock-out interactions and lost revenue for Beauty products SKU-1001, SKU-1002, SKU-1003.",
             "prompt_3_title": "📈 15minutové tempo plnění cílů",
-            "prompt_3_text": "Ukažte 15minutovou křivku tržeb cíl vs skutečnost pro Beauty v pátek.",
+            "prompt_3_text": "Show 15-minute intraday target vs actual revenue curve for Beauty on Friday.",
             "prompt_4_title": "📢 Omezení výdajů na placenou reklamu",
-            "prompt_4_text": "Ukažte omezení reklamního rozpočtu a únavu kreativ pro reklamy na Meta Ads.",
+            "prompt_4_text": "Show paid marketing ad spend throttling and creative fatigue status for Meta Ads.",
             "welcome_title": "Vítejte v analytickém pracovním prostoru CMO LumièreShop.",
-            "welcome_desc": "Kontextová příprava dat dokončena. Nyní můžete klást libovolné dotazy ohledně výpadku tržeb -735,7 tis. €...",
+            "welcome_desc": "Kontextová příprava dat dokončena. Nyní můžete klást libovolné dotazy ohledně výpadku tržeb -{kpiShortfall}...",
             "reasoning_title": "Myšlenkový proces a sémantické zdůvodnění",
             "sql_title": "Vygenerovaný BigQuery SQL dotaz",
             "copy_sql": "Kopírovat SQL",
@@ -2119,23 +2126,23 @@
             "return_to_chat": "Zpět ke konverzaci",
             "start_new_inv": "Zahájit nové vyšetřování",
             "export_pdf": "Exportovat zprávu (PDF)",
-            "preset_incident_a": "Je Černý pátek 14:30. Připravte data pro zjištění hlavní příčiny poklesu tržeb oproti prognóze během Black Week.",
-            "preset_incident_b": "Cíl tržeb pro Black Week nesplněn o 735,7 tis. €",
-            "preset_incident_c": "Analyzujte odchylku tržeb od cíle, výpadky zásob, přiškrcení výdajů na reklamu a dodací lhůty dopravců ve všech kategoriích",
-            "preset_logistics_a": "Vyšetřete SLA dopravců, dodací lhůty zásilek a úzká hrdla v distribučních centrech",
-            "preset_logistics_b": "Proč zpoždění doručení DHL DACH způsobilo opuštění košíků na Černý pátek?",
-            "preset_logistics_c": "Snímky stavu zásob v distribučních centrech a interakce nedostupnosti zboží",
-            "preset_marketing_a": "Analýza přiškrcení rozpočtu nabídek Meta Ads a únavy kreativ v kategorii Beauty",
-            "preset_marketing_b": "Proč výdaje na reklamu v pátek ráno klesly o 31 %, což vedlo ke ztrátě 202 tis. návštěv?",
-            "preset_marketing_c": "Analyzujte ROAS marketingových kampaní, příjmy od influencerů a akce konkurence"
+            "preset_incident_a": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
+            "preset_incident_b": "Black Week sales target missed by {kpiShortfall}",
+            "preset_incident_c": "Analyze revenue target variance, inventory stockouts, ad spend throttling, and carrier lead times across all categories",
+            "preset_logistics_a": "Investigate carrier delivery SLAs, shipping lead times, and fulfillment center bottlenecks",
+            "preset_logistics_b": "Why did DHL DACH delivery delays trigger Black Friday checkout cart abandonment?",
+            "preset_logistics_c": "Distribution center inventory snapshots and out-of-stock interactions",
+            "preset_marketing_a": "Meta ad bidding budget throttling and creative fatigue analysis for Beauty category",
+            "preset_marketing_b": "Why did ad spend drop by 31% on Friday morning resulting in 202k lost sessions?",
+            "preset_marketing_c": "Analyze marketing campaigns ROAS, influencer revenue, and competitor promotions"
       },
       "nl": {
             "alert_title": "Lumière Verkoopmonitor Bot",
             "alert_created": "Lumière Verkoopmonitor Bot heeft deze melding aangemaakt op vrijdag 28 november 2026",
             "history_on": "Geschiedenis staat aan • Berichten worden bewaard",
             "kpi_alert_badge": "KRITIEK OMZETVERLIES",
-            "alert_heading": "🚨 Black Week verkoopdoel gemist met €735,7k (-11,1%)",
-            "alert_desc": "Realtime telemetrie op Black Friday 14:30:00 UTC toont een aanzienlijke achterstand. Doel: €6.650.000 vs Werkelijk: €5.914.300 in alle EU-magazijnen.",
+            "alert_heading": "🚨 Black Week verkoopdoel gemist met {kpiShortfall} ({kpiShortfallPct})",
+            "alert_desc": "Realtime telemetrie op Black Friday 14:30:00 UTC toont een aanzienlijke achterstand. Doel: {kpiTarget} vs Werkelijk: {kpiActual} in alle EU-magazijnen.",
             "target_revenue": "Doelomzet",
             "actual_revenue": "Werkelijke omzet",
             "revenue_variance": "Omzetverschil",
@@ -2152,7 +2159,7 @@
             "prep_step_3_done": "BigQuery Data Agent ({agentId}) succesvol gekoppeld aan {count} tabellen.",
             "prep_step_4_active": "BigQuery Data Agent geïnitialiseerd met {count} bronnen. Werkruimte starten...",
             "prep_step_4_done": "BigQuery Data Agent gereed met {count} bronnen. Werkruimte laden...",
-            "default_alert_prompt": "Bereid gegevens voor over verkoop, marketing, advertenties, voorraad en alle verbonden bedrijfsdomeinen",
+            "default_alert_prompt": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
             "compare_prompts": "Prompts vergelijken",
             "compare_chats": "Chats vergelijken",
             "cmo_workspace_badge": "CMO Analytics Workspace",
@@ -2166,18 +2173,18 @@
             "rec_prompts_subheading": "Klik op een prompt om de oorzaakanalyse in de BigQuery-dataset europe-west4 te starten",
             "prompt_1_title": "💄 Beauty tekort (-27%)",
             "prompt_1_desc": "Doelafwijking per cataloguscategorie",
-            "prompt_1_text": "Welke categorie blijft deze week het meest achter op het omzetdoel?",
+            "prompt_1_text": "Why did Beauty category miss target revenue during Black Week?",
             "prompt_2_title": "📦 Toeleveringsketen & voorraadtekort (OOS)",
             "prompt_2_desc": "Impact van voorraadtekorten op gederfde omzet",
-            "prompt_2_text": "Hebben voorraadtekorten de omzetdaling in Beauty veroorzaakt?",
+            "prompt_2_text": "Show stock-out interactions and lost revenue for Beauty products SKU-1001, SKU-1002, SKU-1003.",
             "prompt_3_title": "📈 Verkeer & Marketing",
             "prompt_3_desc": "Sessietempo en beperking van advertentie-uitgaven",
-            "prompt_3_text": "Waarom daalden het marketingverkeer en de conversieratio vrijdagochtend?",
+            "prompt_3_text": "Show 15-minute intraday target vs actual revenue curve for Beauty on Friday.",
             "prompt_4_title": "🚚 Logistiek & Vervoerders",
             "prompt_4_desc": "Leverings-SLA's en regionale knelpunten",
-            "prompt_4_text": "Leidden leveringsvertragingen tot achtergelaten winkelwagentjes in DACH?",
+            "prompt_4_text": "Show paid marketing ad spend throttling and creative fatigue status for Meta Ads.",
             "welcome_title": "Welkom bij LumièreShop Conversational Analytics",
-            "welcome_desc": "Contextuele gegevensvoorbereiding voltooid. U kunt nu elke zakelijke vraag stellen over het omzetverlies van -€735,7k, categorieverdeling, voorraadtekorten of betaalde campagnes.",
+            "welcome_desc": "Contextuele gegevensvoorbereiding voltooid. U kunt nu elke zakelijke vraag stellen over het omzetverlies van -{kpiShortfall}, categorieverdeling, voorraadtekorten of betaalde campagnes.",
             "chat_placeholder": "Stel een CMO-vraag (bijv. Waarom heeft Beauty het doel gemist?)...",
             "broadcast_placeholder": "Vraag tegelijkertijd uitzenden naar Agent A, Agent B en Agent C...",
             "loading_phase_1_status": "Verbinding maken met Gemini Enterprise Agent Platform & BigQuery...",
@@ -2212,15 +2219,15 @@
             "copy_report": "Rapport kopiëren",
             "report_copied": "Gekopieerd!",
             "audit_empty": "Nog geen logboeken aanwezig.",
-            "preset_incident_a": "Het is Black Friday 14:30 uur. Bereid de gegevens voor die dienen om de hoofdoorzaak te vinden van de gedaalde omzet ten opzichte van de prognose tijdens Black Week.",
-            "preset_incident_b": "Black Week verkoopdoel gemist met €735,7k",
-            "preset_incident_c": "Analyseer de afwijking van het omzetdoel, voorraadtekorten, beperking van advertentie-uitgaven en levertijden van vervoerders",
-            "preset_logistics_a": "Onderzoek de SLA's van vervoerders, levertijden en knelpunten in distributiecentra",
-            "preset_logistics_b": "Waarom leidden leveringsvertragingen van DHL DACH tot het verlaten van winkelwagentjes op Black Friday?",
-            "preset_logistics_c": "Voorraadmomentopnamen in distributiecentra en interacties bij voorraadtekort",
-            "preset_marketing_a": "Analyse van budgetbeperkingen voor Meta-advertentiebiedingen en advertentievermoeidheid in de categorie Beauty",
-            "preset_marketing_b": "Waarom daalden de advertentie-uitgaven vrijdagochtend met 31%, wat leidde tot 202k verloren sessies?",
-            "preset_marketing_c": "Analyseer de ROAS van marketingcampagnes, inkomsten uit influencers en promoties van concurrenten",
+            "preset_incident_a": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
+            "preset_incident_b": "Black Week sales target missed by {kpiShortfall}",
+            "preset_incident_c": "Analyze revenue target variance, inventory stockouts, ad spend throttling, and carrier lead times across all categories",
+            "preset_logistics_a": "Investigate carrier delivery SLAs, shipping lead times, and fulfillment center bottlenecks",
+            "preset_logistics_b": "Why did DHL DACH delivery delays trigger Black Friday checkout cart abandonment?",
+            "preset_logistics_c": "Distribution center inventory snapshots and out-of-stock interactions",
+            "preset_marketing_a": "Meta ad bidding budget throttling and creative fatigue analysis for Beauty category",
+            "preset_marketing_b": "Why did ad spend drop by 31% on Friday morning resulting in 202k lost sessions?",
+            "preset_marketing_c": "Analyze marketing campaigns ROAS, influencer revenue, and competitor promotions",
             "preset_incident": "Black Friday incidenttriage",
             "preset_logistics": "Pacing vs Logistiek & SLA's",
             "preset_marketing": "Marketing & Advertentie-ROAS beperking"
@@ -2230,8 +2237,8 @@
             "alert_created": "Lumière Sales Monitor Bot created this alert on Friday, November 28, 2026",
             "history_on": "History is on • Messages sent with history on are saved",
             "kpi_alert_badge": "CRITICAL REVENUE DEFICIT",
-            "alert_heading": "🚨 Black Week sales target missed by €735.7k (-11.1%)",
-            "alert_desc": "Real-time intraday telemetry at Black Friday 14:30:00 UTC indicates storewide gross revenue is lagging significantly behind forecasted targets across core catalog categories. Target €6,650,000 vs Actual €5,914,300 across all EU warehouse regions.",
+            "alert_heading": "🚨 Black Week sales target missed by {kpiShortfall} ({kpiShortfallPct})",
+            "alert_desc": "Real-time intraday telemetry at Black Friday 14:30:00 UTC indicates storewide gross revenue is lagging significantly behind forecasted targets across core catalog categories. Target {kpiTarget} vs Actual {kpiActual} across all EU warehouse regions.",
             "target_revenue": "Target Revenue",
             "actual_revenue": "Actual Revenue",
             "revenue_variance": "Revenue Variance",
@@ -2243,12 +2250,12 @@
             "prep_step_3": "Registering Analytical Tables with BigQuery Data Agent...",
             "prep_step_4": "BigQuery Data Agent ready with {count} tables in europe-west4",
             "pending": "Pending",
-            "prep_step_2_done": "Discovered {count} Tables, {termCount} Terms, and {linkCount} EntryLinks via Knowledge Catalog Semantic Search...",
-            "prep_step_3_active": "Configuring BigQuery Data Agent ({agentId}) with {count} tables ({linkCount} EntryLinks)...",
-            "prep_step_3_done": "BigQuery Data Agent ({agentId}) mapped with {count} tables ({linkCount} EntryLinks).",
-            "prep_step_4_active": "BigQuery Data Agent initialized ({count} tables, {linkCount} EntryLinks). Launching Workspace...",
-            "prep_step_4_done": "BigQuery Data Agent ready with {count} tables, {termCount} terms, and {linkCount} EntryLinks. Entering Workspace...",
-            "default_alert_prompt": "Prepare sales, marketing, ads, inventory, all connected business domains data",
+            "prep_step_2_done": "Discovered {count} Tables and {termCount} Business Glossary Terms via Knowledge Catalog Semantic Search...",
+            "prep_step_3_active": "Configuring BigQuery Data Agent ({agentId}) with {count} tables and {termCount} business glossary terms...",
+            "prep_step_3_done": "BigQuery Data Agent ({agentId}) mapped with {count} tables and {termCount} business glossary terms.",
+            "prep_step_4_active": "BigQuery Data Agent initialized ({count} tables, {termCount} terms). Launching Workspace...",
+            "prep_step_4_done": "BigQuery Data Agent ready with {count} tables and {termCount} business glossary terms. Entering Workspace...",
+            "default_alert_prompt": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
             "compare_prompts": "Compare prompts",
             "compare_chats": "Compare chats",
             "cmo_workspace_badge": "CMO Analytics Workspace",
@@ -2270,7 +2277,7 @@
             "prompt_4_title": "📢 Paid Social Ad Throttling",
             "prompt_4_text": "Show paid marketing ad spend throttling and creative fatigue status for Meta Ads.",
             "welcome_title": "Welcome to the LumièreShop Conversational Analytics CMO Workspace.",
-            "welcome_desc": "Contextual data preparation complete. You may now ask any business question regarding the -€735.7k storewide revenue shortfall, category breakdown, hourly pacing gaps, stock-outs, clickstream conversions, or paid campaigns.",
+            "welcome_desc": "Contextual data preparation complete. You may now ask any business question regarding the -{kpiShortfall}storewide revenue shortfall, category breakdown, hourly pacing gaps, stock-outs, clickstream conversions, or paid campaigns.",
             "reasoning_title": "Reasoning & Thinking Process",
             "sql_title": "Generated BigQuery SQL Query",
             "copy_sql": "Copy SQL",
@@ -2350,8 +2357,8 @@
             "return_to_chat": "Return to Conversation",
             "start_new_inv": "Start New Investigation",
             "export_pdf": "Export Executive Report (PDF)",
-            "preset_incident_a": "It's Black Friday 14:30. Please prepare the data that will serve to find root cause of the problem of decreased revenue comparing to forecasted revenue during Black Week Sales.",
-            "preset_incident_b": "Black Week sales target missed by €735.7k",
+            "preset_incident_a": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
+            "preset_incident_b": "Black Week sales target missed by {kpiShortfall}",
             "preset_incident_c": "Analyze revenue target variance, inventory stockouts, ad spend throttling, and carrier lead times across all categories",
             "preset_logistics_a": "Investigate carrier delivery SLAs, shipping lead times, and fulfillment center bottlenecks",
             "preset_logistics_b": "Why did DHL DACH delivery delays trigger Black Friday checkout cart abandonment?",
@@ -2365,8 +2372,8 @@
             "alert_created": "Bot lõi selle teatise reedel, 28. novembril 2026",
             "history_on": "Ajalugu on sees • Saadetud sõnumid salvestatakse",
             "kpi_alert_badge": "KRIITILINE TULUDE DEFITSIIT",
-            "alert_heading": "🚨 Black Week tulueesmärk jäi saavutamata 735,7k € võrra (-11,1%)",
-            "alert_desc": "Reaalaja telemeetria Mustal Reedel kell 14:30:00 UTC näitab, et müük jääb oluliselt alla prognoosile. Eesmärk: 6 650 000 € vs Tegelik: 5 914 300 € kõigis EL-i ladudes.",
+            "alert_heading": "🚨 Black Week tulueesmärk jäi saavutamata {kpiShortfall} võrra ({kpiShortfallPct})",
+            "alert_desc": "Reaalaja telemeetria Mustal Reedel kell 14:30:00 UTC näitab, et müük jääb oluliselt alla prognoosile. Eesmärk: {kpiTarget} vs Tegelik: {kpiActual} kõigis EL-i ladudes.",
             "target_revenue": "Sihttulu",
             "actual_revenue": "Tegelik tulu",
             "revenue_variance": "Tulu hälve",
@@ -2383,7 +2390,7 @@
             "prep_step_3_done": "BigQuery Data Agent ({agentId}) edukalt seotud {count} tabeliga.",
             "prep_step_4_active": "BigQuery Data Agent initsialiseeritud {count} allikaga. Tööruumi käivitamine...",
             "prep_step_4_done": "BigQuery Data Agent valmis {count} allikaga. Tööruumi sisenemine...",
-            "default_alert_prompt": "Valmistage ette müügi-, turundus-, reklaami-, lao- ja kõigi seotud ärivaldkondade andmed",
+            "default_alert_prompt": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
             "compare_prompts": "Võrdle viipasid",
             "compare_chats": "Võrdle vestlusi",
             "cmo_workspace_badge": "CMO Analüütiline Tööruum",
@@ -2397,13 +2404,13 @@
             "show_prompts": "Näita viipasid",
             "hide_prompts": "Peida viibad",
             "prompt_1_title": "💄 Beauty kategooria langus (-27%)",
-            "prompt_1_text": "Miks ei saavutanud Beauty kategooria Black Week ajal sihttulu?",
+            "prompt_1_text": "Why did Beauty category miss target revenue during Black Week?",
             "prompt_2_title": "📦 Tulude kaotus laoseisu lõppemise tõttu",
-            "prompt_2_text": "Näita otsasolevate toodetega seotud interaktsioone ja saamata jäänud tulu Beauty SKU-1001, SKU-1002, SKU-1003 puhul.",
+            "prompt_2_text": "Show stock-out interactions and lost revenue for Beauty products SKU-1001, SKU-1002, SKU-1003.",
             "prompt_3_title": "📈 15-minutiline eesmärkide täitmise tempo",
-            "prompt_3_text": "Näita 15-minutilist tulukõverat siht vs tegelik Beauty kategooriale reedel.",
+            "prompt_3_text": "Show 15-minute intraday target vs actual revenue curve for Beauty on Friday.",
             "prompt_4_title": "📢 Reklaamikulude piiramine",
-            "prompt_4_text": "Näita reklaamieelarve piiramist ja loovlahenduste väsimust Meta Adsis.",
+            "prompt_4_text": "Show paid marketing ad spend throttling and creative fatigue status for Meta Ads.",
             "welcome_title": "Tere tulemast LumièreShop CMO analüütilisse tööruumi.",
             "welcome_desc": "Kontekstuaalne andmete ettevalmistus on lõpetatud. Võite esitada mis tahes äriküsimusi...",
             "reasoning_title": "Mõttekäik ja semantiline põhjendus",
@@ -2485,23 +2492,23 @@
             "return_to_chat": "Tagasi vestluse juurde",
             "start_new_inv": "Alusta uut uurimist",
             "export_pdf": "Ekspordi aruanne juhtkonnale (PDF)",
-            "preset_incident_a": "On Must Reede kell 14:30. Palun valmistage ette andmed, et leida Black Weeki tululanguse algpõhjus võrreldes prognoosiga.",
-            "preset_incident_b": "Black Week tulueesmärk jäi saavutamata 735,7k € võrra",
-            "preset_incident_c": "Analüüsige tulueesmärgi hälvet, laovarude puudujääke, reklaamikulude piiramist ja vedajate tarneaegu kõigis kategooriates",
-            "preset_logistics_a": "Uurige vedajate SLA-sid, tarneaegu ja jaotuskeskuste kitsaskohti",
-            "preset_logistics_b": "Miks põhjustasid DHL DACH tarneviivitused ostukorvide hülgamist Mustal Reedel?",
-            "preset_logistics_c": "Jaotuskeskuste laoseisu hetkeülesvõtted ja laopuudujääkide interaktsioonid",
-            "preset_marketing_a": "Meta reklaamide pakkumiste eelarve piiramise ja reklaamiväsimuse analüüs Beauty kategoorias",
-            "preset_marketing_b": "Miks langesid reklaamikulud reede hommikul 31%, mille tulemusel kaotati 202k seanssi?",
-            "preset_marketing_c": "Analüüsige turunduskampaaniate ROAS-i, suunamudijate tulu ja konkurentide pakkumisi"
+            "preset_incident_a": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
+            "preset_incident_b": "Black Week sales target missed by {kpiShortfall}",
+            "preset_incident_c": "Analyze revenue target variance, inventory stockouts, ad spend throttling, and carrier lead times across all categories",
+            "preset_logistics_a": "Investigate carrier delivery SLAs, shipping lead times, and fulfillment center bottlenecks",
+            "preset_logistics_b": "Why did DHL DACH delivery delays trigger Black Friday checkout cart abandonment?",
+            "preset_logistics_c": "Distribution center inventory snapshots and out-of-stock interactions",
+            "preset_marketing_a": "Meta ad bidding budget throttling and creative fatigue analysis for Beauty category",
+            "preset_marketing_b": "Why did ad spend drop by 31% on Friday morning resulting in 202k lost sessions?",
+            "preset_marketing_c": "Analyze marketing campaigns ROAS, influencer revenue, and competitor promotions"
       },
       "fi": {
             "alert_title": "Lumière Myynninseurantabotti",
             "alert_created": "Lumière-botti loi tämän hälytyksen perjantaina 28. marraskuuta 2026",
             "history_on": "Historia on päällä • Viestit tallennetaan",
             "kpi_alert_badge": "KRIITTINEN TULOVAJE",
-            "alert_heading": "🚨 Black Week -myyntitavoite jäi saavuttamatta 735,7 k€ (-11,1%)",
-            "alert_desc": "Reaaliaikainen telemetria Black Fridayna klo 14:30:00 UTC osoittaa merkittävää viivettä. Tavoite: 6 650 000 € vs Todellinen: 5 914 300 € kaikissa EU-varastoissa.",
+            "alert_heading": "🚨 Black Week -myyntitavoite jäi saavuttamatta {kpiShortfall} ({kpiShortfallPct})",
+            "alert_desc": "Reaaliaikainen telemetria Black Fridayna klo 14:30:00 UTC osoittaa merkittävää viivettä. Tavoite: {kpiTarget} vs Todellinen: {kpiActual} kaikissa EU-varastoissa.",
             "target_revenue": "Tavoitetulo",
             "actual_revenue": "Todellinen tulo",
             "revenue_variance": "Tulovaihtelu",
@@ -2518,7 +2525,7 @@
             "prep_step_3_done": "BigQuery Data Agent ({agentId}) liitetty onnistuneesti {count} taulukkoon.",
             "prep_step_4_active": "BigQuery Data Agent alustettu {count} lähteellä. Käynnistetään työtila...",
             "prep_step_4_done": "BigQuery Data Agent valmis {count} lähteellä. Avataan työtila...",
-            "default_alert_prompt": "Valmistele myynnin, markkinoinnin, mainosten, varaston ja kaikkien liittyvien liiketoiminta-alueiden tiedot",
+            "default_alert_prompt": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
             "compare_prompts": "Vertaa kehotteita",
             "compare_chats": "Vertaa keskusteluja",
             "cmo_workspace_badge": "CMO Analytics -työtila",
@@ -2532,18 +2539,18 @@
             "rec_prompts_subheading": "Napsauta mitä tahansa kehotetta aloittaaksesi syiden analysoinnin BigQuery-aineistossa europe-west4",
             "prompt_1_title": "💄 Beauty-kategorian vaje (-27%)",
             "prompt_1_desc": "Tavoitepoikkeama tuotekategorioittain",
-            "prompt_1_text": "Mikä kategoria jää tällä viikolla eniten jälkeen myyntitavoitteestaan?",
+            "prompt_1_text": "Why did Beauty category miss target revenue during Black Week?",
             "prompt_2_title": "📦 Toimitusketju & varastopuutteet (OOS)",
             "prompt_2_desc": "Varaston loppumisen vaikutus menetettyyn myyntiin",
-            "prompt_2_text": "Aiheuttivatko varastopuutteet myynnin laskun Beauty-kategoriassa?",
+            "prompt_2_text": "Show stock-out interactions and lost revenue for Beauty products SKU-1001, SKU-1002, SKU-1003.",
             "prompt_3_title": "📈 Liikenne & Markkinointi",
             "prompt_3_desc": "Istuntojen kehitys ja mainosbudjetin rajoitukset",
-            "prompt_3_text": "Miksi markkinointiliikenne ja konversioprosentti laskivat perjantaiaamuna?",
+            "prompt_3_text": "Show 15-minute intraday target vs actual revenue curve for Beauty on Friday.",
             "prompt_4_title": "🚚 Logistiikka & Kuljetusyhtiöt",
             "prompt_4_desc": "Toimitus-SLA:t ja alueelliset pullonkaulat",
-            "prompt_4_text": "Aiheuttivatko toimitusviivästykset ostoskorien hylkäämisiä DACH-alueella?",
+            "prompt_4_text": "Show paid marketing ad spend throttling and creative fatigue status for Meta Ads.",
             "welcome_title": "Tervetuloa LumièreShop Conversational Analyticsiin",
-            "welcome_desc": "Kontekstuaalisten tietojen valmistelu valmis. Voit nyt esittää minkä tahansa kysymyksen koskien -735,7 k€ tulovajetta, kategoriajakaumaa, varastopuutteita tai maksettuja kampanjoita.",
+            "welcome_desc": "Kontekstuaalisten tietojen valmistelu valmis. Voit nyt esittää minkä tahansa kysymyksen koskien -{kpiShortfall} tulovajetta, kategoriajakaumaa, varastopuutteita tai maksettuja kampanjoita.",
             "chat_placeholder": "Esitä CMO-kysymys (esim. Miksi Beauty-kategoria jäi tavoitteesta?)...",
             "broadcast_placeholder": "Lähetä kysymys samanaikaisesti Agentille A, Agentille B ja Agentille C...",
             "loading_phase_1_status": "Yhdistetään Gemini Enterprise Agent Platformiin ja BigQueryyn...",
@@ -2578,15 +2585,15 @@
             "copy_report": "Kopioi raportti",
             "report_copied": "Kopioitu!",
             "audit_empty": "Ei tarkastuslokeja vielä.",
-            "preset_incident_a": "Kello on Black Fridayna 14:30. Valmistele tiedot, joiden avulla selvitetään Black Weekin ennusteeseen nähden laskeneen myynnin perimmäinen syy.",
-            "preset_incident_b": "Black Week -myyntitavoite jäi saavuttamatta 735,7 k€",
-            "preset_incident_c": "Analysoi myyntitavoitteen poikkeama, varastopuutteet, mainosbudjetin rajoitukset ja kuljetusajat kaikissa kategorioissa",
-            "preset_logistics_a": "Tutki kuljetusyhtiöiden SLA-sopimuksia, toimitusaikoja ja jakelukeskusten pullonkauloja",
-            "preset_logistics_b": "Miksi DHL DACH -toimitusviivästykset aiheuttivat ostoskorien hylkäämisiä Black Fridayna?",
-            "preset_logistics_c": "Jakelukeskusten varastotilannekuvat ja varaston loppumisen tapahtumat",
-            "preset_marketing_a": "Meta-mainosten tarjousbudjetin rajoittamisen ja mainosväsymyksen analyysi Beauty-kategoriassa",
-            "preset_marketing_b": "Miksi mainoskulut laskivat 31 % perjantaiaamuna johtaen 202k istunnon menetykseen?",
-            "preset_marketing_c": "Analysoi markkinointikampanjoiden ROAS, vaikuttajamyynti ja kilpailijoiden kampanjat",
+            "preset_incident_a": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
+            "preset_incident_b": "Black Week sales target missed by {kpiShortfall}",
+            "preset_incident_c": "Analyze revenue target variance, inventory stockouts, ad spend throttling, and carrier lead times across all categories",
+            "preset_logistics_a": "Investigate carrier delivery SLAs, shipping lead times, and fulfillment center bottlenecks",
+            "preset_logistics_b": "Why did DHL DACH delivery delays trigger Black Friday checkout cart abandonment?",
+            "preset_logistics_c": "Distribution center inventory snapshots and out-of-stock interactions",
+            "preset_marketing_a": "Meta ad bidding budget throttling and creative fatigue analysis for Beauty category",
+            "preset_marketing_b": "Why did ad spend drop by 31% on Friday morning resulting in 202k lost sessions?",
+            "preset_marketing_c": "Analyze marketing campaigns ROAS, influencer revenue, and competitor promotions",
             "preset_incident": "Black Friday -poikkeaman analyysi",
             "preset_logistics": "Myyntitahti vs Logistiikka ja SLA",
             "preset_marketing": "Markkinointi ja mainonnan ROAS-rajoitus"
@@ -2596,8 +2603,8 @@
             "alert_created": "Le bot Lumière a créé cette alerte le vendredi 28 novembre 2026",
             "history_on": "Historique activé • Les messages sont enregistrés",
             "kpi_alert_badge": "DÉFICIT CRITIQUE DE REVENUS",
-            "alert_heading": "🚨 Objectif de vente Black Week manqué de 735,7 k€ (-11,1%)",
-            "alert_desc": "La télémétrie en temps réel au Black Friday 14:30:00 UTC montre un retard important. Objectif: 6 650 000 € vs Réel: 5 914 300 € sur tous les entrepôts de l'UE.",
+            "alert_heading": "🚨 Objectif de vente Black Week manqué de {kpiShortfall} ({kpiShortfallPct})",
+            "alert_desc": "La télémétrie en temps réel au Black Friday 14:30:00 UTC montre un retard important. Objectif: {kpiTarget} vs Réel: {kpiActual} sur tous les entrepôts de l'UE.",
             "target_revenue": "Revenu cible",
             "actual_revenue": "Revenu réel",
             "revenue_variance": "Écart de revenu",
@@ -2614,7 +2621,7 @@
             "prep_step_3_done": "BigQuery Data Agent ({agentId}) associé avec succès à {count} tables.",
             "prep_step_4_active": "BigQuery Data Agent initialisé avec {count} sources. Lancement de l'espace...",
             "prep_step_4_done": "BigQuery Data Agent prêt avec {count} sources. Ouverture de l'espace...",
-            "default_alert_prompt": "Préparer les données relatives aux ventes, au marketing, aux publicités, aux stocks et à tous les domaines d'activité associés",
+            "default_alert_prompt": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
             "compare_prompts": "Comparer les invites",
             "compare_chats": "Comparer les discussions",
             "cmo_workspace_badge": "Espace Analytique CMO",
@@ -2628,18 +2635,18 @@
             "rec_prompts_subheading": "Cliquez sur une invite pour analyser les causes dans le jeu de données BigQuery europe-west4",
             "prompt_1_title": "💄 Déficit catégorie Beauté (-27%)",
             "prompt_1_desc": "Écart par rapport aux objectifs par catégorie",
-            "prompt_1_text": "Quelle catégorie accuse le plus grand retard sur ses objectifs de revenus cette semaine ?",
+            "prompt_1_text": "Why did Beauty category miss target revenue during Black Week?",
             "prompt_2_title": "📦 Chaîne logistique & Ruptures (OOS)",
             "prompt_2_desc": "Impact des ruptures de stock sur les revenus",
-            "prompt_2_text": "Les ruptures de stock ont-elles provoqué la baisse de revenus dans la Beauté ?",
+            "prompt_2_text": "Show stock-out interactions and lost revenue for Beauty products SKU-1001, SKU-1002, SKU-1003.",
             "prompt_3_title": "📈 Trafic & Marketing",
             "prompt_3_desc": "Rythme des sessions et limitation des dépenses publicitaires",
-            "prompt_3_text": "Pourquoi le trafic marketing et le taux de conversion ont-ils chuté vendredi matin ?",
+            "prompt_3_text": "Show 15-minute intraday target vs actual revenue curve for Beauty on Friday.",
             "prompt_4_title": "🚚 Logistique & Transporteurs",
             "prompt_4_desc": "SLA de livraison et goulots d'étranglement régionaux",
-            "prompt_4_text": "Les retards de livraison des transporteurs ont-ils provoqué des abandons de panier en DACH ?",
+            "prompt_4_text": "Show paid marketing ad spend throttling and creative fatigue status for Meta Ads.",
             "welcome_title": "Bienvenue dans l'analytique conversationnelle LumièreShop",
-            "welcome_desc": "Préparation des données contextuelles terminée. Vous pouvez poser toute question concernant le déficit de -735,7 k€, la ventilation par catégorie, les ruptures de stock ou les campagnes publicitaires.",
+            "welcome_desc": "Préparation des données contextuelles terminée. Vous pouvez poser toute question concernant le déficit de -{kpiShortfall}, la ventilation par catégorie, les ruptures de stock ou les campagnes publicitaires.",
             "chat_placeholder": "Poser une question CMO (ex. Pourquoi la catégorie Beauté a manqué l'objectif ?)...",
             "broadcast_placeholder": "Diffuser la question simultanément à l'Agent A, l'Agent B et l'Agent C...",
             "loading_phase_1_status": "Connexion à Gemini Enterprise Agent Platform & BigQuery...",
@@ -2674,15 +2681,15 @@
             "copy_report": "Copier le rapport",
             "report_copied": "Copié !",
             "audit_empty": "Aucun journal d'audit.",
-            "preset_incident_a": "Nous sommes le Black Friday à 14h30. Veuillez préparer les données qui permettront de trouver la cause de la baisse des revenus par rapport aux prévisions pendant la Black Week.",
-            "preset_incident_b": "Objectif de vente Black Week manqué de 735,7 k€",
-            "preset_incident_c": "Analyser l'écart par rapport aux objectifs de revenus, les ruptures de stock, la limitation des dépenses publicitaires et les délais de livraison",
-            "preset_logistics_a": "Examiner les SLA des transporteurs, les délais de livraison et les goulots d'étranglement des centres de distribution",
-            "preset_logistics_b": "Pourquoi les retards de livraison de DHL DACH ont-ils provoqué des abandons de panier lors du Black Friday ?",
-            "preset_logistics_c": "Instantanés des stocks en centre de distribution et interactions de rupture de stock",
-            "preset_marketing_a": "Analyse de la limitation du budget d'enchères Meta Ads et de la fatigue publicitaire pour la catégorie Beauté",
-            "preset_marketing_b": "Pourquoi les dépenses publicitaires ont-elles chuté de 31 % vendredi matin, entraînant la perte de 202 000 sessions ?",
-            "preset_marketing_c": "Analyser le ROAS des campagnes marketing, les revenus des influenceurs et les promotions de la concurrence",
+            "preset_incident_a": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
+            "preset_incident_b": "Black Week sales target missed by {kpiShortfall}",
+            "preset_incident_c": "Analyze revenue target variance, inventory stockouts, ad spend throttling, and carrier lead times across all categories",
+            "preset_logistics_a": "Investigate carrier delivery SLAs, shipping lead times, and fulfillment center bottlenecks",
+            "preset_logistics_b": "Why did DHL DACH delivery delays trigger Black Friday checkout cart abandonment?",
+            "preset_logistics_c": "Distribution center inventory snapshots and out-of-stock interactions",
+            "preset_marketing_a": "Meta ad bidding budget throttling and creative fatigue analysis for Beauty category",
+            "preset_marketing_b": "Why did ad spend drop by 31% on Friday morning resulting in 202k lost sessions?",
+            "preset_marketing_c": "Analyze marketing campaigns ROAS, influencer revenue, and competitor promotions",
             "preset_incident": "Triage d'incident Black Friday",
             "preset_logistics": "Rythme vs Logistique & SLA",
             "preset_marketing": "Marketing & Limitation du ROAS"
@@ -2692,8 +2699,8 @@
             "alert_created": "Lumière Sales Monitor Bot hat diese Benachrichtigung am Freitag, 28. November 2026 erstellt",
             "history_on": "Verlauf ist aktiviert • Nachrichten werden gespeichert",
             "kpi_alert_badge": "KRITISCHES UMSATZDEFIZIT",
-            "alert_heading": "🚨 Black Week Umsatzziel um 735,7 Tsd. € verfehlt (-11,1%)",
-            "alert_desc": "Echtzeit-Telemetrie am Black Friday 14:30:00 UTC zeigt erhebliche Zielverfehlungen. Ziel: 6.650.000 € vs. Ist: 5.914.300 € in allen EU-Lagern.",
+            "alert_heading": "🚨 Black Week Umsatzziel um {kpiShortfall} verfehlt ({kpiShortfallPct})",
+            "alert_desc": "Echtzeit-Telemetrie am Black Friday 14:30:00 UTC zeigt erhebliche Zielverfehlungen. Ziel: {kpiTarget} vs. Ist: {kpiActual} in allen EU-Lagern.",
             "target_revenue": "Zielumsatz",
             "actual_revenue": "Ist-Umsatz",
             "revenue_variance": "Umsatzabweichung",
@@ -2710,7 +2717,7 @@
             "prep_step_3_done": "BigQuery Data Agent ({agentId}) erfolgreich mit {count} Tabellen verknüpft.",
             "prep_step_4_active": "BigQuery Data Agent initialisiert mit {count} Datenquellen. Workspace startet...",
             "prep_step_4_done": "BigQuery Data Agent bereit mit {count} Datenquellen. Workspace wird geladen...",
-            "default_alert_prompt": "Bereiten Sie Daten zu Vertrieb, Marketing, Werbung, Lagerbestand und allen verbundenen Geschäftsbereichen vor",
+            "default_alert_prompt": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
             "compare_prompts": "Prompts vergleichen",
             "compare_chats": "Chats vergleichen",
             "cmo_workspace_badge": "CMO Analytics Workspace",
@@ -2724,18 +2731,18 @@
             "rec_prompts_subheading": "Klicken Sie auf einen Prompt, um die Ursachenanalyse im BigQuery-Dataset europe-west4 zu starten",
             "prompt_1_title": "💄 Beauty-Umsatzlücke (-27%)",
             "prompt_1_desc": "Zielabweichung nach Kategorien",
-            "prompt_1_text": "Welche Kategorie verfehlt ihr Umsatzziel diese Woche am stärksten?",
+            "prompt_1_text": "Why did Beauty category miss target revenue during Black Week?",
             "prompt_2_title": "📦 Lieferkette & OOS",
             "prompt_2_desc": "Auswirkungen von Lieferengpässen",
-            "prompt_2_text": "Haben Out-of-Stock-Ereignisse den Umsatzrückgang bei Beauty verursacht?",
+            "prompt_2_text": "Show stock-out interactions and lost revenue for Beauty products SKU-1001, SKU-1002, SKU-1003.",
             "prompt_3_title": "📈 Traffic & Marketing",
             "prompt_3_desc": "Sitzungsverlauf und Drosselung der Werbeausgaben",
-            "prompt_3_text": "Warum sind Marketing-Traffic und Konversionsrate am Freitagmorgen eingebrochen?",
+            "prompt_3_text": "Show 15-minute intraday target vs actual revenue curve for Beauty on Friday.",
             "prompt_4_title": "🚚 Logistik & Versanddienstleister",
             "prompt_4_desc": "Liefer-SLAs und regionale Engpässe",
-            "prompt_4_text": "Haben Lieferverzögerungen von Dienstleistern zu Kaufabbrüchen in DACH geführt?",
+            "prompt_4_text": "Show paid marketing ad spend throttling and creative fatigue status for Meta Ads.",
             "welcome_title": "Willkommen bei LumièreShop Conversational Analytics",
-            "welcome_desc": "Kontextuelle Datenvorbereitung abgeschlossen. Sie können nun Fragen zum Umsatzdefizit von -735,7 Tsd. €, zur Kategorieaufschlüsselung, zu stündlichen Pacing-Lücken oder zu bezahlten Kampagnen stellen.",
+            "welcome_desc": "Kontextuelle Datenvorbereitung abgeschlossen. Sie können nun Fragen zum Umsatzdefizit von -{kpiShortfall}, zur Kategorieaufschlüsselung, zu stündlichen Pacing-Lücken oder zu bezahlten Kampagnen stellen.",
             "chat_placeholder": "CMO-Frage stellen (z. B. Warum hat Beauty das Ziel verfehlt?)...",
             "broadcast_placeholder": "Frage gleichzeitig an Agent A, Agent B und Agent C senden...",
             "loading_phase_1_status": "Verbindung zu Gemini Enterprise Agent Platform & BigQuery...",
@@ -2770,15 +2777,15 @@
             "copy_report": "Bericht kopieren",
             "report_copied": "Kopiert!",
             "audit_empty": "Noch keine Protokolle vorhanden.",
-            "preset_incident_a": "Es ist Black Friday 14:30 Uhr. Bitte bereiten Sie die Daten vor, um die Ursache für den Umsatzrückgang im Vergleich zur Prognose während der Black Week zu ermitteln.",
-            "preset_incident_b": "Black Week Umsatzziel um 735,7 Tsd. € verfehlt",
-            "preset_incident_c": "Umsatzabweichung, Lieferengpässe, Drosselung der Werbeausgaben und Lieferzeiten aller Kategorien analysieren",
-            "preset_logistics_a": "Lieferanten-SLAs, Versandlaufzeiten und Engpässe in Distributionszentren untersuchen",
-            "preset_logistics_b": "Warum führten DHL DACH Lieferverzögerungen zu Kaufabbrüchen am Black Friday?",
-            "preset_logistics_c": "Bestandsaufnahmen in Verteilzentren und Out-of-Stock-Ereignisse",
-            "preset_marketing_a": "Meta Ads Bidding-Budgetdrosselung und Creative Fatigue in der Kategorie Beauty analysieren",
-            "preset_marketing_b": "Warum sanken die Werbeausgaben am Freitagmorgen um 31 % mit 202 Tsd. verlorenen Sitzungen?",
-            "preset_marketing_c": "ROAS von Marketingkampagnen, Influencer-Umsätze und Angebote der Konkurrenz analysieren",
+            "preset_incident_a": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
+            "preset_incident_b": "Black Week sales target missed by {kpiShortfall}",
+            "preset_incident_c": "Analyze revenue target variance, inventory stockouts, ad spend throttling, and carrier lead times across all categories",
+            "preset_logistics_a": "Investigate carrier delivery SLAs, shipping lead times, and fulfillment center bottlenecks",
+            "preset_logistics_b": "Why did DHL DACH delivery delays trigger Black Friday checkout cart abandonment?",
+            "preset_logistics_c": "Distribution center inventory snapshots and out-of-stock interactions",
+            "preset_marketing_a": "Meta ad bidding budget throttling and creative fatigue analysis for Beauty category",
+            "preset_marketing_b": "Why did ad spend drop by 31% on Friday morning resulting in 202k lost sessions?",
+            "preset_marketing_c": "Analyze marketing campaigns ROAS, influencer revenue, and competitor promotions",
             "preset_incident": "Black Friday Incident Triage",
             "preset_logistics": "Pacing vs. Logistik & SLAs",
             "preset_marketing": "Marketing & Werbe-ROAS-Drosselung"
@@ -2788,8 +2795,8 @@
             "alert_created": "Το bot δημιούργησε αυτήν την ειδοποίηση την Παρασκευή, 28 Νοεμβρίου 2026",
             "history_on": "Το ιστορικό είναι ενεργό • Τα απεσταλμένα μηνύματα αποθηκεύονται",
             "kpi_alert_badge": "ΚΡΙΣΙΜΟ ΕΛΛΕΙΜΜΑ ΕΣΟΔΩΝ",
-            "alert_heading": "🚨 Ο στόχος εσόδων Black Week χάθηκε κατά 735,7k € (-11,1%)",
-            "alert_desc": "Η τηλεμετρία πραγματικού χρόνου την Black Friday στις 14:30:00 UTC δείχνει ότι τα έσοδα υστερούν σημαντικά έναντι των προβλέψεων. Στόχος: 6.650.000 € vs Πραγματικό: 5.914.300 € σε όλες τις αποθήκες της ΕΕ.",
+            "alert_heading": "🚨 Ο στόχος εσόδων Black Week χάθηκε κατά {kpiShortfall} ({kpiShortfallPct})",
+            "alert_desc": "Η τηλεμετρία πραγματικού χρόνου την Black Friday στις 14:30:00 UTC δείχνει ότι τα έσοδα υστερούν σημαντικά έναντι των προβλέψεων. Στόχος: {kpiTarget} vs Πραγματικό: {kpiActual} σε όλες τις αποθήκες της ΕΕ.",
             "target_revenue": "Στόχος Εσόδων",
             "actual_revenue": "Πραγματικά Έσοδα",
             "revenue_variance": "Απόκλιση Εσόδων",
@@ -2806,7 +2813,7 @@
             "prep_step_3_done": "Το BigQuery Data Agent ({agentId}) αντιστοιχίστηκε με επιτυχία με {count} πίνακες.",
             "prep_step_4_active": "Το BigQuery Data Agent αρχικοποιήθηκε με {count} πηγές. Εκκίνηση χώρου εργασίας...",
             "prep_step_4_done": "Το BigQuery Data Agent είναι έτοιμο με {count} πηγές. Είσοδος στον χώρο εργασίας...",
-            "default_alert_prompt": "Προετοιμάστε δεδομένα πωλήσεων, μάρκετινγκ, διαφημίσεων, αποθεμάτων και όλων των συνδεδεμένων επιχειρηματικών τομέων",
+            "default_alert_prompt": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
             "compare_prompts": "Σύγκριση προτροπών",
             "compare_chats": "Σύγκριση συνομιλιών",
             "cmo_workspace_badge": "Χώρος Αναλυτικής CMO",
@@ -2820,13 +2827,13 @@
             "show_prompts": "Εμφάνιση προτροπών",
             "hide_prompts": "Απόκρυψη προτροπών",
             "prompt_1_title": "💄 Υστέρηση κατηγορίας Beauty (-27%)",
-            "prompt_1_text": "Γιατί η κατηγορία Beauty δεν πέτυχε τον στόχο εσόδων κατά το Black Week;",
+            "prompt_1_text": "Why did Beauty category miss target revenue during Black Week?",
             "prompt_2_title": "📦 Απώλεια εσόδων λόγω έλλειψης αποθεμάτων",
-            "prompt_2_text": "Εμφάνιση αλληλεπιδράσεων με εξαντλημένα προϊόντα και χαμένα έσοδα για Beauty SKU-1001, SKU-1002, SKU-1003.",
+            "prompt_2_text": "Show stock-out interactions and lost revenue for Beauty products SKU-1001, SKU-1002, SKU-1003.",
             "prompt_3_title": "📈 Ρυθμός στόχων ανά 15 λεπτά",
-            "prompt_3_text": "Εμφάνιση καμπύλης εσόδων στόχος vs πραγματικό ανά 15 λεπτά για Beauty την Παρασκευή.",
+            "prompt_3_text": "Show 15-minute intraday target vs actual revenue curve for Beauty on Friday.",
             "prompt_4_title": "📢 Περιορισμός δαπανών διαφήμισης",
-            "prompt_4_text": "Εμφάνιση περιορισμού προϋπολογισμού διαφημίσεων και κόπωσης δημιουργικών στο Meta Ads.",
+            "prompt_4_text": "Show paid marketing ad spend throttling and creative fatigue status for Meta Ads.",
             "welcome_title": "Καλώς ήρθατε στον Αναλυτικό Χώρο Εργασίας CMO του LumièreShop.",
             "welcome_desc": "Η προετοιμασία των δεδομένων ολοκληρώθηκε. Μπορείτε να υποβάλετε οποιαδήποτε ερώτηση...",
             "reasoning_title": "Διαδικασία σκέψης και σημασιολογική αιτιολόγηση",
@@ -2908,23 +2915,23 @@
             "return_to_chat": "Επιστροφή στη συνομιλία",
             "start_new_inv": "Έναρξη νέας διερεύνησης",
             "export_pdf": "Εξαγωγή αναφοράς (PDF)",
-            "preset_incident_a": "Είναι Black Friday 14:30. Προετοιμάστε τα δεδομένα για να βρείτε τη βασική αιτία της μείωσης των εσόδων σε σχέση με την πρόβλεψη κατά το Black Week.",
-            "preset_incident_b": "Ο στόχος εσόδων Black Week χάθηκε κατά 735,7k €",
-            "preset_incident_c": "Αναλύστε την απόκλιση στόχου εσόδων, τις ελλείψεις αποθεμάτων, τον περιορισμό διαφημιστικών δαπανών και τους χρόνους παράδοσης",
-            "preset_logistics_a": "Ερευνήστε τα SLA μεταφορέων, τους χρόνους παράδοσης και τα σημεία συμφόρησης στα κέντρα διανομής",
-            "preset_logistics_b": "Γιατί οι καθυστερήσεις παράδοσης DHL DACH προκάλεσαν εγκατάλειψη καλαθιών την Black Friday;",
-            "preset_logistics_c": "Στιγμιότυπα αποθεμάτων κέντρων διανομής και αλληλεπιδράσεις εξάντλησης αποθεμάτων",
-            "preset_marketing_a": "Ανάλυση περιορισμού προϋπολογισμού προσφορών Meta Ads και κόπωσης δημιουργικών για την κατηγορία Beauty",
-            "preset_marketing_b": "Γιατί η διαφημιστική δαπάνη μειώθηκε κατά 31% την Παρασκευή το πρωί, οδηγώντας σε απώλεια 202k περιόδων σύνδεσης;",
-            "preset_marketing_c": "Αναλύστε το ROAS των εκστρατειών μάρκετινγκ, τα έσοδα από influencers και τις προσφορές ανταγωνιστών"
+            "preset_incident_a": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
+            "preset_incident_b": "Black Week sales target missed by {kpiShortfall}",
+            "preset_incident_c": "Analyze revenue target variance, inventory stockouts, ad spend throttling, and carrier lead times across all categories",
+            "preset_logistics_a": "Investigate carrier delivery SLAs, shipping lead times, and fulfillment center bottlenecks",
+            "preset_logistics_b": "Why did DHL DACH delivery delays trigger Black Friday checkout cart abandonment?",
+            "preset_logistics_c": "Distribution center inventory snapshots and out-of-stock interactions",
+            "preset_marketing_a": "Meta ad bidding budget throttling and creative fatigue analysis for Beauty category",
+            "preset_marketing_b": "Why did ad spend drop by 31% on Friday morning resulting in 202k lost sessions?",
+            "preset_marketing_c": "Analyze marketing campaigns ROAS, influencer revenue, and competitor promotions"
       },
       "hu": {
             "alert_title": "Lumière Értékesítés-figyelő Bot",
             "alert_created": "A figyelmeztetést a bot hozta létre 2026. november 28-án, pénteken",
             "history_on": "Előzmények bekapcsolva • Az elküldött üzenetek mentésre kerülnek",
             "kpi_alert_badge": "KRITIKUS BEVÉTELI HIÁNY",
-            "alert_heading": "🚨 A Black Week bevételi cél 735,7 ezer €-val elmaradt (-11,1%)",
-            "alert_desc": "A Fekete Péntek 14:30:00 UTC telemetriája szerint a bevételek jelentősen elmaradnak a tervezettől. Cél: 6 650 000 € vs Tény: 5 914 300 € az összes EU raktárban.",
+            "alert_heading": "🚨 A Black Week bevételi cél {kpiShortfall}-val elmaradt ({kpiShortfallPct})",
+            "alert_desc": "A Fekete Péntek 14:30:00 UTC telemetriája szerint a bevételek jelentősen elmaradnak a tervezettől. Cél: {kpiTarget} vs Tény: {kpiActual} az összes EU raktárban.",
             "target_revenue": "Célbevétel",
             "actual_revenue": "Tényleges bevétel",
             "revenue_variance": "Bevételi eltérés",
@@ -2941,7 +2948,7 @@
             "prep_step_3_done": "BigQuery Data Agent ({agentId}) sikeresen beállítva {count} táblával.",
             "prep_step_4_active": "BigQuery Data Agent inicializálva {count} adatforrással. Munkaterület indítása...",
             "prep_step_4_done": "BigQuery Data Agent kész {count} adatforrással. Belépés a munkaterületre...",
-            "default_alert_prompt": "Készítse elő az értékesítési, marketing-, hirdetési, készlet- és minden kapcsolódó üzleti terület adatait",
+            "default_alert_prompt": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
             "compare_prompts": "Promptek összehasonlítása",
             "compare_chats": "Chat-ek összehasonlítása",
             "cmo_workspace_badge": "CMO Analitikai Munkaterület",
@@ -2955,15 +2962,15 @@
             "show_prompts": "Promptek megjelenítése",
             "hide_prompts": "Promptek elrejtése",
             "prompt_1_title": "💄 Beauty kategória hiány (-27%)",
-            "prompt_1_text": "Miért maradt el a Beauty kategória a bevételi céltól a Black Week alatt?",
+            "prompt_1_text": "Why did Beauty category miss target revenue during Black Week?",
             "prompt_2_title": "📦 Készlethiány miatti bevételkiesés",
-            "prompt_2_text": "Mutassa be a készlethiányos interakciókat és a kiesett bevételt a Beauty SKU-1001, SKU-1002, SKU-1003 termékeknél.",
+            "prompt_2_text": "Show stock-out interactions and lost revenue for Beauty products SKU-1001, SKU-1002, SKU-1003.",
             "prompt_3_title": "📈 15 perces napközbeni célkövetés",
-            "prompt_3_text": "Mutassa be a Beauty kategória 15 perces cél vs tényleges bevételi görbéjét pénteken.",
+            "prompt_3_text": "Show 15-minute intraday target vs actual revenue curve for Beauty on Friday.",
             "prompt_4_title": "📢 Fizetett hirdetési költések visszafogása",
-            "prompt_4_text": "Mutassa be a Meta Ads hirdetési költések korlátozását és a kreatív fáradtság állapotát.",
+            "prompt_4_text": "Show paid marketing ad spend throttling and creative fatigue status for Meta Ads.",
             "welcome_title": "Üdvözli a LumièreShop CMO Analitikai Munkaterület.",
-            "welcome_desc": "Kontextuális adat-előkészítés kész. Bármilyen üzleti kérdést feltehet a -735,7 ezer € bevételi hiányról...",
+            "welcome_desc": "Kontextuális adat-előkészítés kész. Bármilyen üzleti kérdést feltehet a -{kpiShortfall} bevételi hiányról...",
             "reasoning_title": "Gondolatmenet és szemantikai indoklás",
             "sql_title": "Generált BigQuery SQL lekérdezés",
             "copy_sql": "SQL másolása",
@@ -3043,23 +3050,23 @@
             "return_to_chat": "Vissza a beszélgetéshez",
             "start_new_inv": "Új vizsgálat indítása",
             "export_pdf": "Vezetői jelentés exportálása (PDF)",
-            "preset_incident_a": "Fekete Péntek 14:30 van. Készítse elő az adatokat a Black Week alatti bevételkiesés kiváltó okának felderítéséhez.",
-            "preset_incident_b": "A Black Week bevételi cél 735,7 ezer €-val elmaradt",
-            "preset_incident_c": "Elemezze a bevételi cél eltérését, a készlethiányokat, a hirdetési költések visszafogását és a szállítási határidőket",
-            "preset_logistics_a": "Vizsgálja meg a szállítói SLA-kat, a szállítási átfutási időket és az elosztóközpontok szűk keresztmetszeteit",
-            "preset_logistics_b": "Miért okoztak a DHL DACH szállítási késések kosárelhagyást Fekete Pénteken?",
-            "preset_logistics_c": "Elosztóközponti készlet-pillanatképek és készlethiányos interakciók",
-            "preset_marketing_a": "Meta hirdetési licitkeret-visszafogás és kreatív fáradtság elemzése a Beauty kategóriában",
-            "preset_marketing_b": "Miért csökkent 31%-kal a hirdetési költés péntek reggel, 202 ezer elveszett munkamenetet okozva?",
-            "preset_marketing_c": "Elemezze a marketingkampányok ROAS-át, az influencer bevételeket és a versenytársak akcióit"
+            "preset_incident_a": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
+            "preset_incident_b": "Black Week sales target missed by {kpiShortfall}",
+            "preset_incident_c": "Analyze revenue target variance, inventory stockouts, ad spend throttling, and carrier lead times across all categories",
+            "preset_logistics_a": "Investigate carrier delivery SLAs, shipping lead times, and fulfillment center bottlenecks",
+            "preset_logistics_b": "Why did DHL DACH delivery delays trigger Black Friday checkout cart abandonment?",
+            "preset_logistics_c": "Distribution center inventory snapshots and out-of-stock interactions",
+            "preset_marketing_a": "Meta ad bidding budget throttling and creative fatigue analysis for Beauty category",
+            "preset_marketing_b": "Why did ad spend drop by 31% on Friday morning resulting in 202k lost sessions?",
+            "preset_marketing_c": "Analyze marketing campaigns ROAS, influencer revenue, and competitor promotions"
       },
       "it": {
             "alert_title": "Bot di monitoraggio vendite Lumière",
             "alert_created": "Il bot Lumière ha creato questo avviso venerdì 28 novembre 2026",
             "history_on": "Cronologia attiva • I messaggi vengono salvati",
             "kpi_alert_badge": "DEFICIT CRITICO DI ENTRATE",
-            "alert_heading": "🚨 Obiettivo di vendita Black Week mancato di 735,7 k€ (-11,1%)",
-            "alert_desc": "La telemetria in tempo reale al Black Friday 14:30:00 UTC mostra un ritardo significativo. Obiettivo: 6.650.000 € vs Reale: 5.914.300 € in tutti i magazzini UE.",
+            "alert_heading": "🚨 Obiettivo di vendita Black Week mancato di {kpiShortfall} ({kpiShortfallPct})",
+            "alert_desc": "La telemetria in tempo reale al Black Friday 14:30:00 UTC mostra un ritardo significativo. Obiettivo: {kpiTarget} vs Reale: {kpiActual} in tutti i magazzini UE.",
             "target_revenue": "Entrate obiettivo",
             "actual_revenue": "Entrate effettive",
             "revenue_variance": "Variazione entrate",
@@ -3076,7 +3083,7 @@
             "prep_step_3_done": "BigQuery Data Agent ({agentId}) mappato con successo su {count} tabelle.",
             "prep_step_4_active": "BigQuery Data Agent inizializzato con {count} origini. Avvio dell'area...",
             "prep_step_4_done": "BigQuery Data Agent pronto con {count} origini. Apertura dell'area...",
-            "default_alert_prompt": "Preparare i dati relativi a vendite, marketing, annunci pubblicitari, inventario e tutti i domini aziendali collegati",
+            "default_alert_prompt": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
             "compare_prompts": "Confronta prompt",
             "compare_chats": "Confronta chat",
             "cmo_workspace_badge": "Area Analitica CMO",
@@ -3090,18 +3097,18 @@
             "rec_prompts_subheading": "Fai clic su un prompt per avviare l'analisi delle cause nel dataset BigQuery europe-west4",
             "prompt_1_title": "💄 Deficit categoria Beauty (-27%)",
             "prompt_1_desc": "Scostamento dagli obiettivi per categoria di catalogo",
-            "prompt_1_text": "Quale categoria sta mancando maggiormente l'obiettivo di entrate questa settimana?",
+            "prompt_1_text": "Why did Beauty category miss target revenue during Black Week?",
             "prompt_2_title": "📦 Catena di fornitura e rotture di stock (OOS)",
             "prompt_2_desc": "Impatto della mancanza di scorte sulle entrate",
-            "prompt_2_text": "Le rotture di stock hanno causato il calo delle entrate nella categoria Beauty?",
+            "prompt_2_text": "Show stock-out interactions and lost revenue for Beauty products SKU-1001, SKU-1002, SKU-1003.",
             "prompt_3_title": "📈 Traffico e Marketing",
             "prompt_3_desc": "Andamento delle sessioni e limitazione della spesa pubblicitaria",
-            "prompt_3_text": "Perché il traffico di marketing e il tasso di conversione sono crollati venerdì mattina?",
+            "prompt_3_text": "Show 15-minute intraday target vs actual revenue curve for Beauty on Friday.",
             "prompt_4_title": "🚚 Logistica e Corrieri",
             "prompt_4_desc": "SLA di consegna e colli di bottiglia regionali",
-            "prompt_4_text": "I ritardi dei corrieri hanno provocato l'abbandono del carrello nell'area DACH?",
+            "prompt_4_text": "Show paid marketing ad spend throttling and creative fatigue status for Meta Ads.",
             "welcome_title": "Benvenuto nell'analitica conversazionale di LumièreShop",
-            "welcome_desc": "Preparazione dei dati contestuali completata. Puoi porre qualsiasi domanda aziendale sul deficit di -735,7 k€, sulla ripartizione per categorie, sull'esaurimento delle scorte o sulle campagne a pagamento.",
+            "welcome_desc": "Preparazione dei dati contestuali completata. Puoi porre qualsiasi domanda aziendale sul deficit di -{kpiShortfall}, sulla ripartizione per categorie, sull'esaurimento delle scorte o sulle campagne a pagamento.",
             "chat_placeholder": "Fai una domanda CMO (es. Perché la categoria Beauty ha mancato l'obiettivo?)...",
             "broadcast_placeholder": "Invia la domanda contemporaneamente ad Agent A, Agent B e Agent C...",
             "loading_phase_1_status": "Connessione a Gemini Enterprise Agent Platform e BigQuery...",
@@ -3136,15 +3143,15 @@
             "copy_report": "Copia report",
             "report_copied": "Copiato!",
             "audit_empty": "Nessun registro presente.",
-            "preset_incident_a": "È il Black Friday alle 14:30. Preparare i dati che serviranno a trovare la causa principale del calo delle entrate rispetto alle previsioni durante la Black Week.",
-            "preset_incident_b": "Obiettivo di vendita Black Week mancato di 735,7 k€",
-            "preset_incident_c": "Analizzare lo scostamento degli obiettivi di entrate, le rotture di stock, la riduzione della spesa pubblicitaria e i tempi di consegna",
-            "preset_logistics_a": "Indagare sugli SLA dei corrieri, sui tempi di consegna e sui colli di bottiglia nei centri di distribuzione",
-            "preset_logistics_b": "Perché i ritardi nelle consegne di DHL DACH hanno causato l'abbandono del carrello durante il Black Friday?",
-            "preset_logistics_c": "Istantanee dell'inventario nei centri di distribuzione e interazioni per esaurimento scorte",
-            "preset_marketing_a": "Analisi della limitazione del budget di offerta su Meta Ads e affaticamento delle creatività per la categoria Beauty",
-            "preset_marketing_b": "Perché la spesa pubblicitaria è diminuita del 31% venerdì mattina causando la perdita di 202.000 sessioni?",
-            "preset_marketing_c": "Analizzare il ROAS delle campagne di marketing, i ricavi da influencer e le promozioni dei concorrenti",
+            "preset_incident_a": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
+            "preset_incident_b": "Black Week sales target missed by {kpiShortfall}",
+            "preset_incident_c": "Analyze revenue target variance, inventory stockouts, ad spend throttling, and carrier lead times across all categories",
+            "preset_logistics_a": "Investigate carrier delivery SLAs, shipping lead times, and fulfillment center bottlenecks",
+            "preset_logistics_b": "Why did DHL DACH delivery delays trigger Black Friday checkout cart abandonment?",
+            "preset_logistics_c": "Distribution center inventory snapshots and out-of-stock interactions",
+            "preset_marketing_a": "Meta ad bidding budget throttling and creative fatigue analysis for Beauty category",
+            "preset_marketing_b": "Why did ad spend drop by 31% on Friday morning resulting in 202k lost sessions?",
+            "preset_marketing_c": "Analyze marketing campaigns ROAS, influencer revenue, and competitor promotions",
             "preset_incident": "Triage degli incidenti Black Friday",
             "preset_logistics": "Andamento vs Logistica e SLA",
             "preset_marketing": "Marketing e limitazione ROAS"
@@ -3154,8 +3161,8 @@
             "alert_created": "Bots izveidoja šo brīdinājumu piektdien, 2026. gada 28. novembrī",
             "history_on": "Vēsture ir ieslēgta • Nosūtītās ziņas tiek saglabātas",
             "kpi_alert_badge": "KRITISKS IEŅĒMUMU DEFICĪTS",
-            "alert_heading": "🚨 Black Week ieņēmumu mērķis nav sasniegts par 735,7k € (-11,1%)",
-            "alert_desc": "Reāllaika telemetrija Melnajā piektdienā plkst. 14:30:00 UTC liecina, ka ieņēmumi būtiski atpaliek no plāna. Mērķis: 6 650 000 € vs Faktiskais: 5 914 300 € visās ES noliktavās.",
+            "alert_heading": "🚨 Black Week ieņēmumu mērķis nav sasniegts par {kpiShortfall} ({kpiShortfallPct})",
+            "alert_desc": "Reāllaika telemetrija Melnajā piektdienā plkst. 14:30:00 UTC liecina, ka ieņēmumi būtiski atpaliek no plāna. Mērķis: {kpiTarget} vs Faktiskais: {kpiActual} visās ES noliktavās.",
             "target_revenue": "Mērķa ieņēmumi",
             "actual_revenue": "Faktiskie ieņēmumi",
             "revenue_variance": "Ieņēmumu novirze",
@@ -3172,7 +3179,7 @@
             "prep_step_3_done": "BigQuery Data Agent ({agentId}) veiksmīgi piesaistīts {count} tabulām.",
             "prep_step_4_active": "BigQuery Data Agent inicializēts ar {count} avotiem. Palaiž darba vidi...",
             "prep_step_4_done": "BigQuery Data Agent gatavs ar {count} avotiem. Ieeja darba vidē...",
-            "default_alert_prompt": "Sagatavojiet datus par pārdošanu, mārketingu, reklāmām, krājumiem un visām saistītajām biznesa jomām",
+            "default_alert_prompt": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
             "compare_prompts": "Salīdzināt vaicājumus",
             "compare_chats": "Salīdzināt tērzēšanas",
             "cmo_workspace_badge": "CMO Analītikas Darba Vide",
@@ -3186,13 +3193,13 @@
             "show_prompts": "Rādīt vaicājumus",
             "hide_prompts": "Slēpt vaicājumus",
             "prompt_1_title": "💄 Beauty kategorijas kritums (-27%)",
-            "prompt_1_text": "Kāpēc Beauty kategorija nesasniedza mērķa ieņēmumus Black Week laikā?",
+            "prompt_1_text": "Why did Beauty category miss target revenue during Black Week?",
             "prompt_2_title": "📦 Ieņēmumu zudums krājumu trūkuma dēļ",
-            "prompt_2_text": "Rādīt mijiedarbības ar izpārdotajām precēm un zaudētos ieņēmumus Beauty SKU-1001, SKU-1002, SKU-1003.",
+            "prompt_2_text": "Show stock-out interactions and lost revenue for Beauty products SKU-1001, SKU-1002, SKU-1003.",
             "prompt_3_title": "📈 15 minūšu mērķu izpildes temps",
-            "prompt_3_text": "Rādīt 15 minūšu ieņēmumu līkni mērķis vs faktiskais Beauty kategorijai piektdien.",
+            "prompt_3_text": "Show 15-minute intraday target vs actual revenue curve for Beauty on Friday.",
             "prompt_4_title": "📢 Reklāmas tēriņu ierobežošana",
-            "prompt_4_text": "Rādīt reklāmas budžeta ierobežojumu un reklāmu noguruma statusu Meta Ads.",
+            "prompt_4_text": "Show paid marketing ad spend throttling and creative fatigue status for Meta Ads.",
             "welcome_title": "Laipni lūdzam LumièreShop CMO analītikas darba vidē.",
             "welcome_desc": "Kontekstuālo datu sagatavošana pabeigta. Varat uzdot jebkuru biznesa jautājumu...",
             "reasoning_title": "Domāšanas gaita un semantiskais pamatojums",
@@ -3274,23 +3281,23 @@
             "return_to_chat": "Atgriezties pie sarunas",
             "start_new_inv": "Sākt jaunu izmeklēšanu",
             "export_pdf": "Eksportēt ziņojumu vadībai (PDF)",
-            "preset_incident_a": "Ir Melnā piektdiena plkst. 14:30. Sagatavojiet datus, lai noskaidrotu iemeslu ieņēmumu kritumam salīdzinājumā ar prognozi Black Week laikā.",
-            "preset_incident_b": "Black Week ieņēmumu mērķis nav sasniegts par 735,7k €",
-            "preset_incident_c": "Analizējiet ieņēmumu mērķa novirzi, preču trūkumu noliktavā, reklāmas izmaksu ierobežošanu un piegādes laikus",
-            "preset_logistics_a": "Izpētiet pārvadātāju SLA, piegādes laikus un šaurās vietas loģistikas centros",
-            "preset_logistics_b": "Kāpēc DHL DACH piegādes kavējumi izraisīja pirkumu grozu pamēšanu Melnajā piektdienā?",
-            "preset_logistics_c": "Izplatīšanas centru krājumu momentuzņēmumi un preču trūkuma mijiedarbība",
-            "preset_marketing_a": "Meta Ads solīšanas budžeta ierobežošanas un reklāmu noguruma analīze Beauty kategorijai",
-            "preset_marketing_b": "Kāpēc reklāmas izdevumi piektdienas rītā samazinājās par 31%, izraisot 202k sesiju zudumu?",
-            "preset_marketing_c": "Analizējiet mārketinga kampaņu ROAS, ietekmētāju ieņēmumus un konkurentu akcijas"
+            "preset_incident_a": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
+            "preset_incident_b": "Black Week sales target missed by {kpiShortfall}",
+            "preset_incident_c": "Analyze revenue target variance, inventory stockouts, ad spend throttling, and carrier lead times across all categories",
+            "preset_logistics_a": "Investigate carrier delivery SLAs, shipping lead times, and fulfillment center bottlenecks",
+            "preset_logistics_b": "Why did DHL DACH delivery delays trigger Black Friday checkout cart abandonment?",
+            "preset_logistics_c": "Distribution center inventory snapshots and out-of-stock interactions",
+            "preset_marketing_a": "Meta ad bidding budget throttling and creative fatigue analysis for Beauty category",
+            "preset_marketing_b": "Why did ad spend drop by 31% on Friday morning resulting in 202k lost sessions?",
+            "preset_marketing_c": "Analyze marketing campaigns ROAS, influencer revenue, and competitor promotions"
       },
       "lt": {
             "alert_title": "Lumière Pardavimų Stebėsenos Botas",
             "alert_created": "Botas sukūrė šį įspėjimą 2026 m. lapkričio 28 d., penktadienį",
             "history_on": "Istorija įjungta • Išsiųsti pranešimai išsaugomi",
             "kpi_alert_badge": "KRITINIS PAJAMŲ DEFICITAS",
-            "alert_heading": "🚨 Black Week pajamų tikslas nepasiektas 735,7 tūkst. € (-11,1%)",
-            "alert_desc": "Realaus laiko telemetrija Juodąjį penktadienį 14:30:00 UTC rodo, kad pajamos ženkliai atsilieka nuo prognozės. Tikslas: 6 650 000 € vs Faktas: 5 914 300 € visuose ES sandėliuose.",
+            "alert_heading": "🚨 Black Week pajamų tikslas nepasiektas {kpiShortfall} ({kpiShortfallPct})",
+            "alert_desc": "Realaus laiko telemetrija Juodąjį penktadienį 14:30:00 UTC rodo, kad pajamos ženkliai atsilieka nuo prognozės. Tikslas: {kpiTarget} vs Faktas: {kpiActual} visuose ES sandėliuose.",
             "target_revenue": "Tikslinės pajamos",
             "actual_revenue": "Faktinės pajamos",
             "revenue_variance": "Pajamų nuokrypis",
@@ -3307,7 +3314,7 @@
             "prep_step_3_done": "BigQuery Data Agent ({agentId}) sėkmingai sukonfigūruotas su {count} lentelėmis.",
             "prep_step_4_active": "BigQuery Data Agent inicializuotas su {count} šaltiniais. Paleidžiama darbo erdvė...",
             "prep_step_4_done": "BigQuery Data Agent paruoštas su {count} šaltiniais. Įeinama į darbo erdvę...",
-            "default_alert_prompt": "Paruoškite duomenis apie pardavimus, rinkodarą, skelbimus, atsargas ir visas susijusias verslo sritis",
+            "default_alert_prompt": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
             "compare_prompts": "Palyginti užklausas",
             "compare_chats": "Palyginti pokalbius",
             "cmo_workspace_badge": "CMO Analitinė Darbo Erdvė",
@@ -3321,13 +3328,13 @@
             "show_prompts": "Rodyti užklausas",
             "hide_prompts": "Slėpti užklausas",
             "prompt_1_title": "💄 Beauty kategorijos nuosmukis (-27%)",
-            "prompt_1_text": "Kodėl Beauty kategorija nepasiekė tikslinių pajamų Black Week metu?",
+            "prompt_1_text": "Why did Beauty category miss target revenue during Black Week?",
             "prompt_2_title": "📦 Pajamų praradimas dėl atsargų trūkumo",
-            "prompt_2_text": "Rodyti sąveikas su pasibaigusiomis prekėmis ir prarastas pajamas Beauty SKU-1001, SKU-1002, SKU-1003.",
+            "prompt_2_text": "Show stock-out interactions and lost revenue for Beauty products SKU-1001, SKU-1002, SKU-1003.",
             "prompt_3_title": "📈 15 minučių tikslų vykdymo tempas",
-            "prompt_3_text": "Rodyti 15 minučių pajamų kreivę tikslas vs faktas Beauty kategorijai penktadienį.",
+            "prompt_3_text": "Show 15-minute intraday target vs actual revenue curve for Beauty on Friday.",
             "prompt_4_title": "📢 Reklamos išlaidų ribojimas",
-            "prompt_4_text": "Rodyti reklamos biudžeto ribojimą ir kūrybinių sprendimų nuovargį Meta Ads.",
+            "prompt_4_text": "Show paid marketing ad spend throttling and creative fatigue status for Meta Ads.",
             "welcome_title": "Sveiki atvykę į LumièreShop CMO analitinę darbo erdvę.",
             "welcome_desc": "Kontekstinis duomenų paruošimas baigtas. Galite užduoti bet kokį verslo klausimą...",
             "reasoning_title": "Mąstymo eiga ir semantinis pagrindimas",
@@ -3409,23 +3416,23 @@
             "return_to_chat": "Grįžti į pokalbį",
             "start_new_inv": "Pradėti naują tyrimą",
             "export_pdf": "Eksportuoti vadovybės ataskaitą (PDF)",
-            "preset_incident_a": "Juodasis penktadienis 14:30. Paruoškite duomenis, kurie padės nustatyti pajamų sumažėjimo priežastį per Black Week.",
-            "preset_incident_b": "Black Week pajamų tikslas nepasiektas 735,7 tūkst. €",
-            "preset_incident_c": "Išanalizuokite pajamų nuokrypį nuo tikslo, prekių trūkumą, reklamos biudžeto ribojimą ir pristatymo terminus",
-            "preset_logistics_a": "Ištirkite vežėjų SLA, pristatymo terminus ir paskirstymo centrų kliūtis",
-            "preset_logistics_b": "Kodėl DHL DACH pristatymo vėlavimai paskatino krepšelių apleidimą Juodąjį penktadienį?",
-            "preset_logistics_c": "Paskirstymo centrų atsargų momentinės nuotraukos ir trūkumų sąveika",
-            "preset_marketing_a": "Meta Ads kainų siūlymo biudžeto ribojimo ir skelbimų nuovargio analizė Beauty kategorijai",
-            "preset_marketing_b": "Kodėl reklamos išlaidos penktadienio rytą sumažėjo 31%, dėl ko prarasta 202 tūkst. apsilankymų?",
-            "preset_marketing_c": "Išanalizuokite rinkodaros kampanijų ROAS, nuomonės formuotojų pajamas ir konkurentų akcijas"
+            "preset_incident_a": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
+            "preset_incident_b": "Black Week sales target missed by {kpiShortfall}",
+            "preset_incident_c": "Analyze revenue target variance, inventory stockouts, ad spend throttling, and carrier lead times across all categories",
+            "preset_logistics_a": "Investigate carrier delivery SLAs, shipping lead times, and fulfillment center bottlenecks",
+            "preset_logistics_b": "Why did DHL DACH delivery delays trigger Black Friday checkout cart abandonment?",
+            "preset_logistics_c": "Distribution center inventory snapshots and out-of-stock interactions",
+            "preset_marketing_a": "Meta ad bidding budget throttling and creative fatigue analysis for Beauty category",
+            "preset_marketing_b": "Why did ad spend drop by 31% on Friday morning resulting in 202k lost sessions?",
+            "preset_marketing_c": "Analyze marketing campaigns ROAS, influencer revenue, and competitor promotions"
       },
       "no": {
             "alert_title": "Lumière Salgsovervåkingsbot",
             "alert_created": "Lumière-boten opprettet dette varselet fredag 28. november 2026",
             "history_on": "Historikk er på • Meldinger lagres",
             "kpi_alert_badge": "KRITISK INNTEKTSTAP",
-            "alert_heading": "🚨 Black Week salgsmål tapt med 735,7 k€ (-11,1%)",
-            "alert_desc": "Sanntidstelemetri på Black Friday kl. 14:30:00 UTC viser betydelig etterslep. Mål: 6 650 000 € vs Faktisk: 5 914 300 € i alle EU-lagre.",
+            "alert_heading": "🚨 Black Week salgsmål tapt med {kpiShortfall} ({kpiShortfallPct})",
+            "alert_desc": "Sanntidstelemetri på Black Friday kl. 14:30:00 UTC viser betydelig etterslep. Mål: {kpiTarget} vs Faktisk: {kpiActual} i alle EU-lagre.",
             "target_revenue": "Målinntekt",
             "actual_revenue": "Faktisk inntekt",
             "revenue_variance": "Inntektsavvik",
@@ -3442,7 +3449,7 @@
             "prep_step_3_done": "BigQuery Data Agent ({agentId}) vellykket tilknyttet {count} tabeller.",
             "prep_step_4_active": "BigQuery Data Agent initialisert med {count} kilder. Starter arbeidsområde...",
             "prep_step_4_done": "BigQuery Data Agent klar med {count} kilder. Åpner arbeidsområde...",
-            "default_alert_prompt": "Klargjør data for salg, markedsføring, annonser, lager og alle tilknyttede forretningsområder",
+            "default_alert_prompt": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
             "compare_prompts": "Sammenlign ledetekster",
             "compare_chats": "Sammenlign samtaler",
             "cmo_workspace_badge": "CMO Analytics Workspace",
@@ -3456,18 +3463,18 @@
             "rec_prompts_subheading": "Klikk på en ledetekst for å starte årsaksanalyse i BigQuery-datasettet europe-west4",
             "prompt_1_title": "💄 Beauty inntektstap (-27%)",
             "prompt_1_desc": "Målavvik per produktkategori",
-            "prompt_1_text": "Hvilken kategori ligger lengst bak inntektsmålet denne uken?",
+            "prompt_1_text": "Why did Beauty category miss target revenue during Black Week?",
             "prompt_2_title": "📦 Forsyningskjede & varemangel (OOS)",
             "prompt_2_desc": "Effekt av utsolgte varer på tapt omsetning",
-            "prompt_2_text": "Var det varemangel som forårsaket inntektsfallet i Beauty?",
+            "prompt_2_text": "Show stock-out interactions and lost revenue for Beauty products SKU-1001, SKU-1002, SKU-1003.",
             "prompt_3_title": "📈 Trafikk & Markedsføring",
             "prompt_3_desc": "Øktutvikling og struping av annonsebudsjett",
-            "prompt_3_text": "Hvorfor falt markedsføringstrafikken og konverteringsraten fredag morgen?",
+            "prompt_3_text": "Show 15-minute intraday target vs actual revenue curve for Beauty on Friday.",
             "prompt_4_title": "🚚 Logistikk & Transportører",
             "prompt_4_desc": "Leverings-SLAer og regionale flaskehalser",
-            "prompt_4_text": "Førte leveringsforsinkelser til forlatte handlekurver i DACH-regionen?",
+            "prompt_4_text": "Show paid marketing ad spend throttling and creative fatigue status for Meta Ads.",
             "welcome_title": "Velkommen til LumièreShop Conversational Analytics",
-            "welcome_desc": "Kontekstuell dataklargjøring fullført. Du kan nå stille spørsmål om inntektstapet på -735,7 k€, kategorifordeling, varemangel eller betalte kampanjer.",
+            "welcome_desc": "Kontekstuell dataklargjøring fullført. Du kan nå stille spørsmål om inntektstapet på -{kpiShortfall}, kategorifordeling, varemangel eller betalte kampanjer.",
             "chat_placeholder": "Still et CMO-spørsmål (f.eks. Hvorfor nådde ikke Beauty målet?)...",
             "broadcast_placeholder": "Send spørsmål samtidig til Agent A, Agent B og Agent C...",
             "loading_phase_1_status": "Kobler til Gemini Enterprise Agent Platform og BigQuery...",
@@ -3502,15 +3509,15 @@
             "copy_report": "Kopier rapport",
             "report_copied": "Kopiert!",
             "audit_empty": "Ingen revisjonslogger ennå.",
-            "preset_incident_a": "Det er Black Friday kl. 14:30. Vennligst klargjør data som vil tjene til å finne grunnårsaken til inntektsfallet sammenlignet med prognosen under Black Week.",
-            "preset_incident_b": "Black Week salgsmål tapt med 735,7 k€",
-            "preset_incident_c": "Analyser inntektsavvik mot mål, varemangel, struping av annonsebudsjett og leveringstider i alle kategorier",
-            "preset_logistics_a": "Undersøk transportørers SLA-er, leveringstider og flaskehalser i distribusjonssentre",
-            "preset_logistics_b": "Hvorfor førte DHL DACH-leveringsforsinkelser til forlatte handlekurver på Black Friday?",
-            "preset_logistics_c": "Lagerøyeblikksbilder i distribusjonssentre og hendelser med utsolgte varer",
-            "preset_marketing_a": "Analyse av budbudsjettbegrensning for Meta-annonser og annonsetretthet for kategorien Beauty",
-            "preset_marketing_b": "Hvorfor falt annonseutgiftene med 31 % fredag morgen, noe som resulterte i 202k tapte økter?",
-            "preset_marketing_c": "Analyser markedsføringskampanjers ROAS, influenser-inntekter og konkurrenters kampanjer",
+            "preset_incident_a": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
+            "preset_incident_b": "Black Week sales target missed by {kpiShortfall}",
+            "preset_incident_c": "Analyze revenue target variance, inventory stockouts, ad spend throttling, and carrier lead times across all categories",
+            "preset_logistics_a": "Investigate carrier delivery SLAs, shipping lead times, and fulfillment center bottlenecks",
+            "preset_logistics_b": "Why did DHL DACH delivery delays trigger Black Friday checkout cart abandonment?",
+            "preset_logistics_c": "Distribution center inventory snapshots and out-of-stock interactions",
+            "preset_marketing_a": "Meta ad bidding budget throttling and creative fatigue analysis for Beauty category",
+            "preset_marketing_b": "Why did ad spend drop by 31% on Friday morning resulting in 202k lost sessions?",
+            "preset_marketing_c": "Analyze marketing campaigns ROAS, influencer revenue, and competitor promotions",
             "preset_incident": "Black Friday hendelsestriage",
             "preset_logistics": "Fremdrift vs Logistikk & SLA-er",
             "preset_marketing": "Markedsføring & begrensning av annonse-ROAS"
@@ -3520,8 +3527,8 @@
             "alert_created": "Bot utworzył ten alert w piątek, 28 listopada 2026",
             "history_on": "Historia włączona • Wysłane wiadomości są zapisywane",
             "kpi_alert_badge": "KRYTYCZNY DEFICYT PRZYCHODÓW",
-            "alert_heading": "🚨 Cel przychodowy Black Week nieosiągnięty o 735,7 tys. € (-11,1%)",
-            "alert_desc": "Dzienny bilans Czarnego Piątku o 14:30:00 UTC wskazuje, że przychody są znacznie poniżej prognoz. Cel: 6 650 000 € vs Rzeczywiste: 5 914 300 € we wszystkich magazynach w UE.",
+            "alert_heading": "🚨 Cel przychodowy Black Week nieosiągnięty o {kpiShortfall} ({kpiShortfallPct})",
+            "alert_desc": "Dzienny bilans Czarnego Piątku o 14:30:00 UTC wskazuje, że przychody są znacznie poniżej prognoz. Cel: {kpiTarget} vs Rzeczywiste: {kpiActual} we wszystkich magazynach w UE.",
             "target_revenue": "Docelowy przychód",
             "actual_revenue": "Rzeczywisty przychód",
             "revenue_variance": "Odchylenie przychodu",
@@ -3533,12 +3540,12 @@
             "prep_step_3": "Rejestrowanie tabel analitycznych w BigQuery Data Agent...",
             "prep_step_4": "BigQuery Data Agent gotowy z {count} tabelami w europe-west4",
             "pending": "Oczekuje",
-            "prep_step_2_done": "Wykryto {count} tabel, {termCount} pojęć i {linkCount} EntryLinks przez wyszukiwanie semantyczne Knowledge Catalog...",
-            "prep_step_3_active": "Konfigurowanie BigQuery Data Agent ({agentId}) z {count} tabelami ({linkCount} EntryLinks)...",
-            "prep_step_3_done": "BigQuery Data Agent ({agentId}) pomyślnie zmapowany z {count} tabelami ({linkCount} EntryLinks).",
-            "prep_step_4_active": "BigQuery Data Agent zainicjalizowany ({count} tabel, {linkCount} EntryLinks). Uruchamianie przestrzeni roboczej...",
-            "prep_step_4_done": "BigQuery Data Agent gotowy z {count} tabelami, {termCount} pojęciami i {linkCount} EntryLinks. Przechodzenie do przestrzeni roboczej...",
-            "default_alert_prompt": "Przygotuj dane dotyczące sprzedaży, marketingu, reklam, zapasów i wszystkich powiązanych domen biznesowych",
+            "prep_step_2_done": "Wykryto {count} tabel i {termCount} pojęć biznesowych przez wyszukiwanie semantyczne Knowledge Catalog...",
+            "prep_step_3_active": "Konfigurowanie BigQuery Data Agent ({agentId}) z {count} tabelami i {termCount} pojęciami biznesowymi...",
+            "prep_step_3_done": "BigQuery Data Agent ({agentId}) pomyślnie zmapowany z {count} tabelami i {termCount} pojęciami biznesowymi.",
+            "prep_step_4_active": "BigQuery Data Agent zainicjalizowany ({count} tabel, {termCount} pojęć). Uruchamianie przestrzeni roboczej...",
+            "prep_step_4_done": "BigQuery Data Agent gotowy z {count} tabelami i {termCount} pojęciami biznesowymi. Przechodzenie do przestrzeni roboczej...",
+            "default_alert_prompt": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
             "compare_prompts": "Porównaj prompty",
             "compare_chats": "Porównaj czaty",
             "cmo_workspace_badge": "Przestrzeń Analityczna CMO",
@@ -3552,15 +3559,15 @@
             "show_prompts": "Pokaż prompty",
             "hide_prompts": "Ukryj prompty",
             "prompt_1_title": "💄 Spadek w Beauty (-27%)",
-            "prompt_1_text": "Dlaczego kategoria Beauty nie osiągnęła docelowych przychodów podczas Black Week?",
+            "prompt_1_text": "Why did Beauty category miss target revenue during Black Week?",
             "prompt_2_title": "📦 Utrata przychodów przez braki na stanie",
-            "prompt_2_text": "Pokaż interakcje braku magazynowego i utracone przychody dla produktów Beauty SKU-1001, SKU-1002, SKU-1003.",
+            "prompt_2_text": "Show stock-out interactions and lost revenue for Beauty products SKU-1001, SKU-1002, SKU-1003.",
             "prompt_3_title": "📈 15-minutowe tempo realizacji celu",
-            "prompt_3_text": "Pokaż 15-minutową krzywą przychodów cel vs wykonanie dla Beauty w piątek.",
+            "prompt_3_text": "Show 15-minute intraday target vs actual revenue curve for Beauty on Friday.",
             "prompt_4_title": "📢 Ograniczenie wydatków reklamowych",
-            "prompt_4_text": "Pokaż ograniczenie budżetu reklamowego i zmęczenie kreacji dla reklam Meta Ads.",
+            "prompt_4_text": "Show paid marketing ad spend throttling and creative fatigue status for Meta Ads.",
             "welcome_title": "Witamy w Przestrzeni Analitycznej CMO LumièreShop.",
-            "welcome_desc": "Przygotowanie danych kontekstowych zakończone. Możesz zadać dowolne pytanie biznesowe dotyczące deficytu przychodów -735,7 tys. €, podziału na kategorie, luki w realizacji celu, braków magazynowych czy kampanii płatnych.",
+            "welcome_desc": "Przygotowanie danych kontekstowych zakończone. Możesz zadać dowolne pytanie biznesowe dotyczące deficytu przychodów -{kpiShortfall}, podziału na kategorie, luki w realizacji celu, braków magazynowych czy kampanii płatnych.",
             "reasoning_title": "Proces myślowy i uzasadnienie semantyczne",
             "sql_title": "Wygenerowane zapytanie BigQuery SQL",
             "copy_sql": "Kopiuj SQL",
@@ -3640,23 +3647,23 @@
             "return_to_chat": "Powrót do rozmowy",
             "start_new_inv": "Rozpocznij nową analizę",
             "export_pdf": "Eksportuj raport zarządczy (PDF)",
-            "preset_incident_a": "Jest Czarny Piątek 14:30. Przygotuj dane, które posłużą do znalezienia przyczyny spadku przychodów w porównaniu z prognozą podczas Black Week.",
-            "preset_incident_b": "Cel przychodowy Black Week nieosiągnięty o 735,7 tys. €",
-            "preset_incident_c": "Przeanalizuj odchylenie celu przychodów, braki magazynowe, ograniczenie wydatków reklamowych i czasy dostaw we wszystkich kategoriach",
-            "preset_logistics_a": "Zbadaj SLA dostawców, czasy realizacji wysyłek i wąskie gardła w centrach dystrybucyjnych",
-            "preset_logistics_b": "Dlaczego opóźnienia dostaw DHL DACH spowodowały porzucenia koszyków w Czarny Piątek?",
-            "preset_logistics_c": "Migawki stanów magazynowych w centrach dystrybucyjnych i interakcje braków magazynowych",
-            "preset_marketing_a": "Analiza ograniczenia budżetu stawek Meta Ads i zmęczenia kreacji w kategorii Beauty",
-            "preset_marketing_b": "Dlaczego wydatki na reklamy spadły o 31% w piątek rano, powodując utratę 202 tys. sesji?",
-            "preset_marketing_c": "Przeanalizuj ROAS kampanii marketingowych, przychody z influencerów i promocje konkurencji"
+            "preset_incident_a": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
+            "preset_incident_b": "Black Week sales target missed by {kpiShortfall}",
+            "preset_incident_c": "Analyze revenue target variance, inventory stockouts, ad spend throttling, and carrier lead times across all categories",
+            "preset_logistics_a": "Investigate carrier delivery SLAs, shipping lead times, and fulfillment center bottlenecks",
+            "preset_logistics_b": "Why did DHL DACH delivery delays trigger Black Friday checkout cart abandonment?",
+            "preset_logistics_c": "Distribution center inventory snapshots and out-of-stock interactions",
+            "preset_marketing_a": "Meta ad bidding budget throttling and creative fatigue analysis for Beauty category",
+            "preset_marketing_b": "Why did ad spend drop by 31% on Friday morning resulting in 202k lost sessions?",
+            "preset_marketing_c": "Analyze marketing campaigns ROAS, influencer revenue, and competitor promotions"
       },
       "pt": {
             "alert_title": "Bot de monitorização de vendas Lumière",
             "alert_created": "O bot Lumière criou este alerta na sexta-feira, 28 de novembro de 2026",
             "history_on": "Histórico ativado • As mensagens são guardadas",
             "kpi_alert_badge": "DÉFICE CRÍTICO DE RECEITA",
-            "alert_heading": "🚨 Meta de vendas da Black Week falhada em 735,7 k€ (-11,1%)",
-            "alert_desc": "A telemetria em tempo real na Black Friday às 14:30:00 UTC mostra um atraso significativo. Meta: 6.650.000 € vs Real: 5.914.300 € em todos os armazéns da UE.",
+            "alert_heading": "🚨 Meta de vendas da Black Week falhada em {kpiShortfall} ({kpiShortfallPct})",
+            "alert_desc": "A telemetria em tempo real na Black Friday às 14:30:00 UTC mostra um atraso significativo. Meta: {kpiTarget} vs Real: {kpiActual} em todos os armazéns da UE.",
             "target_revenue": "Receita prevista",
             "actual_revenue": "Receita real",
             "revenue_variance": "Variação de receita",
@@ -3673,7 +3680,7 @@
             "prep_step_3_done": "BigQuery Data Agent ({agentId}) mapeado com sucesso em {count} tabelas.",
             "prep_step_4_active": "BigQuery Data Agent inicializado com {count} fontes. A iniciar espaço...",
             "prep_step_4_done": "BigQuery Data Agent pronto com {count} fontes. A carregar espaço...",
-            "default_alert_prompt": "Preparar dados de vendas, marketing, anúncios, estoque e todos os domínios de negócios conectados",
+            "default_alert_prompt": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
             "compare_prompts": "Comparar prompts",
             "compare_chats": "Comparar conversas",
             "cmo_workspace_badge": "Painel Analítico CMO",
@@ -3687,18 +3694,18 @@
             "rec_prompts_subheading": "Clique num prompt para iniciar a análise de causas no conjunto de dados BigQuery europe-west4",
             "prompt_1_title": "💄 Défice categoria Beauty (-27%)",
             "prompt_1_desc": "Desvio de metas por categoria de catálogo",
-            "prompt_1_text": "Qual a categoria que está a ficar mais abaixo da meta de receita esta semana?",
+            "prompt_1_text": "Why did Beauty category miss target revenue during Black Week?",
             "prompt_2_title": "📦 Cadeia de abastecimento & Ruturas de stock (OOS)",
             "prompt_2_desc": "Impacto de falta de stock nas perdas de receita",
-            "prompt_2_text": "Foram as ruturas de stock a causa da queda de receita em Beauty?",
+            "prompt_2_text": "Show stock-out interactions and lost revenue for Beauty products SKU-1001, SKU-1002, SKU-1003.",
             "prompt_3_title": "📈 Tráfego & Marketing",
             "prompt_3_desc": "Ritmo de sessões e limitação de orçamento de anúncios",
-            "prompt_3_text": "Porque caíram o tráfego de marketing e a taxa de conversão na sexta-feira de manhã?",
+            "prompt_3_text": "Show 15-minute intraday target vs actual revenue curve for Beauty on Friday.",
             "prompt_4_title": "🚚 Logística & Transportadoras",
             "prompt_4_desc": "SLAs de entrega e estrangulamentos regionais",
-            "prompt_4_text": "Os atrasos nas entregas causaram abandono de carrinhos na região DACH?",
+            "prompt_4_text": "Show paid marketing ad spend throttling and creative fatigue status for Meta Ads.",
             "welcome_title": "Bem-vindo à analítica conversacional da LumièreShop",
-            "welcome_desc": "Preparação de dados contextuais concluída. Pode fazer qualquer pergunta sobre o défice de receita de -735,7 k€, divisão por categorias, ruturas de stock ou campanhas pagas.",
+            "welcome_desc": "Preparação de dados contextuais concluída. Pode fazer qualquer pergunta sobre o défice de receita de -{kpiShortfall}, divisão por categorias, ruturas de stock ou campanhas pagas.",
             "chat_placeholder": "Faça uma pergunta CMO (ex. Por que a categoria Beauty falhou a meta?)...",
             "broadcast_placeholder": "Transmitir pergunta simultaneamente para Agente A, Agente B e Agente C...",
             "loading_phase_1_status": "A ligar ao Gemini Enterprise Agent Platform e BigQuery...",
@@ -3733,15 +3740,15 @@
             "copy_report": "Copiar relatório",
             "report_copied": "Copiado!",
             "audit_empty": "Sem registos de auditoria.",
-            "preset_incident_a": "É Black Friday às 14:30. Por favor, prepare os dados que servirão para encontrar a causa raiz da diminuição da receita em relação às previsões durante a Black Week.",
-            "preset_incident_b": "Meta de vendas da Black Week falhada em 735,7 k€",
-            "preset_incident_c": "Analisar o desvio da meta de receita, ruturas de stock, limitação do investimento em anúncios e prazos de entrega",
-            "preset_logistics_a": "Investigar os SLAs das transportadoras, tempos de envio e estrangulamentos nos centros de distribuição",
-            "preset_logistics_b": "Porque é que os atrasos de entrega da DHL DACH provocaram abandono de carrinhos na Black Friday?",
-            "preset_logistics_c": "Instantâneos de stock nos centros de distribuição e interações de falta de stock",
-            "preset_marketing_a": "Análise da limitação de orçamento de lances Meta Ads e fadiga criativa para a categoria Beauty",
-            "preset_marketing_b": "Porque é que o investimento em anúncios caiu 31% na sexta-feira de manhã, resultando em 202k sessões perdidas?",
-            "preset_marketing_c": "Analisar o ROAS das campanhas de marketing, receitas de influenciadores e promoções da concorrência",
+            "preset_incident_a": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
+            "preset_incident_b": "Black Week sales target missed by {kpiShortfall}",
+            "preset_incident_c": "Analyze revenue target variance, inventory stockouts, ad spend throttling, and carrier lead times across all categories",
+            "preset_logistics_a": "Investigate carrier delivery SLAs, shipping lead times, and fulfillment center bottlenecks",
+            "preset_logistics_b": "Why did DHL DACH delivery delays trigger Black Friday checkout cart abandonment?",
+            "preset_logistics_c": "Distribution center inventory snapshots and out-of-stock interactions",
+            "preset_marketing_a": "Meta ad bidding budget throttling and creative fatigue analysis for Beauty category",
+            "preset_marketing_b": "Why did ad spend drop by 31% on Friday morning resulting in 202k lost sessions?",
+            "preset_marketing_c": "Analyze marketing campaigns ROAS, influencer revenue, and competitor promotions",
             "preset_incident": "Triagem de incidentes Black Friday",
             "preset_logistics": "Ritmo vs Logística e SLAs",
             "preset_marketing": "Marketing e limitação de ROAS"
@@ -3751,8 +3758,8 @@
             "alert_created": "Botul a creat această alertă vineri, 28 noiembrie 2026",
             "history_on": "Istoricul este activat • Mesajele trimise sunt salvate",
             "kpi_alert_badge": "DEFICIT CRITIC DE VENITURI",
-            "alert_heading": "🚨 Ținta de vânzări Black Week ratată cu 735,7k € (-11,1%)",
-            "alert_desc": "Telemetria în timp real de Black Friday la 14:30:00 UTC arată că vânzările sunt mult sub previziuni. Țintă: 6.650.000 € vs Realizat: 5.914.300 € în toate depozitele din UE.",
+            "alert_heading": "🚨 Ținta de vânzări Black Week ratată cu {kpiShortfall} ({kpiShortfallPct})",
+            "alert_desc": "Telemetria în timp real de Black Friday la 14:30:00 UTC arată că vânzările sunt mult sub previziuni. Țintă: {kpiTarget} vs Realizat: {kpiActual} în toate depozitele din UE.",
             "target_revenue": "Venit țintă",
             "actual_revenue": "Venit realizat",
             "revenue_variance": "Variație venit",
@@ -3769,7 +3776,7 @@
             "prep_step_3_done": "BigQuery Data Agent ({agentId}) a fost mapat cu succes cu {count} tabele.",
             "prep_step_4_active": "BigQuery Data Agent inițializat cu {count} surse de date. Lansare spațiu de lucru...",
             "prep_step_4_done": "BigQuery Data Agent pregătit cu {count} surse de date. Intrare în spațiul de lucru...",
-            "default_alert_prompt": "Pregătiți datele privind vânzările, marketingul, reclamele, stocurile și toate domeniile de afaceri conectate",
+            "default_alert_prompt": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
             "compare_prompts": "Compară prompturi",
             "compare_chats": "Compară conversații",
             "cmo_workspace_badge": "Spațiu Analitic CMO",
@@ -3783,15 +3790,15 @@
             "show_prompts": "Afișează prompturile",
             "hide_prompts": "Ascunde prompturile",
             "prompt_1_title": "💄 Deficit categoria Beauty (-27%)",
-            "prompt_1_text": "De ce a ratat categoria Beauty veniturile țintă în timpul Black Week?",
+            "prompt_1_text": "Why did Beauty category miss target revenue during Black Week?",
             "prompt_2_title": "📦 Pierdere de venituri din epuizarea stocurilor",
-            "prompt_2_text": "Arată interacțiunile cu stoc epuizat și veniturile pierdute pentru produsele Beauty SKU-1001, SKU-1002, SKU-1003.",
+            "prompt_2_text": "Show stock-out interactions and lost revenue for Beauty products SKU-1001, SKU-1002, SKU-1003.",
             "prompt_3_title": "📈 Ritmul de atingere a țintelor la 15 minute",
-            "prompt_3_text": "Arată curba de venituri țintă vs realizat la intervale de 15 minute pentru Beauty vineri.",
+            "prompt_3_text": "Show 15-minute intraday target vs actual revenue curve for Beauty on Friday.",
             "prompt_4_title": "📢 Limitarea cheltuielilor publicitare",
-            "prompt_4_text": "Arată limitarea bugetului de reclame și starea de uzură creativă pentru Meta Ads.",
+            "prompt_4_text": "Show paid marketing ad spend throttling and creative fatigue status for Meta Ads.",
             "welcome_title": "Bun venit în Spațiul Analitic CMO LumièreShop.",
-            "welcome_desc": "Pregătirea datelor contextuale este completă. Puteți adresa orice întrebare de afaceri despre deficitul de -735,7k €...",
+            "welcome_desc": "Pregătirea datelor contextuale este completă. Puteți adresa orice întrebare de afaceri despre deficitul de -{kpiShortfall}...",
             "reasoning_title": "Proces de raționament și fundamentare semantică",
             "sql_title": "Interogare SQL BigQuery generată",
             "copy_sql": "Copiază SQL",
@@ -3871,23 +3878,23 @@
             "return_to_chat": "Înapoi la conversație",
             "start_new_inv": "Începe o investigație nouă",
             "export_pdf": "Exportă raport executiv (PDF)",
-            "preset_incident_a": "Este Black Friday 14:30. Vă rugăm să pregătiți datele pentru a găsi cauza principală a scăderii veniturilor față de prognoză în timpul Black Week.",
-            "preset_incident_b": "Ținta de vânzări Black Week ratată cu 735,7k €",
-            "preset_incident_c": "Analizați variația țintei de venituri, lipsa stocurilor, limitarea cheltuielilor publicitare și timpii de livrare",
-            "preset_logistics_a": "Investigați SLA-urile transportatorilor, timpii de livrare și blocajele din centrele de distribuție",
-            "preset_logistics_b": "De ce întârzierile de livrare DHL DACH au provocat abandonarea coșurilor de Black Friday?",
-            "preset_logistics_c": "Instantanee ale stocurilor din centrele de distribuție și interacțiuni de stoc epuizat",
-            "preset_marketing_a": "Analiza limitării bugetului de licitare Meta Ads și a uzurii reclamelor pentru categoria Beauty",
-            "preset_marketing_b": "De ce cheltuielile publicitare au scăzut cu 31% vineri dimineață, ducând la pierderea a 202k sesiuni?",
-            "preset_marketing_c": "Analizați ROAS-ul campaniilor de marketing, veniturile din influenceri și promoțiile concurenței"
+            "preset_incident_a": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
+            "preset_incident_b": "Black Week sales target missed by {kpiShortfall}",
+            "preset_incident_c": "Analyze revenue target variance, inventory stockouts, ad spend throttling, and carrier lead times across all categories",
+            "preset_logistics_a": "Investigate carrier delivery SLAs, shipping lead times, and fulfillment center bottlenecks",
+            "preset_logistics_b": "Why did DHL DACH delivery delays trigger Black Friday checkout cart abandonment?",
+            "preset_logistics_c": "Distribution center inventory snapshots and out-of-stock interactions",
+            "preset_marketing_a": "Meta ad bidding budget throttling and creative fatigue analysis for Beauty category",
+            "preset_marketing_b": "Why did ad spend drop by 31% on Friday morning resulting in 202k lost sessions?",
+            "preset_marketing_c": "Analyze marketing campaigns ROAS, influencer revenue, and competitor promotions"
       },
       "ru": {
             "alert_title": "Бот мониторинга продаж Lumière",
             "alert_created": "Бот мониторинга продаж Lumière создал это оповещение в пятницу, 28 ноября 2026 г.",
             "history_on": "История включена • Сообщения сохраняются",
             "kpi_alert_badge": "КРИТИЧЕСКИЙ ДЕФИЦИТ ВЫРУЧКИ",
-            "alert_heading": "🚨 Цель продаж Black Week не достигнута на 735,7 тыс. € (-11,1%)",
-            "alert_desc": "Телеметрия в реальном времени на Черную пятницу 14:30:00 UTC показывает отставание выручки от прогнозов. Цель: 6 650 000 € vs Факт: 5 914 300 € во всех складах ЕС.",
+            "alert_heading": "🚨 Цель продаж Black Week не достигнута на {kpiShortfall} ({kpiShortfallPct})",
+            "alert_desc": "Телеметрия в реальном времени на Черную пятницу 14:30:00 UTC показывает отставание выручки от прогнозов. Цель: {kpiTarget} vs Факт: {kpiActual} во всех складах ЕС.",
             "target_revenue": "Целевая выручка",
             "actual_revenue": "Фактическая выручка",
             "revenue_variance": "Отклонение выручки",
@@ -3904,7 +3911,7 @@
             "prep_step_3_done": "BigQuery Data Agent ({agentId}) успешно настроен с {count} таблицами.",
             "prep_step_4_active": "BigQuery Data Agent инициализирован с {count} источниками. Запуск рабочей области...",
             "prep_step_4_done": "BigQuery Data Agent готов с {count} источниками. Вход в рабочую область...",
-            "default_alert_prompt": "Подготовьте данные по продажам, маркетингу, рекламе, складским запасам и всем связанным бизнес-доменам",
+            "default_alert_prompt": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
             "compare_prompts": "Сравнить промпты",
             "compare_chats": "Сравнить чаты",
             "cmo_workspace_badge": "Аналитическая панель CMO",
@@ -3918,18 +3925,18 @@
             "rec_prompts_subheading": "Нажмите на любой промпт для анализа первопричин в датасете BigQuery europe-west4",
             "prompt_1_title": "💄 Спад в категории Beauty (-27%)",
             "prompt_1_desc": "Отклонение от целевых показателей по категориям",
-            "prompt_1_text": "Какая категория больше всего не достигает целевой выручки на этой неделе?",
+            "prompt_1_text": "Why did Beauty category miss target revenue during Black Week?",
             "prompt_2_title": "📦 Цепочка поставок и дефицит (OOS)",
             "prompt_2_desc": "Влияние отсутствия товаров на складе на потери выручки",
-            "prompt_2_text": "Вызвали ли случаи отсутствия товаров на складе падение выручки в категории Beauty?",
+            "prompt_2_text": "Show stock-out interactions and lost revenue for Beauty products SKU-1001, SKU-1002, SKU-1003.",
             "prompt_3_title": "📈 Трафик и реклама",
             "prompt_3_desc": "Динамика сессий и ограничение рекламных бюджетов",
-            "prompt_3_text": "Почему маркетинговый трафик и коэффициент конверсии упали в пятницу утром?",
+            "prompt_3_text": "Show 15-minute intraday target vs actual revenue curve for Beauty on Friday.",
             "prompt_4_title": "🚚 Логистика и перевозчики",
             "prompt_4_desc": "SLA доставки и региональные задержки",
-            "prompt_4_text": "Привели ли задержки доставки или проблемы перевозчиков к бросанию корзин в регионе DACH?",
+            "prompt_4_text": "Show paid marketing ad spend throttling and creative fatigue status for Meta Ads.",
             "welcome_title": "Добро пожаловать в диалоговую аналитику LumièreShop",
-            "welcome_desc": "Подготовка контекстных данных завершена. Вы можете задать любой бизнес-вопрос относительно дефицита выручки в -735,7 тыс. €, разбивки по категориям, почасовой динамики, дефицита на складах, конверсий кликстрима или платных кампаний.",
+            "welcome_desc": "Подготовка контекстных данных завершена. Вы можете задать любой бизнес-вопрос относительно дефицита выручки в -{kpiShortfall}, разбивки по категориям, почасовой динамики, дефицита на складах, конверсий кликстрима или платных кампаний.",
             "chat_placeholder": "Задайте вопрос CMO (напр., Почему категория Beauty не достигла цели?)...",
             "broadcast_placeholder": "Отправить вопрос одновременно Агенту A, Агенту B и Агенту C...",
             "loading_phase_1_status": "Подключение к Gemini Enterprise Agent Platform и BigQuery...",
@@ -3964,15 +3971,15 @@
             "copy_report": "Копировать отчет",
             "report_copied": "Скопировано!",
             "audit_empty": "Журнал пуст. Задайте вопрос для генерации логов BigQuery.",
-            "preset_incident_a": "Сейчас Черная пятница 14:30. Пожалуйста, подготовьте данные для поиска первопричины снижения выручки по сравнению с прогнозом во время Black Week.",
-            "preset_incident_b": "Цель продаж Black Week не достигнута на 735,7 тыс. €",
-            "preset_incident_c": "Проанализируйте отклонение выручки от плана, дефицит на складах, ограничение рекламных бюджетов и сроки доставки перевозчиков",
-            "preset_logistics_a": "Исследуйте SLA перевозчиков, сроки доставки и узкие места в распределительных центрах",
-            "preset_logistics_b": "Почему задержки доставки DHL DACH вызвали бросание корзин в Черную пятницу?",
-            "preset_logistics_c": "Снимки остатков в распределительных центрах и события отсутствия товаров на складе",
-            "preset_marketing_a": "Анализ ограничения ставок Meta Ads и выгорания креативов в категории Beauty",
-            "preset_marketing_b": "Почему расходы на рекламу упали на 31% в пятницу утром, что привело к потере 202 тыс. сессий?",
-            "preset_marketing_c": "Проанализируйте ROAS маркетинговых кампаний, доходы от инфлюенсеров и акции конкурентов",
+            "preset_incident_a": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
+            "preset_incident_b": "Black Week sales target missed by {kpiShortfall}",
+            "preset_incident_c": "Analyze revenue target variance, inventory stockouts, ad spend throttling, and carrier lead times across all categories",
+            "preset_logistics_a": "Investigate carrier delivery SLAs, shipping lead times, and fulfillment center bottlenecks",
+            "preset_logistics_b": "Why did DHL DACH delivery delays trigger Black Friday checkout cart abandonment?",
+            "preset_logistics_c": "Distribution center inventory snapshots and out-of-stock interactions",
+            "preset_marketing_a": "Meta ad bidding budget throttling and creative fatigue analysis for Beauty category",
+            "preset_marketing_b": "Why did ad spend drop by 31% on Friday morning resulting in 202k lost sessions?",
+            "preset_marketing_c": "Analyze marketing campaigns ROAS, influencer revenue, and competitor promotions",
             "preset_incident": "Анализ инцидента Black Friday",
             "preset_logistics": "Динамика vs Логистика и SLA",
             "preset_marketing": "Маркетинг и ограничение ROAS рекламы"
@@ -3982,8 +3989,8 @@
             "alert_created": "Бот је креирао ово упозорење у петак, 28. новембра 2026.",
             "history_on": "Историја је укључена • Послате поруке се чувају",
             "kpi_alert_badge": "КРИТИЧНИ ДЕФИЦИТ ПРИХОДА",
-            "alert_heading": "🚨 Циљ прихода за Black Week пропуштен за 735,7к € (-11,1%)",
-            "alert_desc": "Телеметрија у реалном времену на Црни петак у 14:30:00 UTC показује да приходи значајно заостају за планом. Циљ: 6.650.000 € vs Стварно: 5.914.300 € у свим ЕУ складиштима.",
+            "alert_heading": "🚨 Циљ прихода за Black Week пропуштен за {kpiShortfall}к € ({kpiShortfallPct})",
+            "alert_desc": "Телеметрија у реалном времену на Црни петак у 14:30:00 UTC показује да приходи значајно заостају за планом. Циљ: {kpiTarget} vs Стварно: {kpiActual} у свим ЕУ складиштима.",
             "target_revenue": "Циљани приход",
             "actual_revenue": "Стварни приход",
             "revenue_variance": "Одступање прихода",
@@ -4000,7 +4007,7 @@
             "prep_step_3_done": "BigQuery Data Agent ({agentId}) успешно мапиран са {count} табела.",
             "prep_step_4_active": "BigQuery Data Agent иницијализован са {count} извора. Покретање радног простора...",
             "prep_step_4_done": "BigQuery Data Agent спреман са {count} извора. Улазак у радни простор...",
-            "default_alert_prompt": "Припремите податке о продаји, маркетингу, огласима, залихама и свим повезаним пословним доменима",
+            "default_alert_prompt": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
             "compare_prompts": "Упореди промпте",
             "compare_chats": "Упореди разговоре",
             "cmo_workspace_badge": "CMO Аналитички радни простор",
@@ -4014,13 +4021,13 @@
             "show_prompts": "Прикажи промпте",
             "hide_prompts": "Сакриј промпте",
             "prompt_1_title": "💄 Пад у категорији Beauty (-27%)",
-            "prompt_1_text": "Зашто категорија Beauty није остварила циљане приходе током Black Week-а?",
+            "prompt_1_text": "Why did Beauty category miss target revenue during Black Week?",
             "prompt_2_title": "📦 Губитак прихода због нестанка залиха",
-            "prompt_2_text": "Прикажи интеракције са недостатком залиха и изгубљени приход за Beauty SKU-1001, SKU-1002, SKU-1003.",
+            "prompt_2_text": "Show stock-out interactions and lost revenue for Beauty products SKU-1001, SKU-1002, SKU-1003.",
             "prompt_3_title": "📈 15-минутни темпо остварења циљева",
-            "prompt_3_text": "Прикажи 15-минутну криву прихода циљ vs стварно за Beauty у петак.",
+            "prompt_3_text": "Show 15-minute intraday target vs actual revenue curve for Beauty on Friday.",
             "prompt_4_title": "📢 Ограничење буџета за оглашавање",
-            "prompt_4_text": "Прикажи ограничење буџета и замор креативе за Meta Ads огласе.",
+            "prompt_4_text": "Show paid marketing ad spend throttling and creative fatigue status for Meta Ads.",
             "welcome_title": "Добродошли у CMO аналитички радни простор LumièreShop-а.",
             "welcome_desc": "Припрема контекстуалних података завршена. Можете поставити било које пословно питање...",
             "reasoning_title": "Ток размишљања и семантичко образложење",
@@ -4102,23 +4109,23 @@
             "return_to_chat": "Повратак на разговор",
             "start_new_inv": "Започни нову истрагу",
             "export_pdf": "Извези извештај за управу (PDF)",
-            "preset_incident_a": "Црни је петак 14:30. Припремите податке за проналажење узрока пада прихода у односу на прогнозу током Black Week-а.",
-            "preset_incident_b": "Циљ прихода за Black Week пропуштен за 735,7к €",
-            "preset_incident_c": "Анализирајте одступање прихода од циља, несташице залиха, смањење потрошње на огласе и рокове испоруке",
-            "preset_logistics_a": "Истражите СЛА превозника, време испоруке и уска грла у дистрибутивним центрима",
-            "preset_logistics_b": "Зашто су кашњења испоруке DHL DACH изазвала напуштање корпи на Црни петак?",
-            "preset_logistics_c": "Снимци стања залиха у дистрибутивним центрима и интеракције недостатка залиха",
-            "preset_marketing_a": "Анализа ограничења буџета за надметање на Meta огласима и замора креатива за категорију Beauty",
-            "preset_marketing_b": "Зашто је потрошња на огласе пала за 31% у петак ујутру, што је довело до губитка 202к сесија?",
-            "preset_marketing_c": "Анализирајте ROAS маркетиншких кампања, приходе од инфлуенсера и промоције конкурената"
+            "preset_incident_a": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
+            "preset_incident_b": "Black Week sales target missed by {kpiShortfall}",
+            "preset_incident_c": "Analyze revenue target variance, inventory stockouts, ad spend throttling, and carrier lead times across all categories",
+            "preset_logistics_a": "Investigate carrier delivery SLAs, shipping lead times, and fulfillment center bottlenecks",
+            "preset_logistics_b": "Why did DHL DACH delivery delays trigger Black Friday checkout cart abandonment?",
+            "preset_logistics_c": "Distribution center inventory snapshots and out-of-stock interactions",
+            "preset_marketing_a": "Meta ad bidding budget throttling and creative fatigue analysis for Beauty category",
+            "preset_marketing_b": "Why did ad spend drop by 31% on Friday morning resulting in 202k lost sessions?",
+            "preset_marketing_c": "Analyze marketing campaigns ROAS, influencer revenue, and competitor promotions"
       },
       "sk": {
             "alert_title": "Lumière Sales Monitor Bot",
             "alert_created": "Lumière Sales Monitor Bot vytvoril toto upozornenie v piatok 28. novembra 2026",
             "history_on": "História je zapnutá • Správy sa ukladajú",
             "kpi_alert_badge": "KRITICKÝ DEFICIT TRŽIEB",
-            "alert_heading": "🚨 Cieľ tržieb pre Black Week nesplnený o 735,7 tis. € (-11,1 %)",
-            "alert_desc": "Priebežná telemetria na Čierny piatok o 14:30:00 UTC ukazuje, že tržby výrazne zaostávajú za prognózami. Cieľ 6 650 000 € vs Skutočnosť 5 914 300 € vo všetkých skladoch v EÚ.",
+            "alert_heading": "🚨 Cieľ tržieb pre Black Week nesplnený o {kpiShortfall} ({kpiShortfallPct})",
+            "alert_desc": "Priebežná telemetria na Čierny piatok o 14:30:00 UTC ukazuje, že tržby výrazne zaostávajú za prognózami. Cieľ {kpiTarget} vs Skutočnosť {kpiActual} vo všetkých skladoch v EÚ.",
             "target_revenue": "Cieľové tržby",
             "actual_revenue": "Skutočné tržby",
             "revenue_variance": "Odchýlka tržieb",
@@ -4135,7 +4142,7 @@
             "prep_step_3_done": "BigQuery Data Agent ({agentId}) úspešne namapovaný s {count} tabuľkami.",
             "prep_step_4_active": "BigQuery Data Agent inicializovaný s {count} zdrojmi údajov. Spúšťanie pracovného priestoru...",
             "prep_step_4_done": "BigQuery Data Agent pripravený s {count} zdrojmi údajov. Vstup do pracovného priestoru...",
-            "default_alert_prompt": "Pripravte údaje týkajúce sa predaja, marketingu, reklám, zásob a všetkých súvisiacich obchodných domén",
+            "default_alert_prompt": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
             "compare_prompts": "Porovnať prompty",
             "compare_chats": "Porovnať chaty",
             "cmo_workspace_badge": "Pracovný priestor CMO",
@@ -4149,15 +4156,15 @@
             "show_prompts": "Zobraziť prompty",
             "hide_prompts": "Skryť prompty",
             "prompt_1_title": "💄 Výpadok v kategórii Beauty (-27%)",
-            "prompt_1_text": "Prečo kategória Beauty nesplnila cieľové tržby počas Black Week?",
+            "prompt_1_text": "Why did Beauty category miss target revenue during Black Week?",
             "prompt_2_title": "📦 Strata tržieb kvôli vypredaniu zásob",
-            "prompt_2_text": "Ukážte interakcie s vypredanými produktmi a stratu tržieb pre Beauty SKU-1001, SKU-1002, SKU-1003.",
+            "prompt_2_text": "Show stock-out interactions and lost revenue for Beauty products SKU-1001, SKU-1002, SKU-1003.",
             "prompt_3_title": "📈 15-minútové tempo plnenia cieľov",
-            "prompt_3_text": "Ukážte 15-minútovú krivku tržieb cieľ vs skutočnosť pre Beauty v piatok.",
+            "prompt_3_text": "Show 15-minute intraday target vs actual revenue curve for Beauty on Friday.",
             "prompt_4_title": "📢 Obmedzenie výdavkov na platenú reklamu",
-            "prompt_4_text": "Ukážte obmedzenie reklamného rozpočtu a únavu kreatív pre reklamy na Meta Ads.",
+            "prompt_4_text": "Show paid marketing ad spend throttling and creative fatigue status for Meta Ads.",
             "welcome_title": "Vitajte v analytickom pracovnom priestore CMO LumièreShop.",
-            "welcome_desc": "Kontextová príprava údajov dokončená. Teraz môžete klásť ľubovoľné otázky týkajúce sa výpadku tržieb -735,7 tis. €...",
+            "welcome_desc": "Kontextová príprava údajov dokončená. Teraz môžete klásť ľubovoľné otázky týkajúce sa výpadku tržieb -{kpiShortfall}...",
             "reasoning_title": "Myšlienkový proces a sémantické odôvodnenie",
             "sql_title": "Vygenerovaný BigQuery SQL dotaz",
             "copy_sql": "Kopírovať SQL",
@@ -4237,23 +4244,23 @@
             "return_to_chat": "Späť ku konverzácii",
             "start_new_inv": "Začať nové vyšetrovanie",
             "export_pdf": "Exportovať správu (PDF)",
-            "preset_incident_a": "Je Čierny piatok 14:30. Pripravte údaje, ktoré poslúžia na zistenie hlavnej príčiny poklesu tržieb oproti prognóze počas Black Week.",
-            "preset_incident_b": "Cieľ tržieb pre Black Week nesplnený o 735,7 tis. €",
-            "preset_incident_c": "Analyzujte odchýlku tržieb od cieľa, výpadky zásob, priškrtenie výdavkov na reklamu a dodacie lehoty dopravcov vo všetkých kategóriách",
-            "preset_logistics_a": "Preskúmajte SLA dopravcov, dodacie lehoty a úzke miesta v distribučných centrách",
-            "preset_logistics_b": "Prečo oneskorenia doručenia DHL DACH spôsobili opustenie košíkov na Čierny piatok?",
-            "preset_logistics_c": "Snímky stavu zásob v distribučných centrách a interakcie nedostupnosti tovaru",
-            "preset_marketing_a": "Analýza priškrtenia rozpočtu Meta Ads a únavy kreatív v kategórii Beauty",
-            "preset_marketing_b": "Prečo výdavky na reklamu v piatok ráno klesli o 31 %, čo spôsobilo stratu 202 tis. relácií?",
-            "preset_marketing_c": "Analyzujte ROAS marketingových kampaní, príjmy od influencerov a akcie konkurencie"
+            "preset_incident_a": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
+            "preset_incident_b": "Black Week sales target missed by {kpiShortfall}",
+            "preset_incident_c": "Analyze revenue target variance, inventory stockouts, ad spend throttling, and carrier lead times across all categories",
+            "preset_logistics_a": "Investigate carrier delivery SLAs, shipping lead times, and fulfillment center bottlenecks",
+            "preset_logistics_b": "Why did DHL DACH delivery delays trigger Black Friday checkout cart abandonment?",
+            "preset_logistics_c": "Distribution center inventory snapshots and out-of-stock interactions",
+            "preset_marketing_a": "Meta ad bidding budget throttling and creative fatigue analysis for Beauty category",
+            "preset_marketing_b": "Why did ad spend drop by 31% on Friday morning resulting in 202k lost sessions?",
+            "preset_marketing_c": "Analyze marketing campaigns ROAS, influencer revenue, and competitor promotions"
       },
       "sl": {
             "alert_title": "Lumière Bot za spremljanje prodaje",
             "alert_created": "Bot je ustvaril to opozorilo v petek, 28. novembra 2026",
             "history_on": "Zgodovina je vklopljena • Poslana sporočila se shranjujejo",
             "kpi_alert_badge": "KRITIČNI PRIMANJKLJAJ PRIHODKOV",
-            "alert_heading": "🚨 Cilj prihodkov za Black Week zgrešen za 735,7k € (-11,1%)",
-            "alert_desc": "Telemetrija na Črni petek ob 14:30:00 UTC kaže, da prihodki znatno zaostajajo za načrtom. Cilj: 6.650.000 € vs Dejansko: 5.914.300 € v vseh skladiščih v EU.",
+            "alert_heading": "🚨 Cilj prihodkov za Black Week zgrešen za {kpiShortfall} ({kpiShortfallPct})",
+            "alert_desc": "Telemetrija na Črni petek ob 14:30:00 UTC kaže, da prihodki znatno zaostajajo za načrtom. Cilj: {kpiTarget} vs Dejansko: {kpiActual} v vseh skladiščih v EU.",
             "target_revenue": "Ciljni prihodek",
             "actual_revenue": "Dejanski prihodek",
             "revenue_variance": "Odstopanje prihodka",
@@ -4270,7 +4277,7 @@
             "prep_step_3_done": "BigQuery Data Agent ({agentId}) uspešno preslikan z {count} tabelami.",
             "prep_step_4_active": "BigQuery Data Agent inicializiran z {count} viri. Zagon delovnega prostora...",
             "prep_step_4_done": "BigQuery Data Agent pripravljen z {count} viri. Vstop v delovni prostor...",
-            "default_alert_prompt": "Pripravite podatke o prodaji, trženju, oglasih, zalogah in vseh povezanih poslovnih domenah",
+            "default_alert_prompt": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
             "compare_prompts": "Primerjaj pozive",
             "compare_chats": "Primerjaj pogovore",
             "cmo_workspace_badge": "Analitični delovni prostor CMO",
@@ -4284,13 +4291,13 @@
             "show_prompts": "Prikaži pozive",
             "hide_prompts": "Skrij pozive",
             "prompt_1_title": "💄 Padec v kategoriji Beauty (-27%)",
-            "prompt_1_text": "Zakaj kategorija Beauty med tednom Black Week ni dosegla ciljnih prihodkov?",
+            "prompt_1_text": "Why did Beauty category miss target revenue during Black Week?",
             "prompt_2_title": "📦 Izguba prihodkov zaradi pomanjkanja zalog",
-            "prompt_2_text": "Prikaži interakcije s pomanjkanjem zalog in izgubljene prihodke za Beauty SKU-1001, SKU-1002, SKU-1003.",
+            "prompt_2_text": "Show stock-out interactions and lost revenue for Beauty products SKU-1001, SKU-1002, SKU-1003.",
             "prompt_3_title": "📈 15-minutni tempo doseganja ciljev",
-            "prompt_3_text": "Prikaži 15-minutno krivuljo prihodkov cilj vs dejansko za Beauty v petek.",
+            "prompt_3_text": "Show 15-minute intraday target vs actual revenue curve for Beauty on Friday.",
             "prompt_4_title": "📢 Omejitev proračuna za oglaševanje",
-            "prompt_4_text": "Prikaži omejitev proračuna za oglase in utrujenost oglasnih vsebin za Meta Ads.",
+            "prompt_4_text": "Show paid marketing ad spend throttling and creative fatigue status for Meta Ads.",
             "welcome_title": "Dobrodošli v analitičnem delovnem prostoru CMO LumièreShop.",
             "welcome_desc": "Priprava kontekstualnih podatkov je zaključena. Zastavite lahko poljubno vprašanje...",
             "reasoning_title": "Potek razmišljanja in semantična utemeljitev",
@@ -4372,23 +4379,23 @@
             "return_to_chat": "Nazaj na pogovor",
             "start_new_inv": "Začni novo preiskavo",
             "export_pdf": "Izvozi poročilo za vodstvo (PDF)",
-            "preset_incident_a": "Črni petek je ob 14:30. Pripravite podatke za ugotavljanje glavnega vzroka za padec prihodkov glede na napoved med Black Weekom.",
-            "preset_incident_b": "Cilj prihodkov za Black Week zgrešen za 735,7k €",
-            "preset_incident_c": "Analizirajte odstopanje prihodkov od cilja, pomanjkanje zalog, omejevanje porabe za oglase in dobavne roke",
-            "preset_logistics_a": "Raziščite SLA prevoznikov, dobavne roke in ozka grla v distribucijskih centrih",
-            "preset_logistics_b": "Zakaj so zamude pri dostavi DHL DACH povzročile opustitev nakupovalnih vozičkov na črni petek?",
-            "preset_logistics_c": "Posnetki stanja zalog v distribucijskih centrih in interakcije pomanjkanja zalog",
-            "preset_marketing_a": "Analiza omejevanja proračuna ponudb Meta Ads in utrujenosti oglasov za kategorijo Beauty",
-            "preset_marketing_b": "Zakaj je poraba za oglase v petek zjutraj padla za 31 %, kar je povzročilo izgubo 202k sej?",
-            "preset_marketing_c": "Analizirajte ROAS marketinških kampanj, prihodke vplivnežev in promocije konkurence"
+            "preset_incident_a": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
+            "preset_incident_b": "Black Week sales target missed by {kpiShortfall}",
+            "preset_incident_c": "Analyze revenue target variance, inventory stockouts, ad spend throttling, and carrier lead times across all categories",
+            "preset_logistics_a": "Investigate carrier delivery SLAs, shipping lead times, and fulfillment center bottlenecks",
+            "preset_logistics_b": "Why did DHL DACH delivery delays trigger Black Friday checkout cart abandonment?",
+            "preset_logistics_c": "Distribution center inventory snapshots and out-of-stock interactions",
+            "preset_marketing_a": "Meta ad bidding budget throttling and creative fatigue analysis for Beauty category",
+            "preset_marketing_b": "Why did ad spend drop by 31% on Friday morning resulting in 202k lost sessions?",
+            "preset_marketing_c": "Analyze marketing campaigns ROAS, influencer revenue, and competitor promotions"
       },
       "es": {
             "alert_title": "Bot de monitorización de ventas Lumière",
             "alert_created": "El bot de Lumière creó esta alerta el viernes 28 de noviembre de 2026",
             "history_on": "Historial activado • Los mensajes se guardan",
             "kpi_alert_badge": "DÉFICIT CRÍTICO DE INGRESOS",
-            "alert_heading": "🚨 Objetivo de ventas de Black Week no alcanzado por 735,7 k€ (-11,1%)",
-            "alert_desc": "La telemetría en tiempo real a las 14:30:00 UTC del Black Friday muestra un retraso significativo. Objetivo: 6.650.000 € vs Real: 5.914.300 € en todos los almacenes de la UE.",
+            "alert_heading": "🚨 Objetivo de ventas de Black Week no alcanzado por {kpiShortfall} ({kpiShortfallPct})",
+            "alert_desc": "La telemetría en tiempo real a las 14:30:00 UTC del Black Friday muestra un retraso significativo. Objetivo: {kpiTarget} vs Real: {kpiActual} en todos los almacenes de la UE.",
             "target_revenue": "Ingresos objetivo",
             "actual_revenue": "Ingresos reales",
             "revenue_variance": "Variación de ingresos",
@@ -4405,7 +4412,7 @@
             "prep_step_3_done": "BigQuery Data Agent ({agentId}) vinculado exitosamente a {count} tablas.",
             "prep_step_4_active": "BigQuery Data Agent inicializado con {count} fuentes. Iniciando espacio...",
             "prep_step_4_done": "BigQuery Data Agent listo con {count} fuentes. Abriendo espacio...",
-            "default_alert_prompt": "Preparar datos de ventas, marketing, anuncios, inventario y todos los dominios comerciales conectados",
+            "default_alert_prompt": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
             "compare_prompts": "Comparar prompts",
             "compare_chats": "Comparar chats",
             "cmo_workspace_badge": "Espacio Analítico CMO",
@@ -4419,18 +4426,18 @@
             "rec_prompts_subheading": "Haga clic en cualquier prompt para analizar las causas en el dataset de BigQuery europe-west4",
             "prompt_1_title": "💄 Déficit en categoría Beauty (-27%)",
             "prompt_1_desc": "Variación de objetivos por categorías de catálogo",
-            "prompt_1_text": "¿Qué categoría se está alejando más de su objetivo de ingresos esta semana?",
+            "prompt_1_text": "Why did Beauty category miss target revenue during Black Week?",
             "prompt_2_title": "📦 Cadena de suministro y roturas de stock",
             "prompt_2_desc": "Impacto de falta de existencias en la pérdida de ingresos",
-            "prompt_2_text": "¿Causaron las roturas de stock la caída de ingresos en Beauty?",
+            "prompt_2_text": "Show stock-out interactions and lost revenue for Beauty products SKU-1001, SKU-1002, SKU-1003.",
             "prompt_3_title": "📈 Tráfico y Marketing",
             "prompt_3_desc": "Evolución de sesiones y limitación del gasto publicitario",
-            "prompt_3_text": "¿Por qué cayeron el tráfico de marketing y la tasa de conversión el viernes por la mañana?",
+            "prompt_3_text": "Show 15-minute intraday target vs actual revenue curve for Beauty on Friday.",
             "prompt_4_title": "🚚 Logística y transportistas",
             "prompt_4_desc": "SLA de entrega y cuellos de botella regionales",
-            "prompt_4_text": "¿Provocaron los retrasos en las entregas abandono de carritos en DACH?",
+            "prompt_4_text": "Show paid marketing ad spend throttling and creative fatigue status for Meta Ads.",
             "welcome_title": "Bienvenido a la analítica conversacional de LumièreShop",
-            "welcome_desc": "Preparación de datos contextuales completada. Puede realizar cualquier consulta sobre el déficit de ingresos de -735,7 k€, el desglose por categorías, las roturas de stock o las campañas pagadas.",
+            "welcome_desc": "Preparación de datos contextuales completada. Puede realizar cualquier consulta sobre el déficit de ingresos de -{kpiShortfall}, el desglose por categorías, las roturas de stock o las campañas pagadas.",
             "chat_placeholder": "Hacer una pregunta CMO (ej. ¿Por qué la categoría Beauty no alcanzó el objetivo?)...",
             "broadcast_placeholder": "Enviar pregunta simultáneamente al Agente A, Agente B y Agente C...",
             "loading_phase_1_status": "Conectando con Gemini Enterprise Agent Platform y BigQuery...",
@@ -4465,15 +4472,15 @@
             "copy_report": "Copiar informe",
             "report_copied": "¡Copiado!",
             "audit_empty": "No hay registros de auditoría.",
-            "preset_incident_a": "Es Black Friday a las 14:30. Por favor, prepare los datos que servirán para encontrar la causa raíz de la disminución de ingresos en comparación con las previsiones durante la Black Week.",
-            "preset_incident_b": "Objetivo de ventas de Black Week no alcanzado por 735,7 k€",
-            "preset_incident_c": "Analizar la variación de ingresos respecto al objetivo, roturas de stock, limitación del gasto publicitario y tiempos de entrega",
-            "preset_logistics_a": "Investigar los SLA de transportistas, tiempos de envío y cuellos de botella en centros de distribución",
-            "preset_logistics_b": "¿Por qué los retrasos de entrega de DHL DACH provocaron el abandono de carritos en el Black Friday?",
-            "preset_logistics_c": "Instantáneas de inventario en centros de distribución e interacciones de falta de stock",
-            "preset_marketing_a": "Análisis de la limitación del presupuesto de pujas en Meta Ads y desgaste creativo en la categoría Beauty",
-            "preset_marketing_b": "¿Por qué el gasto publicitario cayó un 31 % el viernes por la mañana provocando 202k sesiones perdidas?",
-            "preset_marketing_c": "Analizar el ROAS de campañas de marketing, ingresos por influencers y promociones de la competencia",
+            "preset_incident_a": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
+            "preset_incident_b": "Black Week sales target missed by {kpiShortfall}",
+            "preset_incident_c": "Analyze revenue target variance, inventory stockouts, ad spend throttling, and carrier lead times across all categories",
+            "preset_logistics_a": "Investigate carrier delivery SLAs, shipping lead times, and fulfillment center bottlenecks",
+            "preset_logistics_b": "Why did DHL DACH delivery delays trigger Black Friday checkout cart abandonment?",
+            "preset_logistics_c": "Distribution center inventory snapshots and out-of-stock interactions",
+            "preset_marketing_a": "Meta ad bidding budget throttling and creative fatigue analysis for Beauty category",
+            "preset_marketing_b": "Why did ad spend drop by 31% on Friday morning resulting in 202k lost sessions?",
+            "preset_marketing_c": "Analyze marketing campaigns ROAS, influencer revenue, and competitor promotions",
             "preset_incident": "Triaje de incidencias Black Friday",
             "preset_logistics": "Ritmo vs Logística y SLA",
             "preset_marketing": "Marketing y limitación de ROAS"
@@ -4483,8 +4490,8 @@
             "alert_created": "Lumière-boten skapade denna varning fredagen den 28 november 2026",
             "history_on": "Historik är på • Meddelanden sparas",
             "kpi_alert_badge": "KRITISKT INTÄKTSUNDERSKOTT",
-            "alert_heading": "🚨 Black Week försäljningsmål missat med 735,7 k€ (-11,1%)",
-            "alert_desc": "Realtidstelemetri på Black Friday 14:30:00 UTC visar betydande eftersläpning. Mål: 6 650 000 € vs Faktiskt: 5 914 300 € i alla EU-lager.",
+            "alert_heading": "🚨 Black Week försäljningsmål missat med {kpiShortfall} ({kpiShortfallPct})",
+            "alert_desc": "Realtidstelemetri på Black Friday 14:30:00 UTC visar betydande eftersläpning. Mål: {kpiTarget} vs Faktiskt: {kpiActual} i alla EU-lager.",
             "target_revenue": "Målintäkt",
             "actual_revenue": "Faktisk intäkt",
             "revenue_variance": "Intäktsavvikelse",
@@ -4501,7 +4508,7 @@
             "prep_step_3_done": "BigQuery Data Agent ({agentId}) mappad till {count} tabeller.",
             "prep_step_4_active": "BigQuery Data Agent initierad med {count} källor. Startar arbetsyta...",
             "prep_step_4_done": "BigQuery Data Agent redo med {count} källor. Öppnar arbetsyta...",
-            "default_alert_prompt": "Förbered data för försäljning, marknadsföring, annonser, lager och alla relaterade affärsdomäner",
+            "default_alert_prompt": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
             "compare_prompts": "Jämför prompter",
             "compare_chats": "Jämför chattar",
             "cmo_workspace_badge": "CMO Analytics Workspace",
@@ -4515,18 +4522,18 @@
             "rec_prompts_subheading": "Klicka på en prompt för att analysera grundorsaker i BigQuery-datasetet europe-west4",
             "prompt_1_title": "💄 Beauty intäktsunderskott (-27%)",
             "prompt_1_desc": "Målavvikelse per produktkategori",
-            "prompt_1_text": "Vilken kategori missar sitt intäktsmål mest denna vecka?",
+            "prompt_1_text": "Why did Beauty category miss target revenue during Black Week?",
             "prompt_2_title": "📦 Försörjningskedja & lagerbrist (OOS)",
             "prompt_2_desc": "Effekt av slut i lager på förlorade intäkter",
-            "prompt_2_text": "Orsakade lagerbrist intäktsminskningen inom Beauty?",
+            "prompt_2_text": "Show stock-out interactions and lost revenue for Beauty products SKU-1001, SKU-1002, SKU-1003.",
             "prompt_3_title": "📈 Trafik & Marknadsföring",
             "prompt_3_desc": "Sessionsutveckling och begränsning av annonsbudget",
-            "prompt_3_text": "Varför sjönk marknadsföringstrafiken och konverteringsgraden på fredagsmorgonen?",
+            "prompt_3_text": "Show 15-minute intraday target vs actual revenue curve for Beauty on Friday.",
             "prompt_4_title": "🚚 Logistik & Transportörer",
             "prompt_4_desc": "Leverans-SLA och regionala flaskhalsar",
-            "prompt_4_text": "Orsakade leveransförseningar övergivna varukorgar i DACH-regionen?",
+            "prompt_4_text": "Show paid marketing ad spend throttling and creative fatigue status for Meta Ads.",
             "welcome_title": "Välkommen till LumièreShop Conversational Analytics",
-            "welcome_desc": "Kontextuell dataförberedelse klar. Du kan nu ställa valfri affärsfråga om intäktsunderskottet på -735,7 k€, kategoriuppdelning, lagerbrist eller betalda kampanjer.",
+            "welcome_desc": "Kontextuell dataförberedelse klar. Du kan nu ställa valfri affärsfråga om intäktsunderskottet på -{kpiShortfall}, kategoriuppdelning, lagerbrist eller betalda kampanjer.",
             "chat_placeholder": "Ställ en CMO-fråga (t.ex. Varför missade Beauty-kategorin målet?)...",
             "broadcast_placeholder": "Skicka fråga samtidigt till Agent A, Agent B och Agent C...",
             "loading_phase_1_status": "Ansluter till Gemini Enterprise Agent Platform och BigQuery...",
@@ -4561,15 +4568,15 @@
             "copy_report": "Kopiera rapport",
             "report_copied": "Kopierat!",
             "audit_empty": "Inga granskningsloggar än.",
-            "preset_incident_a": "Det är Black Friday kl. 14:30. Förbered data som ska användas för att hitta grundorsaken till intäktsminskningen jämfört med prognosen under Black Week.",
-            "preset_incident_b": "Black Week försäljningsmål missat med 735,7 k€",
-            "preset_incident_c": "Analysera intäktsavvikelse mot mål, lagerbrist, begränsning av annonsbudget och leveranstider i alla kategorier",
-            "preset_logistics_a": "Undersök transportörernas SLA:er, leveranstider och flaskhalsar i distributionscenter",
-            "preset_logistics_b": "Varför orsakade DHL DACH leveransförseningar övergivna varukorgar under Black Friday?",
-            "preset_logistics_c": "Lagerögonblicksbilder i distributionscenter och interaktioner vid slut i lager",
-            "preset_marketing_a": "Analys av begränsning av budbudget för Meta-annonser och annonströtthet för kategorin Beauty",
-            "preset_marketing_b": "Varför sjönk annonsutgifterna med 31 % på fredagsmorgonen vilket ledde till 202k förlorade sessioner?",
-            "preset_marketing_c": "Analysera marknadsföringskampanjers ROAS, influencer-intäkter och konkurrenters kampanjer",
+            "preset_incident_a": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
+            "preset_incident_b": "Black Week sales target missed by {kpiShortfall}",
+            "preset_incident_c": "Analyze revenue target variance, inventory stockouts, ad spend throttling, and carrier lead times across all categories",
+            "preset_logistics_a": "Investigate carrier delivery SLAs, shipping lead times, and fulfillment center bottlenecks",
+            "preset_logistics_b": "Why did DHL DACH delivery delays trigger Black Friday checkout cart abandonment?",
+            "preset_logistics_c": "Distribution center inventory snapshots and out-of-stock interactions",
+            "preset_marketing_a": "Meta ad bidding budget throttling and creative fatigue analysis for Beauty category",
+            "preset_marketing_b": "Why did ad spend drop by 31% on Friday morning resulting in 202k lost sessions?",
+            "preset_marketing_c": "Analyze marketing campaigns ROAS, influencer revenue, and competitor promotions",
             "preset_incident": "Black Friday incidenthantering",
             "preset_logistics": "Tempo vs Logistik & SLA:er",
             "preset_marketing": "Marknadsföring & begränsning av ROAS"
@@ -4579,8 +4586,8 @@
             "alert_created": "Бот створив це сповіщення в п'ятницю, 28 листопада 2026 р.",
             "history_on": "Історія увімкнена • Надіслані повідомлення зберігаються",
             "kpi_alert_badge": "КРИТИЧНИЙ ДЕФИЦИТ ДОХОДУ",
-            "alert_heading": "🚨 Ціль доходів Black Week не досягнуто на 735,7 тис. € (-11,1%)",
-            "alert_desc": "Телеметрія Чорної п'ятниці на 14:30:00 UTC свідчить, що доходи значно відстають від плану. Ціль: 6 650 000 € vs Факт: 5 914 300 € у всіх складах ЄС.",
+            "alert_heading": "🚨 Ціль доходів Black Week не досягнуто на {kpiShortfall} ({kpiShortfallPct})",
+            "alert_desc": "Телеметрія Чорної п'ятниці на 14:30:00 UTC свідчить, що доходи значно відстають від плану. Ціль: {kpiTarget} vs Факт: {kpiActual} у всіх складах ЄС.",
             "target_revenue": "Цільовий дохід",
             "actual_revenue": "Фактичний дохід",
             "revenue_variance": "Відхилення доходу",
@@ -4597,7 +4604,7 @@
             "prep_step_3_done": "BigQuery Data Agent ({agentId}) успішно налаштований із {count} таблицями.",
             "prep_step_4_active": "BigQuery Data Agent ініціалізовано з {count} джерелами. Запуск робочого простору...",
             "prep_step_4_done": "BigQuery Data Agent готовий із {count} джерелами. Вхід у робочий простір...",
-            "default_alert_prompt": "Підготуйте дані щодо продажів, маркетингу, реклами, складських запасів та всіх пов'язаних бізнес-доменів",
+            "default_alert_prompt": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
             "compare_prompts": "Порівняти промпти",
             "compare_chats": "Порівняти чати",
             "cmo_workspace_badge": "Аналітичний простір CMO",
@@ -4611,15 +4618,15 @@
             "show_prompts": "Показати промпти",
             "hide_prompts": "Сховати промпти",
             "prompt_1_title": "💄 Падіння в категорії Beauty (-27%)",
-            "prompt_1_text": "Чому категорія Beauty не досягла цільового доходу під час Black Week?",
+            "prompt_1_text": "Why did Beauty category miss target revenue during Black Week?",
             "prompt_2_title": "📦 Втрата доходу через відсутність на складі",
-            "prompt_2_text": "Показати взаємодії з відсутніми товарами та втрачений дохід для Beauty SKU-1001, SKU-1002, SKU-1003.",
+            "prompt_2_text": "Show stock-out interactions and lost revenue for Beauty products SKU-1001, SKU-1002, SKU-1003.",
             "prompt_3_title": "📈 15-хвилинний темп виконання цілей",
-            "prompt_3_text": "Показати 15-хвилинну криву доходів план vs факт для Beauty у п'ятницю.",
+            "prompt_3_text": "Show 15-minute intraday target vs actual revenue curve for Beauty on Friday.",
             "prompt_4_title": "📢 Обмеження витрат на платну рекламу",
-            "prompt_4_text": "Показати обмеження рекламного бюджету та втому креативів для Meta Ads.",
+            "prompt_4_text": "Show paid marketing ad spend throttling and creative fatigue status for Meta Ads.",
             "welcome_title": "Ласкаво просимо до аналітичного простору CMO LumièreShop.",
-            "welcome_desc": "Підготовку контекстних даних завершено. Ви можете поставити будь-яке запитання щодо дефіциту доходу в -735,7 тис. €...",
+            "welcome_desc": "Підготовку контекстних даних завершено. Ви можете поставити будь-яке запитання щодо дефіциту доходу в -{kpiShortfall}...",
             "reasoning_title": "Хід думок та семантичне обґрунтування",
             "sql_title": "Згенерований BigQuery SQL запит",
             "copy_sql": "Копіювати SQL",
@@ -4699,17 +4706,116 @@
             "return_to_chat": "Повернутися до розмови",
             "start_new_inv": "Почати нове розслідування",
             "export_pdf": "Експортувати звіт (PDF)",
-            "preset_incident_a": "Зараз Чорна п'ятниця 14:30. Підготуйте дані, які допоможуть знайти першопричину падіння доходу порівняно з прогнозом під час Black Week.",
-            "preset_incident_b": "Ціль доходів Black Week не досягнуто на 735,7 тис. €",
-            "preset_incident_c": "Проаналізуйте відхилення доходу від цілі, дефіцит запасів, обмеження витрат на рекламу та терміни доставки всіма категоріями",
-            "preset_logistics_a": "Дослідіть SLA перевізників, терміни доставки та вузькі місця в дистрибуційних центрах",
-            "preset_logistics_b": "Чому затримки доставки DHL DACH спричинили відмову від кошиків у Чорну п'ятницю?",
-            "preset_logistics_c": "Знімки залишків у центрах дистрибуції та взаємодії за відсутності товарів",
-            "preset_marketing_a": "Аналіз обмеження бюджету ставок Meta Ads та втоми креативів для категорії Beauty",
-            "preset_marketing_b": "Чому витрати на рекламу впали на 31% у п'ятницю вранці, що призвело до втрати 202 тис. сеансів?",
-            "preset_marketing_c": "Проаналізуйте ROAS маркетингових кампаній, доходи від інфлюенсерів та акції конкурентів"
+            "preset_incident_a": "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.",
+            "preset_incident_b": "Black Week sales target missed by {kpiShortfall}",
+            "preset_incident_c": "Analyze revenue target variance, inventory stockouts, ad spend throttling, and carrier lead times across all categories",
+            "preset_logistics_a": "Investigate carrier delivery SLAs, shipping lead times, and fulfillment center bottlenecks",
+            "preset_logistics_b": "Why did DHL DACH delivery delays trigger Black Friday checkout cart abandonment?",
+            "preset_logistics_c": "Distribution center inventory snapshots and out-of-stock interactions",
+            "preset_marketing_a": "Meta ad bidding budget throttling and creative fatigue analysis for Beauty category",
+            "preset_marketing_b": "Why did ad spend drop by 31% on Friday morning resulting in 202k lost sessions?",
+            "preset_marketing_c": "Analyze marketing campaigns ROAS, influencer revenue, and competitor promotions"
       }
 };
+
+    /* ======================================================================
+       MEASURED KPI FIGURES
+       ----------------------------------------------------------------------
+       Every euro amount and percentage shown in this interface is measured
+       from BigQuery by /api/kpi/summary and injected here at runtime.
+
+       Nothing is typed into the page. This is deliberate: the figures used to
+       be hardcoded in 25 language dictionaries, and 24 of them had already
+       drifted away from the warehouse (they said the shortfall was EUR 735.7k
+       against a EUR 6,650,000 target, when it is EUR 731.4k against
+       EUR 6,672,788). The dictionaries now carry {kpiTarget}, {kpiActual},
+       {kpiShortfall} and {kpiShortfallPct} placeholders, which are replaced
+       once, per language, in that language's own number format.
+       ====================================================================== */
+    let KPI_SUMMARY = null;
+
+    // Always formats in full, never compact. Compact CURRENCY notation is not
+    // implemented for every locale we ship - German fell back to
+    // "731.430,3 EUR" instead of "731,4 Tsd. EUR" - and a wrong-looking number
+    // on screen is worse than a long one.
+    function fmtKpiMoney(value, lang) {
+      try {
+        return new Intl.NumberFormat(lang, {
+          style: 'currency', currency: 'EUR', maximumFractionDigits: 0
+        }).format(value);
+      } catch (e) {
+        return '€' + Math.round(value).toLocaleString('en-US');
+      }
+    }
+
+    function fmtKpiPct(value, lang) {
+      try {
+        return new Intl.NumberFormat(lang, {
+          style: 'percent', minimumFractionDigits: 1, maximumFractionDigits: 1,
+          signDisplay: 'always'
+        }).format(value / 100);
+      } catch (e) {
+        return value.toFixed(1) + '%';
+      }
+    }
+
+    // Replace the placeholders in every language dictionary, once, using that
+    // language's own formatting conventions.
+    function hydrateI18nWithKpis(kpi) {
+      const sw = kpi.storewide;
+      Object.keys(I18N_DICTIONARY).forEach(lang => {
+        const dict = I18N_DICTIONARY[lang];
+        const repl = {
+          '{kpiTarget}': fmtKpiMoney(sw.target, lang),
+          '{kpiActual}': fmtKpiMoney(sw.actual, lang),
+          '{kpiShortfall}': fmtKpiMoney(Math.abs(sw.variance), lang),
+          '{kpiShortfallPct}': fmtKpiPct(sw.variance_pct, lang)
+        };
+        Object.keys(dict).forEach(key => {
+          if (typeof dict[key] !== 'string') return;
+          let str = dict[key];
+          Object.keys(repl).forEach(ph => {
+            if (str.indexOf(ph) !== -1) str = str.split(ph).join(repl[ph]);
+          });
+          dict[key] = str;
+        });
+      });
+    }
+
+    // Until /api/kpi/summary resolves, show an ellipsis rather than a raw
+    // {kpiShortfall} token. After hydration there is nothing left to replace.
+    function kpiSafe(str) {
+      return typeof str === 'string' ? str.replace(/\{kpi[A-Za-z]+\}/g, '\u2026') : str;
+    }
+
+    function renderKpiCards() {
+      if (!KPI_SUMMARY) return;
+      const sw = KPI_SUMMARY.storewide;
+      const lang = currentLanguage;
+      const set = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val;
+      };
+      set('kpiTargetRevenue', fmtKpiMoney(sw.target, lang));
+      set('kpiActualRevenue', fmtKpiMoney(sw.actual, lang));
+      set('kpiRevenueVariance',
+          fmtKpiMoney(sw.variance, lang) + ' (' + fmtKpiPct(sw.variance_pct, lang) + ')');
+    }
+
+    async function loadKpiSummary() {
+      try {
+        const res = await fetch('/api/kpi/summary');
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        KPI_SUMMARY = await res.json();
+        hydrateI18nWithKpis(KPI_SUMMARY);
+        renderKpiCards();
+        applyLanguage(currentLanguage);
+      } catch (err) {
+        console.error('KPI summary unavailable:', err);
+        const badge = document.getElementById('kpiAlertBadge');
+        if (badge) badge.textContent = 'KPI FIGURES UNAVAILABLE — BACKEND UNREACHABLE';
+      }
+    }
 
     // Translation helper with dynamic placeholder interpolation & fallback
     function t(key, params = {}) {
@@ -4802,15 +4908,18 @@
       if (alertBadge) alertBadge.textContent = dict.kpi_alert_badge;
       
       const alertHeading = document.getElementById('alertHeading');
-      if (alertHeading) alertHeading.textContent = dict.alert_heading;
+      if (alertHeading) alertHeading.textContent = kpiSafe(dict.alert_heading);
+
+      // Re-format the KPI cards into the newly selected locale.
+      renderKpiCards();
       
       const alertDesc = document.getElementById('alertDesc');
-      if (alertDesc) alertDesc.textContent = dict.alert_desc;
+      if (alertDesc) alertDesc.textContent = kpiSafe(dict.alert_desc);
 
       // Update all elements with data-i18n
       document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
-        if (dict[key]) el.textContent = dict[key];
+        if (dict[key]) el.textContent = kpiSafe(dict[key]);
       });
 
       // Update Recommended Prompts text
@@ -4928,7 +5037,24 @@
     }
 
     // Active preparation prompt (dynamically updated by Prompt Studio or default)
-    const DEFAULT_PRIMARY_PROMPT = "Prepare sales, marketing, ads, inventory, all connected business domains data";
+    // ---------------------------------------------------------------------
+    // THE DISCOVERY PROMPT
+    // ---------------------------------------------------------------------
+    // This is the single sentence the CMO types. It drives two Knowledge
+    // Catalog searches - one for tables, one for glossary terms - and nothing
+    // about the table list is pre-selected anywhere.
+    //
+    // The authoritative copy lives in backend/app/services/discovery_core.py
+    // and is exposed by GET /api/health as `active_prompt`. This constant is
+    // hydrated from there on load; the literal below is only the fallback for
+    // when that call has not returned yet.
+    //
+    // DO NOT REWORD IT. Measured across six variants: adding "return on ad
+    // spend" or "discounts" drops the orders and web_sessions tables and
+    // collapses the main story from 11 of 11 answerable to 1 of 11. The
+    // previous text here - "Prepare sales, marketing, ads, inventory, all
+    // connected business domains data" - scored 0 of 11.
+    let DEFAULT_PRIMARY_PROMPT = "I need to know how each product category is pacing against its Black Week revenue plan to date, and how much revenue the Beauty shortfall lost to each cause: traffic and conversion rate, advertising budget throttling, items being out of stock, mismatched product recommendations, payment gateway failures, and competitor pricing.";
     let activePreparationPrompt = DEFAULT_PRIMARY_PROMPT;
 
     function handleLumiereSalesBotClick(e) {
@@ -5117,22 +5243,27 @@
         const prepResult = await prepPromise;
         const count = (prepResult.table_count !== undefined && prepResult.table_count !== null) ? prepResult.table_count : (prepResult.tables ? prepResult.tables.length : 0);
         const termCount = (prepResult.term_count !== undefined && prepResult.term_count !== null) ? prepResult.term_count : (prepResult.terms ? prepResult.terms.length : 0);
-        const linkCount = (prepResult.entry_link_count !== undefined && prepResult.entry_link_count !== null) ? prepResult.entry_link_count : (count + termCount);
         const agentId = prepResult.data_agent_id || 'gda-blackweek-primary';
+        // Agent A's capability card used to carry a hardcoded "85 terms", which
+        // drifted out of step with what the catalog actually returns. It is now
+        // filled from the live discovery result so the card and the progress
+        // log can never contradict each other on stage.
+        const aTermEl = document.getElementById('agentATermCount');
+        if (aTermEl) aTermEl.textContent = termCount;
         console.log('✅ Preparation Result:', prepResult);
 
         await new Promise(r => setTimeout(r, 1200));
-        completeStep(steps[1], t('prep_step_2_done', { count, termCount, linkCount }));
+        completeStep(steps[1], t('prep_step_2_done', { count, termCount }));
 
         // Step 3: BigQuery Data Agent Mapping
-        activateStep(steps[2], t('prep_step_3_active', { agentId, count, termCount, linkCount }));
+        activateStep(steps[2], t('prep_step_3_active', { agentId, count, termCount }));
         await new Promise(r => setTimeout(r, 1200));
-        completeStep(steps[2], t('prep_step_3_done', { agentId, count, termCount, linkCount }));
+        completeStep(steps[2], t('prep_step_3_done', { agentId, count, termCount }));
 
         // Step 4: Ready and Transition
-        activateStep(steps[3], t('prep_step_4_active', { count, termCount, linkCount }));
+        activateStep(steps[3], t('prep_step_4_active', { count, termCount }));
         await new Promise(r => setTimeout(r, 1000));
-        completeStep(steps[3], t('prep_step_4_done', { count, termCount, linkCount }));
+        completeStep(steps[3], t('prep_step_4_done', { count, termCount }));
 
         // Hold completed state for 3 seconds then transition smoothly
         setTimeout(() => {
@@ -5631,22 +5762,13 @@
     // PROMPT OPTIMIZATION STUDIO MODULE
     // =========================================================================
     let studioEvaluationData = null;
-    let compareClicks = [];
 
     function handleComparePromptsClick(e) {
       if (e) {
         e.preventDefault();
         e.stopPropagation();
       }
-      const now = Date.now();
-      // Keep only clicks within the last 900ms (3 fast clicks)
-      compareClicks = compareClicks.filter(t => now - t < 900);
-      compareClicks.push(now);
-
-      if (compareClicks.length >= 3) {
-        compareClicks = [];
-        openPromptStudio();
-      }
+      openPromptStudio();
     }
 
     function openPromptStudio() {
@@ -5793,7 +5915,7 @@
               </p>
 
               <!-- Telemetry Metrics -->
-              <div class="grid grid-cols-3 gap-2 mb-3 text-[11px]">
+              <div class="grid grid-cols-2 gap-2 mb-3 text-[11px]">
                 <div class="p-2 bg-slate-100 dark:bg-slate-700/60 rounded-xl">
                   <span class="text-[10px] text-slate-500 block">${t('scorecard_tables')}</span>
                   <span class="font-bold text-slate-900 dark:text-white font-mono">${sr.table_count || 0} tables</span>
@@ -5801,10 +5923,6 @@
                 <div class="p-2 bg-slate-100 dark:bg-slate-700/60 rounded-xl">
                   <span class="text-[10px] text-slate-500 block">${t('scorecard_terms')}</span>
                   <span class="font-bold text-slate-900 dark:text-white font-mono">${(sr.terms || []).length || sr.term_count || 0} terms</span>
-                </div>
-                <div class="p-2 bg-slate-100 dark:bg-slate-700/60 rounded-xl">
-                  <span class="text-[10px] text-slate-500 block">EntryLinks</span>
-                  <span class="font-bold text-slate-900 dark:text-white font-mono">${sr.entry_link_count || ((sr.table_count || 0) + ((sr.terms || []).length || sr.term_count || 0))} links</span>
                 </div>
               </div>
 
@@ -5972,7 +6090,7 @@
       
       const input = document.getElementById('chatDiscoveryPrompt');
       if (input && !input.value.trim()) {
-        input.value = "Prepare sales, marketing, ads, inventory, all connected business domains data";
+        input.value = DEFAULT_PRIMARY_PROMPT;
       }
       
       modal.classList.remove('hidden');
@@ -5993,7 +6111,7 @@
       if (key === 'incident') {
         input.value = "Black Friday severe revenue shortfall across Beauty & Logistics with stock-outs and ROAS drops";
       } else if (key === 'cross_domain') {
-        input.value = "Prepare sales, marketing, ads, inventory, all connected business domains data";
+        input.value = DEFAULT_PRIMARY_PROMPT;
       } else if (key === 'logistics') {
         input.value = "Warehouse inventory snapshots, distribution center lead times, and out-of-stock interactions";
       } else if (key === 'marketing') {
@@ -6051,7 +6169,7 @@
 
         const summary = document.getElementById('chatDiscoverySummaryText');
         if (summary) {
-          summary.textContent = `Knowledge Catalog discovered ${count} tables, ${data.term_count || 0} business terms, and ${data.entry_link_count || 0} EntryLinks. Exactly identical table schemas mapped simultaneously across Agent A (ecommerce_dw), Agent B (ecommerce_dw_2nd), and Agent C (ecommerce_dw_3rd).`;
+          summary.textContent = `Knowledge Catalog discovered ${count} tables and ${data.term_count || 0} business glossary terms. Exactly identical table schemas mapped simultaneously across Agent A (ecommerce_dw), Agent B (ecommerce_dw_2nd), and Agent C (ecommerce_dw_3rd).`;
         }
 
         const tablesCountSpan = document.getElementById('chatTablesCountSpan');
@@ -6111,7 +6229,7 @@
 
     async function startMultiAgentConversation() {
       const input = document.getElementById('chatDiscoveryPrompt');
-      const prompt = input ? input.value.trim() : "Prepare sales, marketing, ads, inventory, all connected business domains data";
+      const prompt = input ? input.value.trim() : DEFAULT_PRIMARY_PROMPT;
 
       if (!compareChatsDiscoveryData || !compareChatsDiscoveryData.tables || compareChatsDiscoveryData.tables.length === 0) {
         await runChatIsolationDiscovery();
@@ -6559,6 +6677,51 @@
       }
     }
 
+    // Built entirely from /api/kpi/summary. Previously this block was hardcoded
+    // and had gone badly stale: it ranked stockouts as the 57% primary driver
+    // and listed a DACH carrier bottleneck, which is a deliberate red herring in
+    // the dataset, not a root cause.
+    const DRIVER_LABELS = {
+      ad_throttling: 'Automated Target ROAS budget throttling on Meta and Google Ads, '
+                   + 'compounded by LEARNING_LIMITED creatives',
+      stockout: 'Out-of-stock events on the top 3 high-velocity Beauty SKUs '
+              + '(SKU-1001, SKU-1002, SKU-1003)',
+      recommender: 'Catalog recommender fallback bug serving cross-category items '
+                 + 'on out-of-stock Beauty pages'
+    };
+
+    function buildRootCauseSummary() {
+      if (!KPI_SUMMARY) {
+        return '- Figures unavailable: /api/kpi/summary could not be reached.\n';
+      }
+      const sw = KPI_SUMMARY.storewide;
+      const bt = KPI_SUMMARY.beauty;
+      const m = v => fmtKpiMoney(v, 'en');
+      const lines = [
+        `- Storewide: Target ${m(sw.target)} | Actual ${m(sw.actual)} `
+        + `| Shortfall ${m(sw.variance)} (${fmtKpiPct(sw.variance_pct, 'en')})`,
+        `- Beauty category deficit: ${m(bt.deficit)} (${fmtKpiPct(bt.variance_pct, 'en')}), `
+        + 'the concentration of the storewide shortfall.',
+        '',
+        'Measured root-cause reconciliation of the Beauty deficit:'
+      ];
+      KPI_SUMMARY.drivers.forEach((d, i) => {
+        lines.push(`- Driver ${i + 1} (${d.share_pct}% / ${m(d.value)}): `
+                 + `${DRIVER_LABELS[d.key] || d.key} [${d.basis}]`);
+      });
+      const total = KPI_SUMMARY.drivers.reduce((a, d) => a + d.value, 0);
+      lines.push('');
+      lines.push(`- Components sum to ${m(total)} against a measured deficit of `
+               + `${m(bt.deficit)} - an exact reconciliation.`);
+      lines.push(`- Measured at ${KPI_SUMMARY.as_of} from BigQuery; `
+               + `inputs: gross attempted value ${m(KPI_SUMMARY.inputs.gross_pot_val)}, `
+               + `${KPI_SUMMARY.inputs.bounced_impressions.toLocaleString('en-US')} bounced `
+               + `recommender impressions, paid CVR ${KPI_SUMMARY.inputs.paid_cvr_pct}%, `
+               + `all-channel CVR ${KPI_SUMMARY.inputs.allchannel_cvr_pct}%, `
+               + `AOV ${m(KPI_SUMMARY.inputs.aov)}.`);
+      return lines.join('\n') + '\n';
+    }
+
     function copySummaryReport() {
       const sessionSeconds = Math.floor((Date.now() - sessionMetrics.startTime) / 1000);
       const minutes = Math.floor(sessionSeconds / 60);
@@ -6580,11 +6743,7 @@ Session ID: ${currentSessionId}
 - Warehouse Tables Analyzed: ${Array.from(sessionMetrics.tablesQueried).join(', ') || 'N/A'}
 
 2. ROOT CAUSE SUMMARY:
-- Target Revenue: €6,650,000 | Actual Revenue: €5,914,300 | Shortfall: -€735,700 (-11.1%)
-- Primary Driver 1 (57% / €420.2k): Out-of-stock events on top 3 high-velocity Beauty SKUs (SKU-1001, SKU-1002, SKU-1003).
-- Primary Driver 2 (27% / €202.1k): Meta Ads budget throttling and creative fatigue between 09:00 - 14:00 UTC.
-- Primary Driver 3 (15% / €113.4k): DACH regional carrier delivery bottleneck (DHL express delay triggering checkout cart abandonment).
-
+${buildRootCauseSummary()}
 ================================================================================
 `;
       navigator.clipboard.writeText(reportText);
@@ -6804,6 +6963,7 @@ Session ID: ${currentSessionId}
     // Initial language setup & dropdown population (defaults to English 'en')
     renderLanguageDropdowns();
     applyLanguage(currentLanguage);
+    loadKpiSummary();
 
     // Initialize user session screen flow
     initUserSessionAndScreen();

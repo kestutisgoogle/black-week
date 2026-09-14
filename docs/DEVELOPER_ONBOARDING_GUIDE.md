@@ -123,8 +123,7 @@ lumiere-shop/
 │   └── static/
 │       └── index.html              # Material Design 3 single-page application
 ├── config/                         # Version-Controlled Metadata & Configuration
-│   ├── business_glossary.yaml      # Enterprise business glossary definitions
-│   └── business_glossary.json      # JSON schema representation of glossary
+│   └── business_glossary.yaml      # SINGLE SOURCE OF TRUTH for the enterprise glossary
 ├── docs/                           # Living Documentation, Guides & Reports
 │   ├── images/                     # Canonical screenshots and architecture diagrams
 │   ├── DATASET_DATA_AND_SCHEMA_SUMMARY.md # Full 140-table schema & column dictionary
@@ -155,7 +154,6 @@ lumiere-shop/
 │   ├── 03_verify_agent.py          # Conversational Analytics API REST verification
 │   ├── 04b_verify_extended_logs.py # Audit log verification script
 │   ├── 05_validate_data_dates.py   # Date cutoff & mathematical variance assertions
-│   ├── 07_test_investigation_tree.py # 10-branch Gemini Data Agent discovery verification
 │   ├── 10_test_knowledge_search.py # Knowledge Catalog semantic search precision test
 │   ├── 16_test_user_name_flow.py   # Screen 0 & user_name audit logging test suite
 │   ├── 17_test_compare_chats_logging.py # 3-Agent compare chats audit logging test suite

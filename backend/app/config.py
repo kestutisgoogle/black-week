@@ -60,7 +60,7 @@ DATASET_MAPPING = {
 }
 
 # Regional BigQuery location for dataset storage and SQL job execution
-LOCATION = os.environ.get("BQ_LOCATION", "us-central1")
+LOCATION = os.environ.get("BQ_LOCATION", "europe-west4")
 
 # User email identity for audit logging and permissions tracking
 USER_IDENTITY = os.environ.get("GCP_USER_IDENTITY", "user@example.com")

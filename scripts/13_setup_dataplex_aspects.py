@@ -39,7 +39,7 @@ load_dotenv()
 
 PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "")
 LOCATION = "global"
-ENTRY_LOCATION = os.environ.get("BQ_LOCATION", "us-central1")
+ENTRY_LOCATION = os.environ.get("BQ_LOCATION", "europe-west4")
 DATASET_ID = os.environ.get("BQ_DATASET_ID", "ecommerce_dw")
 
 # Import the 130+ table metadata dictionary from apply_bq_descriptions
@@ -56,7 +56,7 @@ CRUCIAL_ASPECT_CONTEXT = {
         "evaluating product-level revenue contribution, margins, and SKU catalog attributes."
     ),
     "distribution_centers": (
-        "Regional warehouse fulfillment hubs and logistics centers (Paris Hub DC1, Frankfurt Hub DC2). Tracks regional "
+        "Regional warehouse fulfillment hubs and logistics centers (Paris Nord DC1, Rotterdam Port Hub DC2). Tracks regional "
         "inventory allocation, dispatch capacity, and warehouse throughput."
     ),
     "inventory_items": (

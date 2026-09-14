@@ -36,6 +36,7 @@ import argparse
 import subprocess
 import requests
 from typing import Dict, List, Any, Optional, Tuple
+import yaml
 
 
 def load_dotenv():
@@ -134,16 +135,16 @@ def api_request_with_retry(
 
 
 def load_local_glossary_metadata() -> Dict[str, Any]:
-    """Loads local business glossary JSON definition as reference/fallback."""
+    """Loads the local business glossary definition as reference/fallback."""
     local_path = os.path.join(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
         "config",
-        "business_glossary.json"
+        "business_glossary.yaml"
     )
     if os.path.exists(local_path):
         try:
             with open(local_path, "r", encoding="utf-8") as f:
-                return json.load(f).get("glossary", {})
+                return yaml.safe_load(f).get("glossary", {})
         except Exception as e:
             print(f"    ⚠️ Warning loading local glossary config: {e}")
     return {}
@@ -490,8 +491,8 @@ def main():
     )
     parser.add_argument(
         "--bq-location",
-        default=os.environ.get("BQ_LOCATION", "us-central1"),
-        help="BigQuery / EntryGroup location for EntryLinks (default: us-central1)"
+        default=os.environ.get("BQ_LOCATION", "europe-west4"),
+        help="BigQuery / EntryGroup location for EntryLinks (default: $BQ_LOCATION, else europe-west4)"
     )
     parser.add_argument(
         "--include-header",

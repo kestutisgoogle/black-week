@@ -142,7 +142,7 @@ def delete_all_entry_links(token: str, entry_locations: List[str]):
     link_names_to_delete = set()
 
     # 1. Enumerate known EntryLinks from local business glossary configs
-    for cfg_name in ["business_glossary.json", "business_glossary.yaml"]:
+    for cfg_name in ["business_glossary.yaml"]:
         cfg_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config", cfg_name)
         if os.path.exists(cfg_path):
             try:
@@ -204,7 +204,7 @@ def delete_all_glossary_terms(token: str, glossary_id: str):
     term_ids = set()
 
     # 1. Enumerate all term IDs from local config files
-    for cfg_name in ["business_glossary.json", "business_glossary.yaml"]:
+    for cfg_name in ["business_glossary.yaml"]:
         cfg_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config", cfg_name)
         if os.path.exists(cfg_path):
             try:
@@ -266,7 +266,7 @@ def delete_all_glossary_categories(token: str, glossary_id: str):
     cat_ids = set()
 
     # 1. Enumerate all category IDs from local config files
-    for cfg_name in ["business_glossary.json", "business_glossary.yaml"]:
+    for cfg_name in ["business_glossary.yaml"]:
         cfg_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config", cfg_name)
         if os.path.exists(cfg_path):
             try:
@@ -395,7 +395,11 @@ def cleanup_knowledge_catalog():
     # --------------------------------------------------------------------------
     # 4. Delete DataScans (Data Profiling)
     # --------------------------------------------------------------------------
-    print(f"\n[Step 4/5] Purging Knowledge Catalog DataScans across {entry_locs}...")
+    # DataScans are a REGIONAL-only resource. Probing `locations/global` always
+    # returns HTTP 400 "Malformed name", which produced five spurious warnings
+    # on every purge and obscured genuine failures. Regions only.
+    scan_locs = [loc for loc in entry_locs if loc != "global"]
+    print(f"\n[Step 4/5] Purging Knowledge Catalog DataScans across {scan_locs}...")
     data_scans = [
         "profile-payment-logs",
         "profile-daily-ad-perf",
@@ -403,7 +407,7 @@ def cleanup_knowledge_catalog():
         "profile-shipping-lead-times",
         "profile-catalog-recommender"
     ]
-    for loc in entry_locs:
+    for loc in scan_locs:
         for scan_id in data_scans:
             scan_url = f"https://dataplex.googleapis.com/v1/projects/{PROJECT_ID}/locations/{loc}/dataScans/{scan_id}"
             delete_resource(scan_url, headers, f"DataScan ({loc})", scan_id)
