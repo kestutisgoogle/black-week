@@ -12,7 +12,7 @@
 
 ## 1. Project Overview
 
-**LumièreShop** is an enterprise-grade, conversational e-commerce analytics platform and executive incident-response showcase. It pairs a **140-table Google Cloud BigQuery Data Warehouse** (`ecommerce_dw`, 19.3M rows, 100% column & table descriptions) with **Google Cloud Knowledge Catalog** semantic metadata search, **Google Cloud Gemini Enterprise Agent Platform** (Gemini 3.7 Flash), a thin **FastAPI** backend, and the **Google Cloud Conversational Analytics API** (`geminidataanalytics.googleapis.com`).
+**LumièreShop** is an enterprise-grade, conversational e-commerce analytics platform and executive incident-response showcase. It pairs a **140-table Google Cloud BigQuery Data Warehouse** (`ecommerce_dw`, 90.9M rows, 100% column & table descriptions) with **Google Cloud Knowledge Catalog** semantic metadata search, **Google Cloud Gemini Enterprise Agent Platform** (Gemini 3.7 Flash), a thin **FastAPI** backend, and the **Google Cloud Conversational Analytics API** (`geminidataanalytics.googleapis.com`).
 
 ### The Business Scenario & Incident
 On **Black Friday 2026 at 14:30 UTC**, LumièreShop executive leadership receives an urgent Google Workspace alert:  
@@ -33,13 +33,13 @@ LumièreShop is built on a clean, decoupled, cloud-native architecture connectin
 
 ### Core Architectural Pillars
 
-1. **Semantic Discovery Layer (Google Cloud Knowledge Catalog)**: Executes live semantic search against Google Cloud Knowledge Catalog to dynamically discover relevant BigQuery tables from the 140-table data warehouse, matching business incident inquiries against semantic descriptions, 85 business glossary terms, and custom aspect templates with zero hardcoded table biases.
+1. **Semantic Discovery Layer (Google Cloud Knowledge Catalog)**: Executes live semantic search against Google Cloud Knowledge Catalog to dynamically discover relevant BigQuery tables from the 140-table data warehouse, matching business incident inquiries against semantic descriptions, 99 business glossary terms, and custom aspect templates with zero hardcoded table biases.
 2. **Dynamic Agent Grounding & System Instructions (Conversational Analytics API)**: Dynamically patches Google Cloud BigQuery Data Agents (`dataAnalyticsAgent.publishedContext.datasourceReferences.bq.tableReferences`) with discovered table clusters. Crucially, all agents are persistently configured with the system instruction: `"Today is Friday, November 27th, 2026"` (`publishedContext.systemInstruction`), preventing SQL models from defaulting to `CURRENT_DATE()` and anchoring all relative time calculations ("today", "yesterday", "this week") to the Black Week crisis window.
 3. **Server-Managed Stateful Multi-Turn Dialogue**: Maintains server-side persistent conversation resources (`projects/{project}/locations/global/conversations/{uuid}`) via the Conversational Analytics API, preserving context across multi-turn exchanges for seamless pronoun resolution ("that category", "compare it with last year").
 4. **Multi-Prompt Comparative Evaluation Studio (Gemini Enterprise Agent Platform / Gemini 3.7 Flash)**: Evaluates candidate prompts across Knowledge Catalog semantic search metrics without modifying BigQuery Data Agents, scoring table volume, domain coverage, and glossary alignment with strict grading differentiation.
 5. **3-Agent Parallel Conversational Cockpit ("Compare Chats" & 3-Tier Metadata Isolation)**:
    - Evaluates the tangible value of metadata grounding by comparing three models side-by-side:
-     - **Tier A (Agent A)**: Primary dataset (`ecommerce_dw`) with **Full Knowledge Catalog Grounding** (column & table descriptions, 85 business glossary terms linked via EntryLinks, and custom governance aspects).
+     - **Tier A (Agent A)**: Primary dataset (`ecommerce_dw`) with **Full Knowledge Catalog Grounding** — column and table descriptions, the business glossary terms surfaced by semantic discovery (17 of the catalog's 99, in the validated configuration) projected into the agent's published context, and custom governance aspects.
      - **Tier B (Agent B)**: Replica dataset (`ecommerce_dw_2nd`) with **Descriptions Only** (column & table descriptions preserved, but **0 glossary terms, 0 EntryLinks, 0 custom aspects**).
      - **Tier C (Agent C)**: Replica dataset (`ecommerce_dw_3rd`) with **Raw Schema Only** (**0 column descriptions, 0 glossary terms, 0 EntryLinks, 0 custom aspects**).
    - **Unified Table Discovery**: Uses a single prompt to Knowledge Catalog to dynamically discover warehouse tables once, mapping the exact identical table cluster across all 3 agents simultaneously.
@@ -65,10 +65,10 @@ ecommerce_dw (140 Tables)
 - **Simulation Cutoff Timestamp**: **Friday, Nov 27, 2026 at 14:30:00 UTC**
 - **Target Horizon**: Full 8-day promotional window from Monday, Nov 23 to Cyber Monday, Nov 30, 2026.
 - **Statistical Realism**:
-  - **Orders**: 26,413 completed orders.
-  - **Sessions & CVR**: 876,000 web sessions with realistic **3.02% CVR**.
-  - **Clickstream Events**: 17,290,297 events (**19.74 events/session**).
-  - **Payment Coverage**: 24,432 completed payments (**92.50% payment coverage**).
+  - **Orders**: 128,997 orders, of which 121,443 are `Completed` (94.14%); the remainder are `Returned` or `Partially Returned`.
+  - **Sessions & CVR**: 4,270,393 web sessions with realistic **3.02% CVR**.
+  - **Clickstream Events**: 85,605,795 events (**20.05 events/session**).
+  - **Payment Coverage**: 119,485 orders carry a successful gateway payment (**92.63% payment coverage**).
 
 ---
 
@@ -130,7 +130,7 @@ GCP_USER_IDENTITY=user@example.com              # Your email identity for audit 
 # ==============================================================================
 # 2. Regional & BigQuery Dataset Configuration (Pre-configured defaults)
 # ==============================================================================
-BQ_LOCATION=europe-west4                        # BigQuery region (e.g. europe-west4, us-central1)
+BQ_LOCATION=europe-west4                        # BigQuery, Artifact Registry and Cloud Run region. Only europe-west4 is validated end-to-end.
 BQ_DATASET_ID=ecommerce_dw                      # Primary dataset for Tier A (Full Knowledge Catalog)
 BQ_DATASET_2ND_ID=ecommerce_dw_2nd              # Replica dataset for Tier B (Descriptions Only)
 BQ_DATASET_3RD_ID=ecommerce_dw_3rd              # Replica dataset for Tier C (Raw Schema Only)
@@ -189,8 +189,9 @@ python3 scripts/bootstrap_new_project.py
 1. **Google Cloud APIs & IAM Roles**: Automatically enables all 12 required Google Cloud APIs and configures all 18 Service Account IAM roles.
 2. **BigQuery Dataset**: Creates the primary ecommerce dataset (`ecommerce_dw`) and all 140 tables across 17 business domains (Core Catalog, Orders, Clickstream, Competitors, Paid Ads, CRM, Reverse Logistics, ERP Finance, etc.).
 3. **100% Metadata Annotations**: Populates rich, structured descriptions on every table and column in BigQuery.
-4. **19.3M Calibrated Records**: Seeds deterministic synthetic data (`random.seed(42)`) representing realistic Black Week 2026 sales events, cart abandonments, ad bidding logs, and 6 weeks of historical baseline actuals.
-5. **Knowledge Catalog Business Glossary**: Deploys the business taxonomy across 15 categories, 85 business terms, and 257 native EntryLinks in Google Cloud.
+4. **90.9M Calibrated Records**: Seeds deterministic synthetic data (`random.seed(42)`) representing realistic Black Week 2026 sales events, cart abandonments, ad bidding logs, and 6 weeks of historical baseline actuals.
+5. **Knowledge Catalog Business Glossary**: Deploys the business taxonomy across 15 categories and 99 business terms, requesting 298 term-to-table EntryLinks in Google Cloud.
+   > **Note on the EntryLink count.** 298 is the number of term-to-table bindings declared in `config/business_glossary.yaml`, i.e. what the provisioner asks Knowledge Catalog to create. It is *not* an independently verified count: the Knowledge Catalog API exposes no `ListEntryLinks` method, so the number of links actually present cannot be read back programmatically.
 6. **Knowledge Catalog Custom AspectType**: Creates the `enterprise-data-context` AspectType and attaches structured governance metadata to all 140 tables.
 7. **BigQuery Isolation Datasets (Tiers B & C)**: Creates physical replica datasets `ecommerce_dw_2nd` (descriptions preserved, 0 glossary terms/EntryLinks/aspects) and `ecommerce_dw_3rd` (raw schema only, 0 descriptions/terms/aspects) with exact row parity.
 8. **Gemini BigQuery Data Agents**: Dynamically executes Knowledge Catalog semantic search to discover working tables and provisions/grounds all 4 Data Agents (`DATA_AGENT_ID`, `DATA_AGENT_A_ID`, `DATA_AGENT_B_ID`, `DATA_AGENT_C_ID`).
@@ -231,7 +232,7 @@ python3 scripts/12_generate_extended_data.py
 # 8. Generate 6 weeks of historical actuals
 python3 scripts/14_generate_historical_data.py
 
-# 9. Deploy Knowledge Catalog Business Glossary (15 categories, 85 terms, 257 EntryLinks)
+# 9. Deploy Knowledge Catalog Business Glossary (15 categories, 99 terms, 298 term-to-table bindings)
 python3 scripts/09_create_dataplex_glossary.py
 
 # 10. Deploy enterprise-data-context AspectType and bind to all 140 tables
@@ -260,6 +261,30 @@ Open your browser at `http://localhost:8000/`.
 
 ---
 
+### Step 4.5a: Agent Reasoning Mode (FAST vs THINKING)
+
+Every question sent to a data agent carries a `thinking_mode`. The web app **defaults to
+`THINKING`** and sends it explicitly on every request, for the single-agent chat and for
+all three comparison agents.
+
+| Mode | Behaviour |
+| :--- | :--- |
+| `THINKING` | **Default.** The agent plans before answering and streams its intermediate reasoning steps into the UI. |
+| `FAST` | Fewer reasoning steps and a shorter visible trace. |
+
+> [!NOTE]
+> **The two modes were measured against each other and no accuracy difference was found.**
+> Across 177 scored agent calls covering six questions, not one FAST-versus-THINKING
+> difference reached statistical significance. `THINKING` is the default because it is what
+> the application has been validated with, and because the visible reasoning trace is part
+> of the demonstration — not because it scores better.
+
+To change the default, edit `currentThinkingMode` and `currentMultiThinkingMode` in
+`backend/static/index.html` and redeploy. There is no environment variable for this; it is
+a front-end constant.
+
+---
+
 ### Step 4.6: Deploy to Google Cloud Run (Production)
 
 ### Turnkey Single-Command Cloud Run Deployment (Recommended)
@@ -278,7 +303,9 @@ if [ -z "$PROJECT_ID" ] || [ "$PROJECT_ID" = "(unset)" ]; then
 fi
 
 REGION=$(grep -E '^BQ_LOCATION=' .env | cut -d '=' -f2 | tr -d ' "\r\n')
-REGION=${REGION:-"us-central1"}
+# europe-west4 is the only region this project has been validated end-to-end in,
+# and BQ_LOCATION also selects the Artifact Registry and Cloud Run region.
+REGION=${REGION:-"europe-west4"}
 
 echo "Deploying to Project: ${PROJECT_ID} in Region: ${REGION}"
 
