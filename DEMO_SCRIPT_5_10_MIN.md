@@ -66,9 +66,13 @@
 ### Beat 2: Isolate the Outlier & Decompose the Funnel (`2:00 – 4:00`)
 
 #### 🧭 Navigation
-In **Screen 2: CMO Conversational Workspace** (`#workspaceView`), you can either click the **Quick-Start Investigation Pills** above the chat bar or paste the prompts below into the chat input (`#chatInput`) and press **Send** (`#sendBtn`). Keep the mode toggle set to **⚡ Fast** (or switch to **🧠 Thinking** to display live SQL + reasoning steps).
+In **Screen 2: CMO Conversational Workspace** (`#workspaceView`), all **6 Demo Scenario Prompts** (`1️⃣` through `6️⃣`) are pre-loaded as **one-click buttons** in two places:
+1. The **6-Card Guided Investigation Grid** (`#promptsGrid`) at the top of the workspace (expanded by default).
+2. The persistent **`Demo Flow:` Quick-Select Bar** (`#demoQuickPromptsBar`) directly above the bottom chat input (`#promptInput`), which stays visible as you scroll through the conversation.
 
-#### 💬 Prompt 1 — Category Pacing & Pro-Rated Plan Variance (`D-Q1`)
+Click the numbered buttons (`1️⃣`, `2️⃣`, `3️⃣`, `4️⃣`, `5️⃣`) in sequence — or paste the prompts below — with the mode toggle set to **⚡ Fast** (or **🧠 Thinking** to display live SQL + reasoning traces).
+
+#### 💬 Prompt 1 — Category Pacing & Pro-Rated Plan Variance (`D-Q1` • Click `1️⃣ Category Gap (-26.6%)`)
 ```text
 Which product categories missed their revenue targets during Black Week, and what is the gap for each?
 ```
@@ -76,7 +80,7 @@ Which product categories missed their revenue targets during Black Week, and wha
   - The agent automatically pro-rates the 8-day Black Week plan to the **Friday 14:30 UTC cutoff (62.35% elapsed)** — guided by the `Target To Date (Pro-Rated Plan)` and `Pacing Variance` glossary terms.
   - **Beauty** is the clear outlier at **-€520,871 (-26.62%)**, whereas **Electronics (-5.74%)**, **Home (-4.59%)**, and **Fashion (-2.87%)** are within normal trading variance.
 
-#### 💬 Prompt 2 — Funnel Decomposition: Traffic vs. Conversion Rate (`D-Q2`)
+#### 💬 Prompt 2 — Funnel Decomposition: Traffic vs. Conversion Rate (`D-Q2` • Click `2️⃣ Sessions vs. CVR`)
 ```text
 For the Beauty category during Black Week, did sessions come in below plan, or did the conversion rate come in below plan? Compare both against the plan for the same period.
 ```
@@ -90,7 +94,7 @@ For the Beauty category during Black Week, did sessions come in below plan, or d
 
 ### Beat 3: Uncover the 3 Root Causes & The €2.0M Semantic Trap (`4:00 – 7:00`)
 
-#### 💬 Prompt 3 — Hero SKU Stockouts & The €2.0M Gross Demand Trap (`D-Q3`)
+#### 💬 Prompt 3 — Hero SKU Stockouts & The €2.0M Gross Demand Trap (`D-Q3` • Click `3️⃣ Stockouts (€62.4K vs €2M Trap)`)
 ```text
 Did we have out-of-stock events on bestselling Beauty products, and what was the estimated lost sales impact?
 ```
@@ -100,7 +104,7 @@ Did we have out-of-stock events on bestselling Beauty products, and what was the
   - Point out the column `oos_interactions.pot_val`: its raw `SUM(pot_val)` is **€2,003,060.60** (gross attempted basket value at retail list price — nearly 4x the entire Beauty deficit!).
   - Because **Agent A** has the **`Stockout Estimated Lost Revenue`** glossary term from Knowledge Catalog, it multiplies gross unfulfilled demand by the **Paid Conversion Rate (3.115% / 4.05% category CVR)** to report the true net lost revenue: **€62,386 (12.0% of the Beauty shortfall)**.
 
-#### 💬 Prompt 4 — Recommender Engine Fallback Bug (`D-Q4`)
+#### 💬 Prompt 4 — Recommender Engine Fallback Bug (`D-Q4` • Click `4️⃣ Recommender Bug (Rule 99)`)
 ```text
 When customers viewed out-of-stock Beauty items, did our product recommendations suggest relevant alternatives, or was there an algorithm issue?
 ```
@@ -108,7 +112,7 @@ When customers viewed out-of-stock Beauty items, did our product recommendations
   - The column names in `catalog_recommender_logs` are deliberately cryptic ERP abbreviations: `fb_rule_id`, `cat_mismatch_flg`, and `opp_cost_eur` (which is a reserved column filled with `0.00`!).
   - Using Knowledge Catalog's **`Catalog Recommender Category Mismatch`** and **`Recommender Mismatch Lost Revenue`** glossary definitions, the agent ignores the dead `opp_cost_eur` column, filters for `fb_rule_id = 99 AND cat_mismatch_flg = 1` (**64,003 mismatched Electronics impressions** shown on Beauty pages, **22,065 bounced**), and calculates `bounced_impressions × CVR × AOV` = **€49,804 (9.6% of the Beauty shortfall)**.
 
-#### 💬 Prompt 5 — Automated Target ROAS Bidding Throttle & Full Attribution (`D-Q5` & `D-Q6`)
+#### 💬 Prompt 5 — Automated Target ROAS Bidding Throttle & Full Attribution (`D-Q5` & `D-Q6` • Click `5️⃣ Full €521K Attribution Waterfall`)
 ```text
 Break down the Beauty revenue shortfall during Black Week. How much does each root cause account for, including paid marketing ad throttling?
 ```
@@ -129,14 +133,16 @@ Break down the Beauty revenue shortfall during Black Week. How much does each ro
 If you have 8–10 minutes, this is the ultimate visual proof of why **Google Cloud Knowledge Catalog** matters.
 
 #### 🧭 Navigation
-1. In the top navigation bar, click **"Compare Chats (3 Agents)"** (`#navCompareChatsBtn`) to open **Screen 3: 3-Agent Parallel Conversational Cockpit** (`#compareChatsView`).
-2. Point out the 3 columns grounded on the **exact same 40 tables** and **identical row counts**, differing **only** in metadata richness:
+1. In the left sidebar or top navigation bar, click **"Compare chats"** (`#compareChatsBtn` — 3 fast clicks or via the staging modal) to open **Screen 3: 3-Agent Parallel Conversational Cockpit** (`#multiAgentWorkspaceView`).
+2. Point out the 3 columns grounded on the **exact same tables** and **identical row counts**, differing **only** in metadata richness:
    - **Column 1 — Agent A (`ecommerce_dw`)**: **Full Knowledge Catalog Grounding** (Table/Column Descriptions + **17 Business Glossary Terms** + EntryLinks + Custom Aspects).
    - **Column 2 — Agent B (`ecommerce_dw_2nd`)**: **Descriptions Only** (Basic column labels, **0 Glossary Terms**, **0 EntryLinks**).
    - **Column 3 — Agent C (`ecommerce_dw_3rd`)**: **Raw Schema Only** (**0 Descriptions**, **0 Glossary Terms**, bare column names like `pot_val`, `cat_mismatch_flg`, `ord_hdr_num`).
-3. Paste the following prompt into the **Master Broadcast Bar** at the top and click **"Broadcast to All 3 Agents"**:
+3. **One-Click Suggested Prompts in Every Chatbox**:
+   - **Master Broadcast Bar (`#demoPromptsBroadcast`)**: Click **`🎯 6️⃣ Dual-Trap Showdown (Stockout €62.4K vs €2M + Recommender Rule 99)`** right above `#multiPromptInput` to broadcast the exact dual-trap question to all 3 agents simultaneously!
+   - **Individual Agent Columns (`#demoPromptsAgentA`, `#demoPromptsAgentB`, `#demoPromptsAgentC`)**: Each of the 3 agent chatboxes also has its own clickable Demo Scenario pills (`🎯 6️⃣ Dual-Trap`, `3️⃣ Stockouts`, `4️⃣ Recommender`, `5️⃣ Full Waterfall`, `1️⃣ Category Gap`, `2️⃣ Sessions vs CVR`) both inside the agent's welcome card and right above `#inputAgentA/B/C`.
 
-#### 💬 Broadcast Prompt (The Side-by-Side Trap Test)
+#### 💬 Broadcast Prompt (The Side-by-Side Trap Test • Click `🎯 6️⃣ Dual-Trap Showdown`)
 ```text
 Did we have out-of-stock events on bestselling Beauty products, and what was the estimated lost sales impact? Also how much revenue did we lose from mismatched product recommendations?
 ```

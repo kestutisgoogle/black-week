@@ -670,41 +670,61 @@
           <button onclick="togglePrompts()" class="w-full flex items-center justify-between text-left cursor-pointer group">
             <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition flex items-center gap-1.5">
               <i data-lucide="compass" class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400"></i>
-              <span data-i18n="rec_prompts_title">Recommended CMO Investigation Prompts</span>
+              <span data-i18n="rec_prompts_title">5–10 Min Demo Scenario: Guided Investigation Prompts</span>
             </p>
             <div class="flex items-center gap-1 text-xs text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200 transition">
-              <span id="promptsToggleText" class="text-[11px]" data-i18n="show_prompts">Show Prompts</span>
-              <i id="promptsChevron" data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200"></i>
+              <span id="promptsToggleText" class="text-[11px]" data-i18n="hide_prompts">Hide Prompts</span>
+              <i id="promptsChevron" data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200 rotate-180"></i>
             </div>
           </button>
 
-          <div id="promptsGrid" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-3">
-            <button onclick="sendPromptByIndex(0)" class="text-left p-3.5 rounded-2xl bg-white dark:bg-slate-800 hover:bg-blue-50/50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition group shadow-2xs cursor-pointer">
-              <p class="text-xs font-semibold text-slate-800 dark:text-slate-200 group-hover:text-blue-700 dark:group-hover:text-blue-400 transition flex items-center gap-1.5">
-                <span id="recPromptTitle0" data-i18n="prompt_1_title">💄 Beauty Shortfall (-27%)</span>
+          <div id="promptsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 mt-3">
+            <button onclick="sendDemoScenarioPrompt(0)" class="text-left p-3 rounded-2xl bg-white dark:bg-slate-800 hover:bg-blue-50/50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition group shadow-2xs cursor-pointer">
+              <p class="text-xs font-semibold text-slate-800 dark:text-slate-200 group-hover:text-blue-700 dark:group-hover:text-blue-400 transition flex items-center justify-between gap-1.5">
+                <span id="recPromptTitle0" data-i18n="prompt_1_title">1️⃣ Category Pacing &amp; Shortfall (-26.6%)</span>
+                <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 font-mono">Prompt 1</span>
               </p>
-              <p id="recPromptText0" class="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">"Why did Beauty category miss target revenue during Black Week?"</p>
+              <p id="recPromptText0" class="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">"Which product categories missed their revenue targets during Black Week, and what is the gap for each?"</p>
             </button>
 
-            <button onclick="sendPromptByIndex(1)" class="text-left p-3.5 rounded-2xl bg-white dark:bg-slate-800 hover:bg-blue-50/50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition group shadow-2xs cursor-pointer">
-              <p class="text-xs font-semibold text-slate-800 dark:text-slate-200 group-hover:text-blue-700 dark:group-hover:text-blue-400 transition flex items-center gap-1.5">
-                <span id="recPromptTitle1" data-i18n="prompt_2_title">📦 Stock-Out Revenue Loss</span>
+            <button onclick="sendDemoScenarioPrompt(1)" class="text-left p-3 rounded-2xl bg-white dark:bg-slate-800 hover:bg-blue-50/50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition group shadow-2xs cursor-pointer">
+              <p class="text-xs font-semibold text-slate-800 dark:text-slate-200 group-hover:text-blue-700 dark:group-hover:text-blue-400 transition flex items-center justify-between gap-1.5">
+                <span id="recPromptTitle1" data-i18n="prompt_2_title">2️⃣ Funnel: Sessions (-23.5%) vs. CVR</span>
+                <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 font-mono">Prompt 2</span>
               </p>
-              <p id="recPromptText1" class="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">"Show stock-out interactions and lost revenue for Beauty SKUs."</p>
+              <p id="recPromptText1" class="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">"For the Beauty category during Black Week, did sessions come in below plan, or did the conversion rate come in below plan? Compare both against the plan for the same period."</p>
             </button>
 
-            <button onclick="sendPromptByIndex(2)" class="text-left p-3.5 rounded-2xl bg-white dark:bg-slate-800 hover:bg-blue-50/50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition group shadow-2xs cursor-pointer">
-              <p class="text-xs font-semibold text-slate-800 dark:text-slate-200 group-hover:text-blue-700 dark:group-hover:text-blue-400 transition flex items-center gap-1.5">
-                <span id="recPromptTitle2" data-i18n="prompt_3_title">📈 15-Min Intraday Target Pacing</span>
+            <button onclick="sendDemoScenarioPrompt(2)" class="text-left p-3 rounded-2xl bg-white dark:bg-slate-800 hover:bg-blue-50/50 dark:hover:bg-slate-700 border border-amber-300 dark:border-amber-700/70 transition group shadow-2xs cursor-pointer">
+              <p class="text-xs font-semibold text-slate-800 dark:text-slate-200 group-hover:text-blue-700 dark:group-hover:text-blue-400 transition flex items-center justify-between gap-1.5">
+                <span id="recPromptTitle2" data-i18n="prompt_3_title">3️⃣ Stock-Out Loss (€62.4K vs €2M Trap)</span>
+                <span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300 font-mono">Prompt 3 • Trap 1</span>
               </p>
-              <p id="recPromptText2" class="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">"Show 15-minute intraday target vs actual revenue curve for Beauty."</p>
+              <p id="recPromptText2" class="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">"Did we have out-of-stock events on bestselling Beauty products, and what was the estimated lost sales impact?"</p>
             </button>
 
-            <button onclick="sendPromptByIndex(3)" class="text-left p-3.5 rounded-2xl bg-white dark:bg-slate-800 hover:bg-blue-50/50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition group shadow-2xs cursor-pointer">
-              <p class="text-xs font-semibold text-slate-800 dark:text-slate-200 group-hover:text-blue-700 dark:group-hover:text-blue-400 transition flex items-center gap-1.5">
-                <span id="recPromptTitle3" data-i18n="prompt_4_title">📢 Paid Social Ad Throttling</span>
+            <button onclick="sendDemoScenarioPrompt(3)" class="text-left p-3 rounded-2xl bg-white dark:bg-slate-800 hover:bg-blue-50/50 dark:hover:bg-slate-700 border border-amber-300 dark:border-amber-700/70 transition group shadow-2xs cursor-pointer">
+              <p class="text-xs font-semibold text-slate-800 dark:text-slate-200 group-hover:text-blue-700 dark:group-hover:text-blue-400 transition flex items-center justify-between gap-1.5">
+                <span id="recPromptTitle3" data-i18n="prompt_4_title">4️⃣ Recommender Bug (Rule 99: €49.8K)</span>
+                <span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300 font-mono">Prompt 4 • Trap 2</span>
               </p>
-              <p id="recPromptText3" class="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">"Show ad spend throttling and creative fatigue status for Meta Ads."</p>
+              <p id="recPromptText3" class="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">"When customers viewed out-of-stock Beauty items, did our product recommendations suggest relevant alternatives, or was there an algorithm issue?"</p>
+            </button>
+
+            <button onclick="sendDemoScenarioPrompt(4)" class="text-left p-3 rounded-2xl bg-white dark:bg-slate-800 hover:bg-blue-50/50 dark:hover:bg-slate-700 border border-emerald-300 dark:border-emerald-700/70 transition group shadow-2xs cursor-pointer">
+              <p class="text-xs font-semibold text-slate-800 dark:text-slate-200 group-hover:text-blue-700 dark:group-hover:text-blue-400 transition flex items-center justify-between gap-1.5">
+                <span id="recPromptTitle4" data-i18n="prompt_5_title">5️⃣ Full Attribution &amp; Ad Throttling (€521K)</span>
+                <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 font-mono">Prompt 5 • Waterfall</span>
+              </p>
+              <p id="recPromptText4" class="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">"Break down the Beauty revenue shortfall during Black Week. How much does each root cause account for, including paid marketing ad throttling?"</p>
+            </button>
+
+            <button onclick="sendDemoScenarioPrompt(5)" class="text-left p-3 rounded-2xl bg-white dark:bg-slate-800 hover:bg-blue-50/50 dark:hover:bg-slate-700 border border-purple-300 dark:border-purple-700/70 transition group shadow-2xs cursor-pointer">
+              <p class="text-xs font-semibold text-slate-800 dark:text-slate-200 group-hover:text-blue-700 dark:group-hover:text-blue-400 transition flex items-center justify-between gap-1.5">
+                <span id="recPromptTitle5" data-i18n="prompt_6_title">6️⃣ Dual-Trap Test (OOS + Recommender)</span>
+                <span class="text-[10px] px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-900/60 text-purple-800 dark:text-purple-300 font-mono">Compare Chats</span>
+              </p>
+              <p id="recPromptText5" class="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">"Did we have out-of-stock events on bestselling Beauty products, and what was the estimated lost sales impact? Also how much revenue did we lose from mismatched product recommendations?"</p>
             </button>
           </div>
         </div>
@@ -725,6 +745,32 @@
 
         <!-- Input Bar -->
         <div class="p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-2.5">
+          <!-- Persistent Demo Scenario Quick-Select Prompts inside Chatbox -->
+          <div id="demoQuickPromptsBar" class="flex items-center gap-1.5 overflow-x-auto pb-1 custom-scrollbar">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 shrink-0 flex items-center gap-1 mr-1">
+              <i data-lucide="play-circle" class="w-3 h-3"></i>
+              <span>Demo Flow:</span>
+            </span>
+            <button type="button" onclick="sendDemoScenarioPrompt(0)" class="px-2.5 py-1 rounded-full text-[11px] font-medium bg-blue-50 hover:bg-blue-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-slate-700 transition shrink-0 cursor-pointer" title="Which product categories missed their revenue targets during Black Week, and what is the gap for each?">
+              1️⃣ Category Gap (-26.6%)
+            </button>
+            <button type="button" onclick="sendDemoScenarioPrompt(1)" class="px-2.5 py-1 rounded-full text-[11px] font-medium bg-blue-50 hover:bg-blue-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-slate-700 transition shrink-0 cursor-pointer" title="For the Beauty category during Black Week, did sessions come in below plan, or did the conversion rate come in below plan? Compare both against the plan for the same period.">
+              2️⃣ Sessions vs. CVR
+            </button>
+            <button type="button" onclick="sendDemoScenarioPrompt(2)" class="px-2.5 py-1 rounded-full text-[11px] font-medium bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/50 dark:hover:bg-amber-900/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 transition shrink-0 cursor-pointer" title="Did we have out-of-stock events on bestselling Beauty products, and what was the estimated lost sales impact?">
+              3️⃣ Stockouts (€62.4K vs €2M Trap)
+            </button>
+            <button type="button" onclick="sendDemoScenarioPrompt(3)" class="px-2.5 py-1 rounded-full text-[11px] font-medium bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/50 dark:hover:bg-amber-900/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 transition shrink-0 cursor-pointer" title="When customers viewed out-of-stock Beauty items, did our product recommendations suggest relevant alternatives, or was there an algorithm issue?">
+              4️⃣ Recommender Bug (Rule 99)
+            </button>
+            <button type="button" onclick="sendDemoScenarioPrompt(4)" class="px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/50 dark:hover:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 transition shrink-0 cursor-pointer" title="Break down the Beauty revenue shortfall during Black Week. How much does each root cause account for, including paid marketing ad throttling?">
+              5️⃣ Full €521K Attribution Waterfall
+            </button>
+            <button type="button" onclick="sendDemoScenarioPrompt(5)" class="px-2.5 py-1 rounded-full text-[11px] font-medium bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/50 dark:hover:bg-purple-900/60 text-purple-800 dark:text-purple-300 border border-purple-300 dark:border-purple-800 transition shrink-0 cursor-pointer" title="Did we have out-of-stock events on bestselling Beauty products, and what was the estimated lost sales impact? Also how much revenue did we lose from mismatched product recommendations?">
+              6️⃣ Dual-Trap (OOS + Recommender)
+            </button>
+          </div>
+
           <div class="flex items-center justify-between px-1">
             <div class="flex items-center gap-2">
               <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400">Mode:</span>
@@ -885,7 +931,29 @@
             <!-- Messages injected dynamically -->
           </div>
           <!-- Column Bottom Input (Single-Agent Query) -->
-          <div class="p-2 border-t border-blue-100 dark:border-blue-900/50 bg-blue-50/30 dark:bg-slate-900 shrink-0">
+          <div class="p-2 border-t border-blue-100 dark:border-blue-900/50 bg-blue-50/30 dark:bg-slate-900 shrink-0 space-y-1.5">
+            <!-- Suggested Demo Prompts for Agent A -->
+            <div id="demoPromptsAgentA" class="flex items-center gap-1 overflow-x-auto pb-0.5 custom-scrollbar">
+              <span class="text-[9px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 shrink-0 mr-0.5">Demo:</span>
+              <button type="button" onclick="sendSingleAgentDemoPrompt('A', 5)" class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-800 transition shrink-0 cursor-pointer" title="Did we have out-of-stock events on bestselling Beauty products, and what was the estimated lost sales impact? Also how much revenue did we lose from mismatched product recommendations?">
+                🎯 6️⃣ Dual-Trap (OOS + Rec)
+              </button>
+              <button type="button" onclick="sendSingleAgentDemoPrompt('A', 2)" class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 transition shrink-0 cursor-pointer" title="Did we have out-of-stock events on bestselling Beauty products, and what was the estimated lost sales impact?">
+                3️⃣ Stockouts (€62.4K vs €2M)
+              </button>
+              <button type="button" onclick="sendSingleAgentDemoPrompt('A', 3)" class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 transition shrink-0 cursor-pointer" title="When customers viewed out-of-stock Beauty items, did our product recommendations suggest relevant alternatives, or was there an algorithm issue?">
+                4️⃣ Recommender (Rule 99)
+              </button>
+              <button type="button" onclick="sendSingleAgentDemoPrompt('A', 4)" class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 transition shrink-0 cursor-pointer" title="Break down the Beauty revenue shortfall during Black Week. How much does each root cause account for, including paid marketing ad throttling?">
+                5️⃣ Full €521K Waterfall
+              </button>
+              <button type="button" onclick="sendSingleAgentDemoPrompt('A', 0)" class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-blue-50 hover:bg-blue-100 dark:bg-slate-800 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-slate-700 transition shrink-0 cursor-pointer" title="Which product categories missed their revenue targets during Black Week, and what is the gap for each?">
+                1️⃣ Category Gap
+              </button>
+              <button type="button" onclick="sendSingleAgentDemoPrompt('A', 1)" class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-blue-50 hover:bg-blue-100 dark:bg-slate-800 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-slate-700 transition shrink-0 cursor-pointer" title="For the Beauty category during Black Week, did sessions come in below plan, or did the conversion rate come in below plan? Compare both against the plan for the same period.">
+                2️⃣ Sessions vs CVR
+              </button>
+            </div>
             <form onsubmit="handleSingleAgentSubmit(event, 'A')" class="flex items-center gap-1.5">
               <input 
                 type="text" 
@@ -945,7 +1013,29 @@
             <!-- Messages injected dynamically -->
           </div>
           <!-- Column Bottom Input (Single-Agent Query) -->
-          <div class="p-2 border-t border-indigo-100 dark:border-indigo-900/50 bg-indigo-50/30 dark:bg-slate-900 shrink-0">
+          <div class="p-2 border-t border-indigo-100 dark:border-indigo-900/50 bg-indigo-50/30 dark:bg-slate-900 shrink-0 space-y-1.5">
+            <!-- Suggested Demo Prompts for Agent B -->
+            <div id="demoPromptsAgentB" class="flex items-center gap-1 overflow-x-auto pb-0.5 custom-scrollbar">
+              <span class="text-[9px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 shrink-0 mr-0.5">Demo:</span>
+              <button type="button" onclick="sendSingleAgentDemoPrompt('B', 5)" class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-800 transition shrink-0 cursor-pointer" title="Did we have out-of-stock events on bestselling Beauty products, and what was the estimated lost sales impact? Also how much revenue did we lose from mismatched product recommendations?">
+                🎯 6️⃣ Dual-Trap (OOS + Rec)
+              </button>
+              <button type="button" onclick="sendSingleAgentDemoPrompt('B', 2)" class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 transition shrink-0 cursor-pointer" title="Did we have out-of-stock events on bestselling Beauty products, and what was the estimated lost sales impact?">
+                3️⃣ Stockouts (€62.4K vs €2M)
+              </button>
+              <button type="button" onclick="sendSingleAgentDemoPrompt('B', 3)" class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 transition shrink-0 cursor-pointer" title="When customers viewed out-of-stock Beauty items, did our product recommendations suggest relevant alternatives, or was there an algorithm issue?">
+                4️⃣ Recommender (Rule 99)
+              </button>
+              <button type="button" onclick="sendSingleAgentDemoPrompt('B', 4)" class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 transition shrink-0 cursor-pointer" title="Break down the Beauty revenue shortfall during Black Week. How much does each root cause account for, including paid marketing ad throttling?">
+                5️⃣ Full €521K Waterfall
+              </button>
+              <button type="button" onclick="sendSingleAgentDemoPrompt('B', 0)" class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-indigo-50 hover:bg-indigo-100 dark:bg-slate-800 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-slate-700 transition shrink-0 cursor-pointer" title="Which product categories missed their revenue targets during Black Week, and what is the gap for each?">
+                1️⃣ Category Gap
+              </button>
+              <button type="button" onclick="sendSingleAgentDemoPrompt('B', 1)" class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-indigo-50 hover:bg-indigo-100 dark:bg-slate-800 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-slate-700 transition shrink-0 cursor-pointer" title="For the Beauty category during Black Week, did sessions come in below plan, or did the conversion rate come in below plan? Compare both against the plan for the same period.">
+                2️⃣ Sessions vs CVR
+              </button>
+            </div>
             <form onsubmit="handleSingleAgentSubmit(event, 'B')" class="flex items-center gap-1.5">
               <input 
                 type="text" 
@@ -1005,7 +1095,29 @@
             <!-- Messages injected dynamically -->
           </div>
           <!-- Column Bottom Input (Single-Agent Query) -->
-          <div class="p-2 border-t border-purple-100 dark:border-purple-900/50 bg-purple-50/30 dark:bg-slate-900 shrink-0">
+          <div class="p-2 border-t border-purple-100 dark:border-purple-900/50 bg-purple-50/30 dark:bg-slate-900 shrink-0 space-y-1.5">
+            <!-- Suggested Demo Prompts for Agent C -->
+            <div id="demoPromptsAgentC" class="flex items-center gap-1 overflow-x-auto pb-0.5 custom-scrollbar">
+              <span class="text-[9px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400 shrink-0 mr-0.5">Demo:</span>
+              <button type="button" onclick="sendSingleAgentDemoPrompt('C', 5)" class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-800 transition shrink-0 cursor-pointer" title="Did we have out-of-stock events on bestselling Beauty products, and what was the estimated lost sales impact? Also how much revenue did we lose from mismatched product recommendations?">
+                🎯 6️⃣ Dual-Trap (OOS + Rec)
+              </button>
+              <button type="button" onclick="sendSingleAgentDemoPrompt('C', 2)" class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 transition shrink-0 cursor-pointer" title="Did we have out-of-stock events on bestselling Beauty products, and what was the estimated lost sales impact?">
+                3️⃣ Stockouts (€62.4K vs €2M)
+              </button>
+              <button type="button" onclick="sendSingleAgentDemoPrompt('C', 3)" class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 transition shrink-0 cursor-pointer" title="When customers viewed out-of-stock Beauty items, did our product recommendations suggest relevant alternatives, or was there an algorithm issue?">
+                4️⃣ Recommender (Rule 99)
+              </button>
+              <button type="button" onclick="sendSingleAgentDemoPrompt('C', 4)" class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 transition shrink-0 cursor-pointer" title="Break down the Beauty revenue shortfall during Black Week. How much does each root cause account for, including paid marketing ad throttling?">
+                5️⃣ Full €521K Waterfall
+              </button>
+              <button type="button" onclick="sendSingleAgentDemoPrompt('C', 0)" class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-purple-50 hover:bg-purple-100 dark:bg-slate-800 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-slate-700 transition shrink-0 cursor-pointer" title="Which product categories missed their revenue targets during Black Week, and what is the gap for each?">
+                1️⃣ Category Gap
+              </button>
+              <button type="button" onclick="sendSingleAgentDemoPrompt('C', 1)" class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-purple-50 hover:bg-purple-100 dark:bg-slate-800 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-slate-700 transition shrink-0 cursor-pointer" title="For the Beauty category during Black Week, did sessions come in below plan, or did the conversion rate come in below plan? Compare both against the plan for the same period.">
+                2️⃣ Sessions vs CVR
+              </button>
+            </div>
             <form onsubmit="handleSingleAgentSubmit(event, 'C')" class="flex items-center gap-1.5">
               <input 
                 type="text" 
@@ -1029,7 +1141,32 @@
       </div>
 
       <!-- Synchronized Master Prompt Bar at Bottom -->
-      <div class="shrink-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-2.5 shadow-md">
+      <div class="shrink-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-2.5 shadow-md space-y-2">
+        <!-- Suggested Demo Scenario Broadcast Prompts -->
+        <div id="demoPromptsBroadcast" class="flex items-center gap-1.5 overflow-x-auto pb-0.5 custom-scrollbar">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 shrink-0 flex items-center gap-1 mr-1">
+            <i data-lucide="radio" class="w-3 h-3"></i>
+            <span>Broadcast Demo Trap:</span>
+          </span>
+          <button type="button" onclick="sendMultiAgentDemoPrompt(5)" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 border border-purple-300 dark:border-purple-800 transition shrink-0 cursor-pointer" title="Broadcast Dual-Trap: Stockout Loss (€62.4K vs €2.0M) + Recommender Bug (€49.8K vs €0)">
+            🎯 6️⃣ Dual-Trap Showdown (Stockout €62.4K vs €2M + Recommender Rule 99)
+          </button>
+          <button type="button" onclick="sendMultiAgentDemoPrompt(2)" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 transition shrink-0 cursor-pointer" title="Broadcast Trap 1: Stockout Loss (€62.4K Net vs €2.0M Gross Trap)">
+            3️⃣ Trap 1: Stockouts (€62.4K vs €2M)
+          </button>
+          <button type="button" onclick="sendMultiAgentDemoPrompt(3)" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 transition shrink-0 cursor-pointer" title="Broadcast Trap 2: Recommender Fallback Rule 99 (€49.8K vs €0)">
+            4️⃣ Trap 2: Recommender (Rule 99)
+          </button>
+          <button type="button" onclick="sendMultiAgentDemoPrompt(4)" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 transition shrink-0 cursor-pointer" title="Broadcast Prompt 5: Full €521K Attribution Waterfall & Ad Throttling">
+            5️⃣ Full €521K Waterfall
+          </button>
+          <button type="button" onclick="sendMultiAgentDemoPrompt(0)" class="px-2.5 py-1 rounded-full text-[11px] font-medium bg-indigo-50 hover:bg-indigo-100 dark:bg-slate-800 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-slate-700 transition shrink-0 cursor-pointer" title="Broadcast Prompt 1: Category Pacing & Shortfall (-26.6%)">
+            1️⃣ Category Gap (-26.6%)
+          </button>
+          <button type="button" onclick="sendMultiAgentDemoPrompt(1)" class="px-2.5 py-1 rounded-full text-[11px] font-medium bg-indigo-50 hover:bg-indigo-100 dark:bg-slate-800 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-slate-700 transition shrink-0 cursor-pointer" title="Broadcast Prompt 2: Sessions (-23.5%) vs Conversion Rate">
+            2️⃣ Sessions vs. CVR
+          </button>
+        </div>
         <!-- Master Broadcast Input Form -->
         <form onsubmit="handleMultiChatSubmit(event)" class="flex items-center gap-2">
           <input 
@@ -2265,17 +2402,21 @@
             "issue_solved": "Summary & Exit",
             "chat_placeholder": "Ask a follow-up question regarding Black Week revenue, campaigns, stockouts...",
             "send_btn": "Send",
-            "rec_prompts_title": "Recommended CMO Investigation Prompts",
+            "rec_prompts_title": "5–10 Min Demo Scenario: Guided Investigation Prompts",
             "show_prompts": "Show Prompts",
             "hide_prompts": "Hide Prompts",
-            "prompt_1_title": "💄 Beauty Shortfall (-27%)",
-            "prompt_1_text": "Why did Beauty category miss target revenue during Black Week?",
-            "prompt_2_title": "📦 Stock-Out Revenue Loss",
-            "prompt_2_text": "Show stock-out interactions and lost revenue for Beauty products SKU-1001, SKU-1002, SKU-1003.",
-            "prompt_3_title": "📈 15-Min Intraday Target Pacing",
-            "prompt_3_text": "Show 15-minute intraday target vs actual revenue curve for Beauty on Friday.",
-            "prompt_4_title": "📢 Paid Social Ad Throttling",
-            "prompt_4_text": "Show paid marketing ad spend throttling and creative fatigue status for Meta Ads.",
+            "prompt_1_title": "1️⃣ Category Pacing & Shortfall (-26.6%)",
+            "prompt_1_text": "Which product categories missed their revenue targets during Black Week, and what is the gap for each?",
+            "prompt_2_title": "2️⃣ Funnel: Sessions (-23.5%) vs. CVR",
+            "prompt_2_text": "For the Beauty category during Black Week, did sessions come in below plan, or did the conversion rate come in below plan? Compare both against the plan for the same period.",
+            "prompt_3_title": "3️⃣ Stock-Out Loss (€62.4K vs €2M Trap)",
+            "prompt_3_text": "Did we have out-of-stock events on bestselling Beauty products, and what was the estimated lost sales impact?",
+            "prompt_4_title": "4️⃣ Recommender Bug (Rule 99: €49.8K)",
+            "prompt_4_text": "When customers viewed out-of-stock Beauty items, did our product recommendations suggest relevant alternatives, or was there an algorithm issue?",
+            "prompt_5_title": "5️⃣ Full Attribution & Ad Throttling (€521K)",
+            "prompt_5_text": "Break down the Beauty revenue shortfall during Black Week. How much does each root cause account for, including paid marketing ad throttling?",
+            "prompt_6_title": "6️⃣ Dual-Trap Test (OOS + Recommender)",
+            "prompt_6_text": "Did we have out-of-stock events on bestselling Beauty products, and what was the estimated lost sales impact? Also how much revenue did we lose from mismatched product recommendations?",
             "welcome_title": "Welcome to the LumièreShop Conversational Analytics CMO Workspace.",
             "welcome_desc": "Contextual data preparation complete. You may now ask any business question regarding the -{kpiShortfall}storewide revenue shortfall, category breakdown, hourly pacing gaps, stock-outs, clickstream conversions, or paid campaigns.",
             "reasoning_title": "Reasoning & Thinking Process",
@@ -4923,7 +5064,7 @@
       });
 
       // Update Recommended Prompts text
-      for (let i = 0; i < 4; i++) {
+      for (let i = 0; i < 6; i++) {
         const titleEl = document.getElementById(`recPromptTitle${i}`);
         const textEl = document.getElementById(`recPromptText${i}`);
         if (titleEl && dict[`prompt_${i+1}_title`]) titleEl.textContent = dict[`prompt_${i+1}_title`];
@@ -5337,8 +5478,71 @@
       drawer.classList.toggle('translate-x-full');
     }
 
+    // Canonical 6-Step Executive Demo Scenario Prompts (aligned with DEMO_SCRIPT_5_10_MIN.md)
+    const DEMO_SCENARIO_PROMPTS = [
+      {
+        step: 1,
+        id: 'D-Q1',
+        shortLabel: '1️⃣ Category Gap (-26.6%)',
+        prompt: 'Which product categories missed their revenue targets during Black Week, and what is the gap for each?'
+      },
+      {
+        step: 2,
+        id: 'D-Q2',
+        shortLabel: '2️⃣ Sessions (-23.5%) vs. CVR',
+        prompt: 'For the Beauty category during Black Week, did sessions come in below plan, or did the conversion rate come in below plan? Compare both against the plan for the same period.'
+      },
+      {
+        step: 3,
+        id: 'D-Q3',
+        shortLabel: '3️⃣ Stockouts (€62.4K vs €2M Trap)',
+        prompt: 'Did we have out-of-stock events on bestselling Beauty products, and what was the estimated lost sales impact?'
+      },
+      {
+        step: 4,
+        id: 'D-Q4',
+        shortLabel: '4️⃣ Recommender Bug (Rule 99)',
+        prompt: 'When customers viewed out-of-stock Beauty items, did our product recommendations suggest relevant alternatives, or was there an algorithm issue?'
+      },
+      {
+        step: 5,
+        id: 'D-Q5',
+        shortLabel: '5️⃣ Full €521K Attribution Waterfall',
+        prompt: 'Break down the Beauty revenue shortfall during Black Week. How much does each root cause account for, including paid marketing ad throttling?'
+      },
+      {
+        step: 6,
+        id: 'D-TRAP',
+        shortLabel: '6️⃣ Dual-Trap (OOS + Recommender)',
+        prompt: 'Did we have out-of-stock events on bestselling Beauty products, and what was the estimated lost sales impact? Also how much revenue did we lose from mismatched product recommendations?'
+      }
+    ];
+
+    function sendDemoScenarioPrompt(index) {
+      const item = DEMO_SCENARIO_PROMPTS[index] || DEMO_SCENARIO_PROMPTS[0];
+      sendPrompt(item.prompt);
+    }
+
+    function sendSingleAgentDemoPrompt(agentKey, index) {
+      const item = DEMO_SCENARIO_PROMPTS[index] || DEMO_SCENARIO_PROMPTS[0];
+      const input = document.getElementById(`inputAgent${agentKey}`);
+      if (input) {
+        input.value = item.prompt;
+        handleSingleAgentSubmit(new Event('submit'), agentKey);
+      }
+    }
+
+    function sendMultiAgentDemoPrompt(index) {
+      const item = DEMO_SCENARIO_PROMPTS[index] || DEMO_SCENARIO_PROMPTS[0];
+      sendMultiAgentPrompt(item.prompt);
+    }
+
     // Presets for single prompt sending
     function sendPromptByIndex(index) {
+      if (DEMO_SCENARIO_PROMPTS[index]) {
+        sendDemoScenarioPrompt(index);
+        return;
+      }
       const dict = I18N_DICTIONARY[currentLanguage] || I18N_DICTIONARY['en'];
       const key = `prompt_${index + 1}_text`;
       const promptText = dict[key] || I18N_DICTIONARY['en'][key];
@@ -5346,6 +5550,10 @@
     }
 
     function sendMultiAgentPromptByIndex(index) {
+      if (DEMO_SCENARIO_PROMPTS[index]) {
+        sendMultiAgentDemoPrompt(index);
+        return;
+      }
       const dict = I18N_DICTIONARY[currentLanguage] || I18N_DICTIONARY['en'];
       const key = `prompt_${index + 1}_text`;
       const promptText = dict[key] || I18N_DICTIONARY['en'][key];
@@ -6257,16 +6465,39 @@
       if (!thread) return;
 
       const color = key === 'A' ? 'blue' : (key === 'B' ? 'indigo' : 'purple');
+      const tierDesc = key === 'A'
+        ? 'Full Knowledge Catalog (Glossary + Governance Aspects)'
+        : (key === 'B' ? 'Table/Column Descriptions Only (No Glossary)' : 'Raw Schema Only (No Descriptions, No Glossary)');
 
       thread.innerHTML = `
         <div class="flex gap-2.5">
           <div class="w-7 h-7 rounded-full bg-${color}-100 dark:bg-${color}-950 text-${color}-800 dark:text-${color}-200 flex items-center justify-center shrink-0 mt-0.5 shadow-2xs font-bold text-xs">
             ${key}
           </div>
-          <div class="flex-1 bg-white dark:bg-slate-800 border border-slate-200/90 dark:border-slate-700 p-3 rounded-2xl rounded-tl-sm shadow-2xs leading-relaxed">
-            <div class="flex items-center gap-1.5 font-bold text-${color}-600 dark:text-${color}-400 text-xs">
-              <i data-lucide="bot" class="w-3.5 h-3.5"></i>
-              <span>Agent ${key} Online</span>
+          <div class="flex-1 bg-white dark:bg-slate-800 border border-slate-200/90 dark:border-slate-700 p-3 rounded-2xl rounded-tl-sm shadow-2xs leading-relaxed space-y-2">
+            <div class="flex items-center justify-between gap-1.5 font-bold text-${color}-600 dark:text-${color}-400 text-xs">
+              <span class="flex items-center gap-1.5">
+                <i data-lucide="bot" class="w-3.5 h-3.5"></i>
+                <span>Agent ${key} Online</span>
+              </span>
+              <span class="text-[10px] font-normal text-slate-500 dark:text-slate-400">${tierDesc}</span>
+            </div>
+            <div class="pt-1.5 border-t border-slate-100 dark:border-slate-700/60 space-y-1">
+              <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Suggested Demo Scenario Prompts (Click to ask Agent ${key}):</p>
+              <div class="flex flex-wrap gap-1">
+                <button type="button" onclick="sendSingleAgentDemoPrompt('${key}', 5)" class="px-2 py-1 rounded-lg text-[10px] font-semibold bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/50 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-800 transition cursor-pointer text-left">
+                  🎯 6️⃣ Dual-Trap (Stockout €62.4K vs €2M + Recommender Rule 99)
+                </button>
+                <button type="button" onclick="sendSingleAgentDemoPrompt('${key}', 2)" class="px-2 py-1 rounded-lg text-[10px] font-medium bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 transition cursor-pointer text-left">
+                  3️⃣ Stockout Loss (€62.4K vs €2M Trap)
+                </button>
+                <button type="button" onclick="sendSingleAgentDemoPrompt('${key}', 3)" class="px-2 py-1 rounded-lg text-[10px] font-medium bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 transition cursor-pointer text-left">
+                  4️⃣ Recommender Bug (Rule 99: €49.8K)
+                </button>
+                <button type="button" onclick="sendSingleAgentDemoPrompt('${key}', 4)" class="px-2 py-1 rounded-lg text-[10px] font-medium bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 transition cursor-pointer text-left">
+                  5️⃣ Full €521K Attribution Waterfall
+                </button>
+              </div>
             </div>
           </div>
         </div>
