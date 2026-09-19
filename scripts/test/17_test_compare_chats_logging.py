@@ -27,12 +27,12 @@ sys.path.insert(0, PROJECT_ROOT)
 sys.path.insert(0, os.path.join(PROJECT_ROOT, "backend"))
 
 from app.config import PROJECT_ID, DATASET_ID
-from app.services.ca_service import send_cmo_prompt, get_recent_logs
+from app.services.ca_service import send_cmo_prompt, get_recent_logs, get_bigquery_client
 
 
 def test_schema_columns():
     print("\n[Test 1] Verifying BigQuery agent_interaction_logs schema columns...")
-    client = bigquery.Client(project=PROJECT_ID)
+    client = get_bigquery_client()
     table_ref = f"{PROJECT_ID}.{DATASET_ID}.agent_interaction_logs"
     table = client.get_table(table_ref)
 
@@ -61,7 +61,7 @@ def test_single_agent_logging():
     time.sleep(3.5)  # Allow async BigQuery insert
 
     # Query BigQuery directly for the logged record
-    client = bigquery.Client(project=PROJECT_ID)
+    client = get_bigquery_client()
     query = f"""
         SELECT interaction_id, session_id, user_name, menu_item, agent_no, user_prompt, generated_sql, thinking_process
         FROM `{PROJECT_ID}.{DATASET_ID}.agent_interaction_logs`
@@ -111,7 +111,7 @@ def test_three_agents_compare_chats_logging():
 
     time.sleep(4.0)  # Allow async BigQuery insert
 
-    client = bigquery.Client(project=PROJECT_ID)
+    client = get_bigquery_client()
     query = f"""
         SELECT interaction_id, session_id, user_name, menu_item, agent_no, data_agent_id, user_prompt, generated_sql, thinking_process, execution_time_ms
         FROM `{PROJECT_ID}.{DATASET_ID}.agent_interaction_logs`

@@ -55,7 +55,8 @@ def _fq() -> str:
 
 
 def _client() -> bigquery.Client:
-    return bigquery.Client(project=PROJECT_ID)
+    from app.services.ca_service import get_bigquery_client
+    return get_bigquery_client()
 
 
 def _pacing_sql() -> str:

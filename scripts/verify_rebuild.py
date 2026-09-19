@@ -76,7 +76,18 @@ def main():
         print("GCP_PROJECT_ID is not set in .env", file=sys.stderr)
         sys.exit(1)
 
-    client = bigquery.Client(project=PROJECT)
+    import subprocess
+    from google.oauth2 import credentials as oauth2_credentials
+    token = None
+    for cmd in ["/google/data/ro/teams/cloud-sdk/gcloud", "gcloud"]:
+        try:
+            res = subprocess.run([cmd, "auth", "print-access-token"], capture_output=True, text=True, timeout=10)
+            if res.returncode == 0 and res.stdout.strip():
+                token = res.stdout.strip()
+                break
+        except Exception:
+            continue
+    client = bigquery.Client(project=PROJECT, credentials=oauth2_credentials.Credentials(token)) if token else bigquery.Client(project=PROJECT)
     fq = f"`{PROJECT}.{DATASET}`"
 
     print("=" * 78)
@@ -225,22 +236,26 @@ def main():
         ("gift_card_transactions", "expires_at"),
     }
     probes = []
-    for tbl in client.list_tables(f"{PROJECT}.{DATASET}"):
-        for field in client.get_table(tbl.reference).schema:
-            if field.field_type not in ("TIMESTAMP", "DATETIME"):
-                continue
-            if (tbl.table_id, field.name) in exempt:
-                continue
-            probes.append(
-                f"SELECT '{tbl.table_id}.{field.name}' AS col, "
-                f"COUNTIF({field.name} > TIMESTAMP('{CUTOFF_TS}')) AS n "
-                f"FROM `{PROJECT}.{DATASET}.{tbl.table_id}`")
+    schema_rows = list(client.query(f"""
+        SELECT table_name, column_name, data_type, description
+        FROM {fq}.INFORMATION_SCHEMA.COLUMN_FIELD_PATHS
+        WHERE field_path = column_name
+    """, location=LOCATION).result())
+    for r in schema_rows:
+        if r.data_type not in ("TIMESTAMP", "DATETIME"):
+            continue
+        if (r.table_name, r.column_name) in exempt:
+            continue
+        probes.append(
+            f"SELECT '{r.table_name}.{r.column_name}' AS col, "
+            f"COUNTIF({r.column_name} > TIMESTAMP('{CUTOFF_TS}')) AS n "
+            f"FROM `{PROJECT}.{DATASET}.{r.table_name}`")
 
     late = []
     if probes:
         query = ("SELECT col, n FROM (" + " UNION ALL ".join(probes)
                  + ") WHERE n > 0 ORDER BY n DESC")
-        late = [(r.col, r.n) for r in client.query(query).result()]
+        late = [(r.col, r.n) for r in client.query(query, location=LOCATION).result()]
 
     total_bad = sum(n for _, n in late)
     detail = f"swept {len(probes)} timestamp columns"
@@ -525,11 +540,10 @@ def main():
         described.setdefault(tname, set()).update(cols)
 
     live_cols, empty_desc = {}, []
-    for tbl in client.list_tables(f"{PROJECT}.{DATASET}"):
-        t = client.get_table(tbl.reference)
-        live_cols[t.table_id] = {f.name for f in t.schema}
-        empty_desc += [f"{t.table_id}.{f.name}" for f in t.schema
-                       if not f.description]
+    for r in schema_rows:
+        live_cols.setdefault(r.table_name, set()).add(r.column_name)
+        if not r.description:
+            empty_desc.append(f"{r.table_name}.{r.column_name}")
 
     dead = [f"{t}.{c}" for t, cols in described.items()
             for c in cols if c not in live_cols.get(t, set())]

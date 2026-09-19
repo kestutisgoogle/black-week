@@ -244,45 +244,63 @@ def search_tables(
     on all 140 tables, far over the 50-table cliff. The relevance ranking IS
     the product being demonstrated.
     """
-    body = {
-        "query": f"{prompt} system=bigquery type=table parent={dataset_id}",
-        "scope": f"projects/{project_id}",
-        "semanticSearch": True,
-        "pageSize": 100,
-    }
-
-    try:
-        res = requests.post(
-            SEARCH_ENDPOINT.format(project=project_id),
-            headers=_headers(project_id, token),
-            json=body,
-            timeout=timeout,
-        )
-        if res.status_code != 200:
-            print(f"  Notice: Knowledge Catalog table search returned HTTP {res.status_code}")
+    def _run_single_query(q_text: str) -> List[str]:
+        body = {
+            "query": f"{q_text} system=bigquery type=table parent={dataset_id}",
+            "scope": f"projects/{project_id}",
+            "semanticSearch": True,
+            "pageSize": 100,
+        }
+        try:
+            res = requests.post(
+                SEARCH_ENDPOINT.format(project=project_id),
+                headers=_headers(project_id, token),
+                json=body,
+                timeout=timeout,
+            )
+            if res.status_code != 200:
+                print(f"  Notice: Knowledge Catalog table search returned HTTP {res.status_code}")
+                return []
+            results = res.json().get("results", [])
+        except Exception as exc:
+            print(f"  Notice: Knowledge Catalog table search error: {exc}")
             return []
-        results = res.json().get("results", [])
-    except Exception as exc:
-        print(f"  Notice: Knowledge Catalog table search error: {exc}")
-        return []
 
-    pattern = f"datasets/{dataset_id}/tables/"
-    tables: List[str] = []
-    for r in results:
-        entry = r.get("dataplexEntry", {})
-        for candidate in (
-            r.get("linkedResource", ""),
-            entry.get("name", ""),
-            entry.get("entrySource", {}).get("resource", ""),
-        ):
-            if pattern in candidate:
-                name = candidate.split(pattern)[-1]
-                # `parent=` is an exact match, so a leaked `_2nd`/`_3rd` table
-                # should be impossible. Verified anyway - a silent tier leak
-                # would invalidate the whole comparison.
-                if name and "/" not in name and name not in tables:
-                    tables.append(name)
-                break
+        pattern = f"datasets/{dataset_id}/tables/"
+        found: List[str] = []
+        for r in results:
+            entry = r.get("dataplexEntry", {})
+            for candidate in (
+                r.get("linkedResource", ""),
+                entry.get("name", ""),
+                entry.get("entrySource", {}).get("resource", ""),
+            ):
+                if pattern in candidate:
+                    name = candidate.split(pattern)[-1]
+                    if name and "/" not in name and name not in found:
+                        found.append(name)
+                    break
+        return found
+
+    tables: List[str] = _run_single_query(prompt)
+
+    # Multi-clause compound questions (like DISCOVERY_PROMPT) list candidate
+    # causes separated by colons/commas. Searching each clause prevents the
+    # opening noun phrase ("each product category") from crowding out later
+    # clauses in Dataplex lexical/hybrid retrieval while using only the
+    # caller's prompt string.
+    import re
+    clauses = [
+        c.strip(" .")
+        for c in re.split(r"[:;,]", prompt)
+        if len(c.strip(" .").split()) >= 2
+    ]
+    if len(clauses) > 1:
+        for clause in clauses:
+            for t in _run_single_query(clause):
+                if t not in tables:
+                    tables.append(t)
+
     return tables
 
 

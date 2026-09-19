@@ -268,6 +268,7 @@ def main():
             f"--project={project_id}",
             "--platform=managed",
             "--allow-unauthenticated",
+            "--no-invoker-iam-check",
             f"--set-env-vars={env_vars}"
         ],
         desc="4. Deploying service to Google Cloud Run"

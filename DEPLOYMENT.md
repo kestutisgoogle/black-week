@@ -215,10 +215,13 @@ Expected results:
 ---
 
 ## 📦 2. Production Service Reference
+* **GCP Project ID**: `malaga-conv-analytics` (`240314821780`)
 * **Cloud Run Service**: `lumiere-shop-app`
 * **Region**: `europe-west4`
-* **Artifact Registry**: `europe-west4-docker.pkg.dev/lumiere-shop-504709/lumiere-shop-repo/lumiere-app:latest`
-* **Live Service URL**: [https://lumiere-shop-app-htjxtcbs5a-ez.a.run.app](https://lumiere-shop-app-htjxtcbs5a-ez.a.run.app)
+* **Artifact Registry**: `europe-west4-docker.pkg.dev/malaga-conv-analytics/lumiere-shop-repo/lumiere-app:latest`
+* **Live Service URL**: [https://lumiere-shop-app-kjlt6xcbra-ez.a.run.app](https://lumiere-shop-app-kjlt6xcbra-ez.a.run.app)
+* **Executive Demo Script**: [DEMO_SCRIPT_5_10_MIN.md](DEMO_SCRIPT_5_10_MIN.md)
+
 
 
 
